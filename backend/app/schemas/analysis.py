@@ -5,16 +5,15 @@ from pydantic import BaseModel, Field, field_validator
 from typing import Dict, Any, Optional, Literal
 from datetime import date
 
-
 class PatientIntakeRequest(BaseModel):
-    patient_type: str = "new"  # "new", "existing", "anonymous"
+    patient_type: str = "new"
     patient_id: Optional[str] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     phone_number: Optional[str] = None
     email: Optional[str] = None
     date_of_birth: Optional[date] = None
-    age: Optional[Any] = None   # legacy; auto-computed from date_of_birth if provided
+    age: Optional[Any] = None
     gender: Optional[Literal["Male", "Female"]] = None
     background: Optional[str] = None
     environment: Optional[str] = None
@@ -30,13 +29,11 @@ class PatientIntakeRequest(BaseModel):
         except (ValueError, TypeError):
             return None
 
-
 class AnalyzeCardRequest(BaseModel):
     patientId: str
     cardId: str
     story: str = Field(..., max_length=10000)
     effectiveAge: Optional[int] = None
-
 
 class AggregateRequest(BaseModel):
     patientId: str
@@ -44,15 +41,13 @@ class AggregateRequest(BaseModel):
     assessment_name: Optional[str] = "Assessment"
     request_psychologist_validation: Optional[bool] = False
 
-
 class ValidateSessionRequest(BaseModel):
     validator_name: str
     license_number: str
     validation_notes: Optional[str] = ""
 
-
 class FeedbackRequest(BaseModel):
     session_id: str
     card_id: str
-    feedback_type: str  # need_correction | defense_correction | score_override | theme_correction | narrative_note
-    payload: Dict[str, Any]  # must contain "original" and "corrected"
+    feedback_type: str
+    payload: Dict[str, Any]

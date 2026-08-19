@@ -25,7 +25,7 @@ async def get_insight(
 @router.post("/start", response_model=schemas.AssessmentResponse)
 def start_assessment(
     core_patient_id: str = Query(None, description="Required in embedded mode to link to CoreThematics patient"),
-    db: Session = Depends(get_db), 
+    db: Session = Depends(get_db),
     current_user: models.ScreeningUser = Depends(auth.get_current_active_user)
 ):
     try:
@@ -46,7 +46,6 @@ def complete_assessment(assessment_id: str, data: schemas.AssessmentComplete, ba
     if not assessment:
         return {"error": "Assessment not found"}
 
-    # Save questionnaire responses
     if data.questionnaire_responses:
         db.add_all([
             models.ScreeningQuestionnaireResponse(
@@ -56,7 +55,6 @@ def complete_assessment(assessment_id: str, data: schemas.AssessmentComplete, ba
             ) for q in data.questionnaire_responses
         ])
 
-    # Save game metrics
     if data.game_metrics:
         db.add_all([
             models.ScreeningGameMetric(
@@ -69,11 +67,9 @@ def complete_assessment(assessment_id: str, data: schemas.AssessmentComplete, ba
             ) for g in data.game_metrics
         ])
 
-    # Save patient context
     if data.patient_context:
         assessment.patient_context = data.patient_context.model_dump()
 
-    # Save Story Assessments
     if data.story_assessments:
         db.add_all([
             models.ScreeningStoryAssessment(

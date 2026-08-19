@@ -44,7 +44,7 @@ export function AssessmentDetailsSheet({
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto pr-4 -mr-4 py-6 space-y-6">
-          
+
           <div className="flex items-center gap-4 p-4 rounded-lg bg-primary/5 border border-primary/10">
             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
               <User className="h-6 w-6 text-primary" />
@@ -57,7 +57,7 @@ export function AssessmentDetailsSheet({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            
+
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground flex items-center gap-1.5"><FileText className="h-4 w-4" /> Assessment Type</p>
               <p className="font-medium text-foreground pl-5.5">{getAssessmentName(report)}</p>

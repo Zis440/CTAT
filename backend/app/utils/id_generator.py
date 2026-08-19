@@ -11,31 +11,29 @@ Example: PAT_194a3b7c_8f4e2d1a9b3c
 import time
 import uuid
 
-# Canonical prefix registry — one source of truth
 PREFIXES = {
-    "PAT",   # Patient
-    "SES",   # Session (TAT / generic)
-    "APT",   # Appointment
-    "WAL",   # Wallet
-    "WTX",   # WalletTransaction
-    "TKT",   # SupportTicket
-    "MSG",   # SupportMessage
-    "REQ",   # OrgAssessmentRequest
-    "VRQ",   # VerificationRequest
-    "DOC",   # UserVerificationDocument
-    "AUD",   # AuditLog
-    "PRC",   # TestPricing
-    "RST",   # PasswordResetRequest
-    "LNK",   # AnonymousLink
-    "ASM",   # Assessment (catalog)
-    "SCU",   # ScreeningUser
-    "SCR",   # ScreeningLevel1Session
-    "SQR",   # ScreeningQuestionnaireResponse
-    "SGM",   # ScreeningGameMetric
-    "SSA",   # ScreeningStoryAssessment
-    "SRP",   # ScreeningReport
+    "PAT",
+    "SES",
+    "APT",
+    "WAL",
+    "WTX",
+    "TKT",
+    "MSG",
+    "REQ",
+    "VRQ",
+    "DOC",
+    "AUD",
+    "PRC",
+    "RST",
+    "LNK",
+    "ASM",
+    "SCU",
+    "SCR",
+    "SQR",
+    "SGM",
+    "SSA",
+    "SRP",
 }
-
 
 def generate_id(prefix: str) -> str:
     """

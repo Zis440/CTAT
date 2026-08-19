@@ -67,7 +67,7 @@ export const superAdminRoutes = [
       { path: "admin/transactions/page/:pageId", element: <AdminTransactionsPage /> },
       { path: "admin/income", element: <AdminIncomePage /> },
       { path: "admin/settings", element: <AdminSettingsPage /> },
-      // Currently super_admin has access to these shared routes in App.tsx:
+
       { path: "admin/session-history/result", element: <AnalysisDashboard /> },
       { path: "admin/session/NI/report/synthesizing", element: <AnalysisDashboard /> },
       { path: "admin/session/NI/report/:id", element: <AnalysisDashboard /> },

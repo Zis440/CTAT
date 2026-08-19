@@ -4,22 +4,18 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-# Load .env BEFORE any module reads os.getenv()
 _env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(_env_path, override=True)
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-# Add backend root to sys.path so all app.* imports resolve
-PROJECT_ROOT = Path(__file__).parent.parent.resolve()  # backend/
+PROJECT_ROOT = Path(__file__).parent.parent.resolve()
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-# ── App config ────────────────────────────────────────────────────────────────
 from app.config import SystemConfig
 
-# ── Shared dependencies (engines dict, path constants) ────────────────────────
 from app.api.dependencies import (
     engines,
     KG_GRAPH_FILE,
@@ -27,12 +23,10 @@ from app.api.dependencies import (
 )
 from app.database import DATA_STORE_DIR
 
-# ── Core modules (used only in lifespan initialization) ───────────────────────
 from app.services.patient_intake import PatientDatabase, SessionManager
 from app.assessments.tat.engines.rag.rag_engine import RAGEngine
 from app.assessments.tat.pipeline.multicard_dynamics_engine import MulticardDynamicsEngine
 
-# ── Engine modules (used only in lifespan initialization) ─────────────────────
 from app.assessments.tat.engines.graph.knowledge_graph_engine import KnowledgeGraphEngine
 from app.assessments.tat.engines.nlp.enhanced_nlp import EnhancedNLPProcessor
 from app.assessments.tat.engines.nlp.semantic_narrative_engine import SemanticNarrativeEngine
@@ -46,15 +40,13 @@ from app.assessments.tat.engines.visual.environment_classifier import Environmen
 from app.assessments.tat.engines.visual.visual_analysis_engine import VisualAnalysisEngine
 from app.assessments.tat.engines.clinical.medication_engine import MedicationEngine
 
-# ── Service modules (used only in lifespan initialization) ────────────────────
 from app.services.airavata_provider import AiravataProvider
 from app.services.ollama_humanizer import OllamaHumanizer
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Modern lifespan handler (replaces deprecated @app.on_event)."""
-    # Initialize data_store directory structure and database tables
+
     from app.database import init_db
     init_db()
     print(f"Database tables initialized. Data store: {DATA_STORE_DIR}")
@@ -66,11 +58,11 @@ async def lifespan(app: FastAPI):
         knowledge_graph.load(KG_GRAPH_FILE)
         knowledge_graph._graph_built = True
     else:
-        # No persisted graph — mark as NOT built so downstream knows
+
         knowledge_graph._graph_built = False
 
     nlp_processor = EnhancedNLPProcessor(system_config)
-    engines['nlp_processor'] = nlp_processor  # stored for per-request engine creation
+    engines['nlp_processor'] = nlp_processor
 
     engines['semantic_engine'] = SemanticNarrativeEngine(nlp_processor)
     engines['murray_engine'] = MurrayInferenceEngine(nlp_processor)
@@ -94,7 +86,6 @@ async def lifespan(app: FastAPI):
 
     engines['session_manager'] = SessionManager(SESSION_DIR)
 
-    # Defense Inference Engine — initialized once with a real NLP processor
     from app.assessments.tat.engines.inference.defense_inference_engine import DefenseInferenceEngine
     try:
         engines['defense_engine'] = DefenseInferenceEngine(nlp_processor)
@@ -102,17 +93,14 @@ async def lifespan(app: FastAPI):
         print(f"CRITICAL ERROR: DefenseInferenceEngine failed: {e}")
         raise RuntimeError(f"Failed to load critical system engine: DefenseInferenceEngine. Error: {e}")
 
-    # Visual Analysis Engine (VLM-powered, CNN optional)
     try:
         engines['visual_engine'] = VisualAnalysisEngine(config=system_config)
         print("[OK] visual_engine initialized")
-        # Note: Auto-annotation should be run via CLI script, not in uvicorn startup
-        # to prevent detached threads and file-locking issues across multiple workers.
+
     except Exception as e:
         print(f"Warning: VisualAnalysisEngine failed: {e}")
         engines['visual_engine'] = None
 
-    # Medication and Ollama Integration
     try:
         engines['medication_engine'] = MedicationEngine(
             medication_csv_path=PROJECT_ROOT / "data" / "remedies_dataset" / "MEDICATION.csv"
@@ -146,14 +134,11 @@ async def lifespan(app: FastAPI):
         print(f"Warning: OllamaHumanizer failed: {e}")
         engines['ollama_humanizer'] = None
 
-    # (Feedback store removed)
-
     print("Starting background SLA loop...")
     import asyncio
     from app.services.sla_loop import sla_assignment_loop
-    sla_task = asyncio.create_task(sla_assignment_loop(interval_seconds=60)) # Check every minute
+    sla_task = asyncio.create_task(sla_assignment_loop(interval_seconds=60))
 
-    # Run the audit logs target_user_id backfill task once on startup
     try:
         from scripts.backfill_audit_logs import backfill
         backfill()
@@ -161,10 +146,9 @@ async def lifespan(app: FastAPI):
         print(f"Startup backfill failed: {be}")
 
     print("All engines initialized successfully.")
-    yield  # App runs here
+    yield
     print("Shutting down engines...")
     sla_task.cancel()
-
 
 app = FastAPI(
     title="TAT Analysis API",
@@ -191,27 +175,22 @@ app.add_middleware(
 from app.middleware.activity_logger import ActivityLoggerMiddleware
 app.add_middleware(ActivityLoggerMiddleware)
 
-# ── Rate Limiter ──────────────────────────────────────────────────────────────
 from slowapi.errors import RateLimitExceeded
 from app.middleware.rate_limiter import limiter, rate_limit_exceeded_handler
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
-# ── Health / Readiness ────────────────────────────────────────────────────────
 @app.get("/health")
 def health():
     """Docker/load-balancer health check."""
     return {"status": "ok"}
-
 
 @app.get("/readiness")
 def readiness():
     """Deeper readiness probe — confirms engines are loaded."""
     return {"ready": True, "engines_loaded": len(engines)}
 
-
-# ── Auth / Wallet / Pricing / Patient routers ────────────────────────────────
 from app.auth.router import router as auth_router
 from app.wallet.router import router as wallet_router
 from app.pricing.router import router as pricing_router
@@ -222,7 +201,6 @@ app.include_router(wallet_router)
 app.include_router(pricing_router)
 app.include_router(patient_crud_router)
 
-# ── Domain routers (extracted from monolith) ──────────────────────────────────
 from app.api.routes import (
     patients_router,
     cards_router,
@@ -283,9 +261,6 @@ app.include_router(verification_queue_router)
 app.include_router(psychologist_verification_router)
 app.include_router(cron_router)
 
-
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=True)
-
-# Trigger reload

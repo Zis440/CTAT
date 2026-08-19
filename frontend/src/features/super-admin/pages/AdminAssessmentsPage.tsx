@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/dialog";
 import { TEST_REGISTRY } from "@/features/assessment/registry";
 
-// Map registry icon strings → Lucide components
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   brain: Brain,
   heart: Heart,
@@ -30,7 +29,6 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   baby: Baby,
 };
 
-// Define the shape of an Assessment
 interface Assessment {
   id: string | number;
   name: string;
@@ -44,12 +42,10 @@ interface Assessment {
 export function AdminAssessmentsPage() {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
 
-  // Modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingAssessment, setEditingAssessment] = useState<Assessment | null>(null);
   const [, setIsLoading] = useState(true);
 
-  // Fetch assessments from database
   useEffect(() => {
     const fetchAssessments = async () => {
       try {
@@ -76,13 +72,12 @@ export function AdminAssessmentsPage() {
     if (!editingAssessment) return;
 
     try {
-      // Optimistic UI update
+
       setAssessments((prev) =>
         prev.map((a) => (a.id === editingAssessment.id ? editingAssessment : a))
       );
       setIsEditModalOpen(false);
 
-      // Persist to database
       await apiClient.put(`/assessments/${editingAssessment.id}`, {
         name: editingAssessment.name,
         category: editingAssessment.category,
@@ -105,7 +100,6 @@ export function AdminAssessmentsPage() {
         <title>Assessments  | PsyicHub - Psychological Intelligence</title>
       </Helmet>
 
-      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-border/40 pb-6">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2">
@@ -118,10 +112,9 @@ export function AdminAssessmentsPage() {
         </div>
       </div>
 
-      {/* Grid of Assessments */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 pt-4">
         {assessments.map((test) => {
-          // Attempt to find the matching test in the frontend registry to pull the icon/description
+
           const registryTest = TEST_REGISTRY.find(
             (t) => t.name.toLowerCase() === test.name.toLowerCase() || t.shortName.toLowerCase() === test.name.toLowerCase()
           );
@@ -138,7 +131,7 @@ export function AdminAssessmentsPage() {
                   : "border-primary/20 bg-background/50 backdrop-blur-sm hover:border-primary/50"
                 }`}
             >
-              {/* Coming Soon overlay badge */}
+
               {test.isComingSoon && (
                 <Badge
                   variant="secondary"
@@ -150,12 +143,11 @@ export function AdminAssessmentsPage() {
               )}
 
               <CardContent className="pt-6 pb-4 flex flex-col flex-1 gap-3 text-center">
-                {/* Icon */}
+
                 <div className="mx-auto h-12 w-12 rounded-xl flex items-center justify-center bg-muted/50">
                   <Icon className="h-6 w-6 text-muted-foreground" />
                 </div>
 
-                {/* Title & Description */}
                 <div>
                   <h3 className={`font-semibold text-lg ${test.isComingSoon ? "text-muted-foreground" : ""}`}>
                     {test.name}
@@ -165,7 +157,6 @@ export function AdminAssessmentsPage() {
                   </p>
                 </div>
 
-                {/* Meta badges */}
                 <div className="flex flex-wrap items-center justify-center gap-1.5 mt-2">
                   {test.category && (
                     <Badge variant="outline" className="text-[10px] px-1.5 py-0">
@@ -179,10 +170,8 @@ export function AdminAssessmentsPage() {
                   )}
                 </div>
 
-                {/* Spacer to push pricing to the bottom */}
                 <div className="flex-1" />
 
-                {/* Pricing & Edit Button Section */}
                 <div className="w-full pt-4 mt-2 border-t border-border/50 text-left">
                   <div className="flex flex-col gap-2 mb-4">
                     <div className="flex justify-between items-center px-3 py-2 rounded-md bg-muted/30">
@@ -205,7 +194,6 @@ export function AdminAssessmentsPage() {
                     </div>
                   </div>
 
-                  {/* Edit Button Properly Placed at Bottom Right */}
                   <div className="flex justify-end">
                     <Button
                       size="sm"
@@ -224,7 +212,6 @@ export function AdminAssessmentsPage() {
         })}
       </div>
 
-      {/* Edit Pricing Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>

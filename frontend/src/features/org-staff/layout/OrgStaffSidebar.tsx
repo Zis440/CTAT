@@ -187,15 +187,14 @@ export function OrgStaffSidebar() {
         )}
         {ORG_STAFF_NAV.map((group, idx) => {
           const visibleItems = group.items.filter(item => {
-            if (!item.permissionKey) return true; // always show items with no permission gate
+            if (!item.permissionKey) return true;
             const perms = user?.module_permissions;
             if (!perms) return false;
-            
-            // Backward compatibility: if checking for 'candidates', also check 'patients'
+
             if (item.permissionKey === "candidates") {
               return !!perms.candidates || !!perms.patients;
             }
-            
+
             return !!perms[item.permissionKey];
           });
           if (visibleItems.length === 0) return null;

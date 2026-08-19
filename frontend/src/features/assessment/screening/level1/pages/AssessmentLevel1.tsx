@@ -24,7 +24,6 @@ import { globalAudioPlayer } from "@/lib/audioPlayer";
 import { useAuthStore } from "@/store/useAuthStore";
 import { getDashboardRoute } from "@/lib/routeUtils";
 
-// Phase mapping
 type Phase = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 interface PhaseConfig {
@@ -175,7 +174,6 @@ const AssessmentLevel1: React.FC = () => {
     return () => setTopbarBackOverride(null);
   }, [qIndex, phase, setTopbarBackOverride]);
 
-  // Auto-submit countdown when time expires on timed modules or games complete
   useEffect(() => {
     if (!isConfirmingSubmit) return;
     if (!isTimeUp && phase !== 5 && phase !== 6) return;
@@ -201,7 +199,6 @@ const AssessmentLevel1: React.FC = () => {
     }
   };
 
-  // Stop any playing audio when the component unmounts
   useEffect(() => {
     return () => {
       globalAudioPlayer.stop();
@@ -222,7 +219,7 @@ const AssessmentLevel1: React.FC = () => {
         console.error("Failed to init assessment", err);
         if (err.response?.status === 402) {
           toast.error("Insufficient wallet balance to start screening assessment. Please recharge.");
-          navigate(-1); // Go back to intake
+          navigate(-1);
         } else {
           toast.error("Failed to initialize the assessment environment.");
         }
@@ -253,7 +250,7 @@ const AssessmentLevel1: React.FC = () => {
         speakText(`phase_${phase}`);
       }
     } else {
-      // Nothing needed here since audio instances complete naturally
+
     }
   }, [showInstructions, phase, isIntermission]);
 
@@ -271,7 +268,7 @@ const AssessmentLevel1: React.FC = () => {
   const startIntermission = () => {
     setIsIntermission(true);
     setCountdown(10);
-    // Removed random phrase read aloud per user request
+
   };
 
   const getQuestionList = (): Question[] => {
@@ -314,7 +311,7 @@ const AssessmentLevel1: React.FC = () => {
     setSelectedScore(score);
     setTimeout(() => {
       const q = currentQList[qIndex];
-      // Update responses: replace if exists, otherwise append
+
       setResponses(prev => {
         const existingIndex = prev.findIndex(r => r.question_id === q.id);
         if (existingIndex >= 0) {
@@ -329,7 +326,7 @@ const AssessmentLevel1: React.FC = () => {
       if (qIndex < currentQList.length - 1) {
         setQIndex(qIndex + 1);
       } else {
-        // Show confirmation dialog before going to intermission
+
         setPendingSubmitAction(() => () => {
           setQIndex(0);
           startIntermission();
@@ -339,10 +336,9 @@ const AssessmentLevel1: React.FC = () => {
     }, 400);
   };
 
-
   const handleGameComplete = async (metrics: GameMetrics) => {
     const timeUp = !!metrics.timeExpired;
-    // Show confirmation dialog before completing game
+
     setPendingSubmitAction(() => async () => {
       if (metrics.story_assessments) {
         setStoryAssessments(metrics.story_assessments);
@@ -400,7 +396,6 @@ const AssessmentLevel1: React.FC = () => {
     const progress = (qIndex / totalQuestions) * 100;
     const isOverallIndicator = !!q.note;
 
-    // Find if already answered
     const existingResponse = responses.find(r => r.question_id === q.id);
     const activeScore = selectedScore !== null ? selectedScore : existingResponse?.score;
 
@@ -529,12 +524,12 @@ const AssessmentLevel1: React.FC = () => {
         <div className="bg-card p-8 rounded-2xl shadow-sm border border-border text-lg text-card-foreground leading-relaxed max-w-2xl">
           {info.text}
         </div>
-        
+
         {phase === 1 && (
           <div className="mt-8 max-w-2xl bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-start gap-3 text-left">
-            <input 
-              type="checkbox" 
-              id="disclaimer" 
+            <input
+              type="checkbox"
+              id="disclaimer"
               checked={disclaimerAccepted}
               onChange={(e) => setDisclaimerAccepted(e.target.checked)}
               className="mt-1 w-5 h-5 text-primary border-amber-300 rounded focus:ring-primary"
@@ -546,12 +541,12 @@ const AssessmentLevel1: React.FC = () => {
         )}
 
         <div className="mt-10 flex gap-4">
-          <button 
+          <button
             onClick={() => setShowInstructions(false)}
             disabled={phase === 1 && !disclaimerAccepted}
-            className={`px-8 py-3 rounded-full font-bold text-lg flex items-center gap-2 transition-all 
-              ${phase === 1 && !disclaimerAccepted 
-                ? 'bg-muted text-muted-foreground cursor-not-allowed' 
+            className={`px-8 py-3 rounded-full font-bold text-lg flex items-center gap-2 transition-all
+              ${phase === 1 && !disclaimerAccepted
+                ? 'bg-muted text-muted-foreground cursor-not-allowed'
                 : 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30 hover:scale-105 active:scale-95'}`}
           >
             Start Module <ArrowRight size={20} />
@@ -587,8 +582,8 @@ const AssessmentLevel1: React.FC = () => {
             You can safely navigate to the dashboard while the report generates in the background.
           </p>
           <div className="pt-6">
-            <button 
-              onClick={() => navigate(getDashboardRoute(user?.role))} 
+            <button
+              onClick={() => navigate(getDashboardRoute(user?.role))}
               className="px-6 py-2.5 bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-md font-medium transition-colors text-sm shadow-sm"
             >
               Go to Dashboard
@@ -610,7 +605,6 @@ const AssessmentLevel1: React.FC = () => {
         </div>
       )}
 
-      {/* Confirmation Dialog */}
       <AlertDialog open={isConfirmingSubmit} onOpenChange={(open) => {
         if (!open && (isTimeUp || phase >= 5)) return;
         setIsConfirmingSubmit(open);

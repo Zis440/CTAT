@@ -9,28 +9,18 @@ from app.services.email_service import email_service
 
 logger = logging.getLogger(__name__)
 
-# ── SLA Tiers ─────────────────────────────────────────────────────────────────
-# Attempt 1: 15 hours
-# Attempt 2: 6 hours
-# Attempt 3: 3 hours
-# After 3 failed attempts → ESCALATED (admin notified)
-
 SLA_HOURS_BY_ATTEMPT = {1: 15, 2: 6, 3: 3}
 MAX_ASSIGNMENT_ATTEMPTS = 3
 
-
 def calculate_psychologist_score(psychologist: User) -> float:
     """Calculate a composite score based on rating and experience."""
-    rating = psychologist.rating or 3.0  # Default average rating
-    experience = psychologist.experience_years or 1  # Default 1 year
-    
-    # Simple weighted formula: rating (max 5) is scaled, experience is capped around 20 for scoring
+    rating = psychologist.rating or 3.0
+    experience = psychologist.experience_years or 1
+
     score = (rating * 10) + min(experience, 20)
-    
-    # Introduce up to 15% random jitter to distribute load among similarly-ranked psychologists
+
     jitter = random.uniform(0.85, 1.15)
     return score * jitter
-
 
 def _get_eligible_validators(db: Session, exclude_id: str = None) -> list[User]:
     """
@@ -55,7 +45,6 @@ def _get_eligible_validators(db: Session, exclude_id: str = None) -> list[User]:
 
     return candidates
 
-
 def assign_verification_request(db: Session, request_id: str = None, session_id: str = None) -> VerificationRequest:
     """
     Assigns or re-assigns a VerificationRequest to the best available
@@ -68,7 +57,7 @@ def assign_verification_request(db: Session, request_id: str = None, session_id:
     if request_id:
         v_req = db.query(VerificationRequest).filter(VerificationRequest.id == request_id).first()
     else:
-        # Check if one already exists for this session
+
         v_req = db.query(VerificationRequest).filter(
             VerificationRequest.session_id == session_id,
             VerificationRequest.status.in_([
@@ -87,7 +76,6 @@ def assign_verification_request(db: Session, request_id: str = None, session_id:
         db.commit()
         db.refresh(v_req)
 
-    # Don't re-assign if it's already verified, rejected, or escalated
     if v_req.status in [
         VerificationRequestStatus.VERIFIED,
         VerificationRequestStatus.REJECTED,
@@ -95,23 +83,20 @@ def assign_verification_request(db: Session, request_id: str = None, session_id:
     ]:
         return v_req
 
-    # Check if max attempts exceeded → escalate
     if v_req.assignment_attempts >= MAX_ASSIGNMENT_ATTEMPTS:
         v_req.status = VerificationRequestStatus.ESCALATED
         db.commit()
         db.refresh(v_req)
         logger.warning(f"VerificationRequest {v_req.id} ESCALATED after {MAX_ASSIGNMENT_ATTEMPTS} failed attempts.")
-        # TODO: Send admin/org/clinic notification
+
         try:
             email_service.send_escalation_notification(v_req.id, v_req.session_id)
         except Exception as e:
             logger.error(f"Failed to send escalation notification: {e}")
         return v_req
 
-    # Find eligible validators (strict filter)
     candidates = _get_eligible_validators(db, exclude_id=v_req.assigned_psychologist_id)
 
-    # If we filtered out everyone, fall back to include the current assignee
     if not candidates:
         candidates = _get_eligible_validators(db)
 
@@ -119,24 +104,21 @@ def assign_verification_request(db: Session, request_id: str = None, session_id:
         logger.error("No eligible Psyichub Verified Clinical Psychologists found for assignment.")
         return v_req
 
-    # Sort candidates by their computed score
     candidates.sort(key=calculate_psychologist_score, reverse=True)
     selected_psychologist = candidates[0]
 
-    # Assign
     v_req.assigned_psychologist_id = selected_psychologist.id
     v_req.status = VerificationRequestStatus.ASSIGNED
     v_req.assigned_at = datetime.now(timezone.utc)
     v_req.assignment_attempts += 1
-    
-    # Sync with Session record
+
     if v_req.session_id.startswith("SCR_"):
         from app.assessments.screening.level1.models import ScreeningLevel1Session, ScreeningReport
         scr_report = db.query(ScreeningReport).filter(ScreeningReport.assessment_id == v_req.session_id).first()
         if scr_report:
             scr_report.verified_by_id = selected_psychologist.id
             scr_report.status = "Assigned"
-            
+
         assess_session = db.query(ScreeningLevel1Session).filter(ScreeningLevel1Session.id == v_req.session_id).first()
         if assess_session:
             from app.models.patient import Patient
@@ -152,8 +134,7 @@ def assign_verification_request(db: Session, request_id: str = None, session_id:
 
     db.commit()
     db.refresh(v_req)
-    
-    # Trigger Email
+
     psychologist_name = f"{selected_psychologist.first_name} {selected_psychologist.last_name or ''}".strip()
     sla_hours = SLA_HOURS_BY_ATTEMPT.get(v_req.assignment_attempts, 3)
     try:
@@ -172,7 +153,6 @@ def assign_verification_request(db: Session, request_id: str = None, session_id:
     )
     return v_req
 
-
 def process_expired_requests(db: Session):
     """
     Checks for VerificationRequests that have been ASSIGNED and exceeded their SLA.
@@ -183,31 +163,29 @@ def process_expired_requests(db: Session):
     After attempt 3 expires → ESCALATED.
     """
     now = datetime.now(timezone.utc)
-    
+
     assigned_requests = db.query(VerificationRequest).filter(
         VerificationRequest.status == VerificationRequestStatus.ASSIGNED
     ).all()
-    
+
     count = 0
     for req in assigned_requests:
         if not req.assigned_at:
             continue
-            
-        # Determine the SLA based on assignment attempts
+
         sla_hours = SLA_HOURS_BY_ATTEMPT.get(req.assignment_attempts, 3)
-            
+
         cutoff_time = req.assigned_at + timedelta(hours=sla_hours)
-        
+
         if now > cutoff_time:
             logger.info(f"VerificationRequest {req.id} expired ({sla_hours}h limit, attempt #{req.assignment_attempts}). Reassigning...")
             req.status = VerificationRequestStatus.EXPIRED
             db.commit()
-            # Re-assign (will escalate if max attempts reached)
+
             assign_verification_request(db, request_id=req.id)
             count += 1
-            
-    return count
 
+    return count
 
 def process_pending_requests(db: Session) -> int:
     """Assign any VerificationRequests that are in PENDING status."""

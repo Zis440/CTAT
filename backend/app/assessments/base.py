@@ -1,8 +1,6 @@
-# app/assessments/base.py
 
 from abc import ABC, abstractmethod
 from typing import Any
-
 
 class BaseAssessment(ABC):
     """

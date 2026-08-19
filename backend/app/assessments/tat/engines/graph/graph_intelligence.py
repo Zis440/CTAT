@@ -1,6 +1,3 @@
-# ============================================================================
-# PSYCHOLOGICAL GRAPH INTELLIGENCE ENGINE
-# ============================================================================
 
 import networkx as nx
 
@@ -65,20 +62,18 @@ def analyze_psychological_graph(knowledge_graph):
 
     isolated = list(nx.isolates(graph))
     if isolated and centrality:
-        # Auto-connect isolated nodes to the most central node
+
         anchor = max(centrality, key=centrality.get)
         for iso_node in isolated:
             graph.add_edge(iso_node, anchor, relation="weak_link", weight=0.1)
         print(f"\n🔗 Connected {len(isolated)} orphan node(s) → {anchor}")
-    results["anomalies"] = list(nx.isolates(graph))  # should be empty now
+    results["anomalies"] = list(nx.isolates(graph))
 
-    # --- PRODUCTION HARDENING: Graph Sparsity Balancing (§7) ---
     _balance_graph_sparsity(graph)
     results["graph_sparsity_score"] = round(nx.density(graph), 4)
 
     print("\n" + "="*80 + "\n")
     return results
-
 
 def _balance_graph_sparsity(graph):
     """
@@ -87,19 +82,17 @@ def _balance_graph_sparsity(graph):
     Preserves all nodes and maintains centrality integrity.
     """
     density = nx.density(graph)
-    
-    # Prune ultra-weak edges if too dense
+
     if density > 0.4:
         edges_to_remove = [
             (u, v) for u, v, d in graph.edges(data=True)
             if d.get('weight', 1.0) < 0.05
         ]
         for u, v in edges_to_remove:
-            # Only remove if both nodes have degree > 1 (preserve connectivity)
+
             if graph.degree(u) > 1 and graph.degree(v) > 1:
                 graph.remove_edge(u, v)
-    
-    # Add weak connections if too sparse
+
     elif density < 0.05 and graph.number_of_nodes() > 2:
         nodes = list(graph.nodes())
         centrality = nx.degree_centrality(graph)

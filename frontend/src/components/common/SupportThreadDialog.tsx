@@ -49,7 +49,7 @@ export function SupportThreadDialog({
     mutationFn: () => replyToTicket(ticket!.id, message, file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["support-messages", ticket?.id] });
-      // Invalidate tickets to update the unread status/updated_at if we add that later
+
       queryClient.invalidateQueries({ queryKey: ["support-tickets"] });
       queryClient.invalidateQueries({ queryKey: ["admin-support-tickets"] });
       setMessage("");
@@ -74,7 +74,7 @@ export function SupportThreadDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl h-[85vh] flex flex-col p-0 overflow-hidden bg-background border-primary/20">
-        {/* Header */}
+
         <DialogHeader className="px-6 py-4 border-b border-border/50 shrink-0 bg-background/95 backdrop-blur-sm z-10">
           <div className="flex items-center justify-between pr-6">
             <DialogTitle className="text-xl font-bold truncate pr-4">
@@ -99,10 +99,9 @@ export function SupportThreadDialog({
           )}
         </DialogHeader>
 
-        {/* Chat Thread */}
         <ScrollArea className="flex-1 p-6 bg-muted/20">
           <div className="space-y-6 max-w-full">
-            {/* Original ticket message is technically not a SupportMessage row, but we can show it as the first bubble */}
+
             <div className="flex flex-col items-start max-w-[85%]">
               <div className="flex items-center gap-2 mb-1">
                 <Avatar className="h-6 w-6 border border-border shrink-0">
@@ -183,7 +182,6 @@ export function SupportThreadDialog({
           </div>
         </ScrollArea>
 
-        {/* Input Area */}
         <div className="p-4 bg-background border-t border-border/50 shrink-0">
           {isClosed ? (
             <div className="text-center p-3 text-sm text-muted-foreground bg-muted/50 rounded-xl border border-border/50">

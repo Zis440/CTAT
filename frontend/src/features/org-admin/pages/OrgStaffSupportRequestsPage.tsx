@@ -78,7 +78,6 @@ export function OrgStaffSupportRequestsPage() {
     queryFn: getClinicStaffTickets,
   });
 
-  // Filter & Search Tickets
   const filteredTickets = tickets?.filter((ticket) => {
     const matchesSearch =
       ticket.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -102,7 +101,7 @@ export function OrgStaffSupportRequestsPage() {
       </Helmet>
 
       <div className="mx-auto max-w-6xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        {/* Header */}
+
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -130,7 +129,6 @@ export function OrgStaffSupportRequestsPage() {
           )}
         </div>
 
-        {/* Main Card with Filters + Table */}
         <Card className="border-primary/10 bg-background/50 backdrop-blur-sm relative overflow-hidden pb-0">
           <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
           {isSelectionMode ? (
@@ -362,7 +360,6 @@ export function OrgStaffSupportRequestsPage() {
           </CardContent>
         </Card>
 
-        {/* Pagination */}
         {totalPages >= 0 && !isLoading && !error && (
           <div className="pt-6 pb-10 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-xs text-muted-foreground w-full sm:w-auto text-center sm:text-left">

@@ -1,6 +1,4 @@
-// src/components/auth/RoleGuard.tsx
-// Renders children only if current user has one of the allowed roles.
-// Use for conditional UI inside components (not for routing).
+
 import { useCurrentUser } from '@/store/useAuthStore';
 import type { UserRole } from '@/types/auth';
 

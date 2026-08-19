@@ -40,7 +40,7 @@ export function ClinicDashboardPage() {
     if (user?.role === "org_admin") return "/org";
     if (user?.role === "org_staff") return "/org-staff";
     if (user?.role === "clinic_staff") return "/clinic-staff";
-    return "/clinic"; // default for clinic_admin
+    return "/clinic";
   };
   const basePath = getBasePath();
 
@@ -88,7 +88,6 @@ export function ClinicDashboardPage() {
         <title>Dashboard  | PsyicHub - Psychological Intelligence</title>
       </Helmet>
 
-      {/* Header section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight">
@@ -105,7 +104,6 @@ export function ClinicDashboardPage() {
         </div>
       </div>
 
-      {/* KPI Metrics */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <BorderGlow className="hover:border-primary/30 transition-colors h-full">
           <Card className="border-0 bg-transparent shadow-none w-full h-full">
@@ -162,7 +160,6 @@ export function ClinicDashboardPage() {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
 
-        {/* Patient Growth */}
         <Card className="col-span-1 lg:col-span-4 border-primary/10 bg-background/50 backdrop-blur-sm flex flex-col h-full overflow-hidden relative">
           <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
           <CardHeader className="pb-3">
@@ -225,7 +222,6 @@ export function ClinicDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Assessment Uses Donut */}
         <Card className="col-span-1 lg:col-span-3 border-primary/10 bg-background/50 backdrop-blur-sm flex flex-col h-full overflow-hidden relative">
           <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-secondary/40 via-secondary/20 to-transparent" />
           <CardHeader className="pb-3">
@@ -275,7 +271,7 @@ export function ClinicDashboardPage() {
       </div>
 
       <div className={cn("grid gap-6 md:grid-cols-2", isOrg ? "lg:grid-cols-1" : "lg:grid-cols-2")}>
-        {/* Upcoming Appointments */}
+
         {!isOrg && (
           <Card className="border-primary/10 bg-background/50 backdrop-blur-sm flex flex-col h-full relative overflow-hidden">
             <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-destructive/40 via-destructive/20 to-transparent" />
@@ -317,7 +313,6 @@ export function ClinicDashboardPage() {
           </Card>
         )}
 
-        {/* Latest Credit Log */}
         <Card className="border-primary/10 bg-background/50 backdrop-blur-sm flex flex-col h-full relative overflow-hidden">
           <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500/40 via-blue-500/20 to-transparent" />
           <CardHeader className="pb-3">
@@ -362,7 +357,6 @@ export function ClinicDashboardPage() {
         </Card>
       </div>
 
-      {/* Org-specific Assessments Hub */}
       {isOrg && (
         <>
           <OrgAssessmentRequests />

@@ -11,9 +11,7 @@ from app.services.audio_transcriber import AudioTranscriber
 
 router = APIRouter(prefix="/api/audio", tags=["audio"])
 
-# Singleton transcriber instance (model loaded on first use)
 _transcriber = AudioTranscriber(preferred_backend="auto")
-
 
 @router.post("/transcribe")
 async def transcribe_audio(
@@ -28,11 +26,11 @@ async def transcribe_audio(
     to ensure accurate detection — especially for Hindi vs Urdu
     and Bengali vs other Indic languages.
     """
-    # Validate language if provided
+
     allowed_languages = {"en", "hi", "bn"}
     resolved_language = language.strip().lower() if language else None
     if resolved_language and resolved_language not in allowed_languages:
-        resolved_language = None  # fallback to auto if unknown
+        resolved_language = None
 
     try:
         if not _transcriber.is_available():
@@ -60,7 +58,6 @@ async def transcribe_audio(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
-
 
 @router.get("/transcriber-status")
 async def transcriber_status():

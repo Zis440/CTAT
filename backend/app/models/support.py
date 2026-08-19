@@ -24,7 +24,6 @@ class SupportTicket(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-
 class SupportMessage(Base):
     __tablename__ = "support_messages"
 

@@ -1,4 +1,4 @@
-// src/app/providers.tsx
+
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { RouterProvider } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -8,13 +8,9 @@ import { HelmetProvider } from "react-helmet-async";
 import { router } from "./router";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-// PWA components
 import { PWAUpdatePrompt } from "./pwa";
 import { PWAInstallButton } from "./pwa";
 
-// ────────────────────────────────────
-// 1. Theme provider (local definition)
-// ────────────────────────────────────
 type Theme = "dark" | "light" | "system";
 
 type ThemeProviderProps = {
@@ -59,7 +55,7 @@ export function ThemeProvider({
       const systemTheme = isSystemDark ? "dark" : "light";
       root.classList.add(systemTheme);
       setResolvedTheme(systemTheme);
-      
+
       const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
       const handleChange = (e: MediaQueryListEvent) => {
         if (theme === "system") {
@@ -106,9 +102,6 @@ export const useTheme = () => {
   return context;
 };
 
-// ────────────────────────────────────
-// 2. Query client + App shell
-// ────────────────────────────────────
 const queryClient = new QueryClient();
 
 function App() {

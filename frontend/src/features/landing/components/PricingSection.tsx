@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 
 export function Pricing() {
-    // CHANGED: Updated prices — Individual Test → ₹30, Clinical → ₹20
+
     const plans = [
         {
             name: "Individual Test",

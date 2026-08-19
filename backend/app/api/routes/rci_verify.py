@@ -19,8 +19,6 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["verification"])
 
-# ── Helper Functions ──────────────────────────────────────────────────────────
-
 def _normalize_phone(phone: str) -> str:
     """Strip a phone number to just digits, last 10."""
     digits = "".join(c for c in phone if c.isdigit())
@@ -41,8 +39,6 @@ def _fuzzy_address_match(user_addr: str | None, rci_addr: str | None) -> bool:
     min_len = min(len(user_words), len(rci_words))
     return len(overlap) / min_len >= 0.4
 
-# ── Request / Response Schemas ────────────────────────────────────────────────
-
 class RCIVerifyRequest(BaseModel):
     rci_number: str
     user_name: str | None = None
@@ -57,31 +53,26 @@ class RCIVerifyRequest(BaseModel):
             raise ValueError("RCI number must be in format A followed by 5 to 6 digits (e.g. A123456)")
         return v
 
-
 class RCIVerifyResponse(BaseModel):
     verified: bool
     practitioner_name: str | None = None
     address: str | None = None
     phone: str | None = None
-    
+
     name_match: bool | None = None
     phone_match: bool | None = None
     address_match: bool | None = None
 
     message: str | None = None
 
-
-# ── Endpoint ──────────────────────────────────────────────────────────────────
-
 RCI_SEARCH_URL = "https://rciregistration.nic.in/rehabcouncil/Newsearchlist_c.jsp"
-REQUEST_TIMEOUT = 10  # seconds
+REQUEST_TIMEOUT = 10
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     "Content-Type": "application/x-www-form-urlencoded",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
 }
-
 
 @router.post("/verify-rci", response_model=RCIVerifyResponse)
 def verify_rci_number(req: RCIVerifyRequest):
@@ -117,7 +108,6 @@ def verify_rci_number(req: RCIVerifyRequest):
             message="Unable to connect to the RCI verification service. Please try again later.",
         )
 
-    # Parse the HTML response
     try:
         soup = BeautifulSoup(response.text, "html.parser")
 
@@ -130,33 +120,32 @@ def verify_rci_number(req: RCIVerifyRequest):
                 if len(cells) >= 2:
                     row_text_raw = " ".join(cell.get_text(separator=" ", strip=True) for cell in cells)
                     row_text = re.sub(r'\s+', ' ', row_text_raw)
-                    
+
                     if req.rci_number in row_text:
                         practitioner_name = None
-                        
-                        # Cross-check logic
+
                         name_match = None
                         phone_match = None
                         address_match = None
-                        
+
                         if req.user_name:
                             name_words = set(req.user_name.lower().split())
                             row_words = set(row_text.lower().split())
                             overlap = name_words & row_words
-                            # Consider name matched if at least 50% of the words are in the row text
+
                             name_match = len(overlap) / len(name_words) >= 0.5 if name_words else False
-                        
+
                         if req.user_phone:
                             norm_phone = _normalize_phone(req.user_phone)
                             phone_match = norm_phone in row_text if norm_phone else False
-                            
+
                         if req.user_address:
                             address_match = _fuzzy_address_match(req.user_address, row_text)
 
                         for cell in cells:
                             header = cell.get("data-table-header", "")
                             text = cell.get_text(strip=True)
-                            
+
                             if "name" in header.lower() or (
                                 text
                                 and text != req.rci_number
@@ -173,7 +162,7 @@ def verify_rci_number(req: RCIVerifyRequest):
                                     practitioner_name = f"Name: {parts[0].title()}"
                                 else:
                                     practitioner_name = text.title()
-                                    
+
                                 return RCIVerifyResponse(
                                     verified=True,
                                     practitioner_name=practitioner_name,
@@ -208,4 +197,3 @@ def verify_rci_number(req: RCIVerifyRequest):
             verified=False,
             message="Failed to parse the RCI verification response. Please try again later.",
         )
-

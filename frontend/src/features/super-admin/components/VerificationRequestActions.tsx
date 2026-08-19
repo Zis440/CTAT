@@ -43,10 +43,10 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
-import { 
-  reassignVerificationRequest, 
-  cancelVerificationRequest, 
-  getEligiblePsychologists 
+import {
+  reassignVerificationRequest,
+  cancelVerificationRequest,
+  getEligiblePsychologists
 } from "@/services/psychologistVerificationService";
 import type { VerificationRequestItem } from "@/services/psychologistVerificationService";
 
@@ -78,7 +78,7 @@ export function VerificationRequestActions({ request }: Props) {
   const { data: psychologists, isLoading: loadingPsychologists } = useQuery({
     queryKey: ["admin-eligible-psychologists"],
     queryFn: getEligiblePsychologists,
-    enabled: reassignOpen, // Only fetch when dialog is open
+    enabled: reassignOpen,
   });
 
   const reassignMutation = useMutation({
@@ -134,7 +134,7 @@ export function VerificationRequestActions({ request }: Props) {
           </SheetHeader>
 
           <div className="space-y-6">
-            {/* Status & Identifiers */}
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Request ID</p>
@@ -150,12 +150,11 @@ export function VerificationRequestActions({ request }: Props) {
 
             <Separator />
 
-            {/* Target Entities */}
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                 <UserIcon className="h-4 w-4 text-muted-foreground" /> Associated Entities
               </h3>
-              
+
               <div className="grid grid-cols-2 gap-4 bg-muted/20 p-3 rounded-lg border border-border/50">
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">Patient/Candidate</p>
@@ -184,7 +183,6 @@ export function VerificationRequestActions({ request }: Props) {
 
             <Separator />
 
-            {/* Timelines */}
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                 <CalendarIcon className="h-4 w-4 text-muted-foreground" /> Timelines
@@ -209,7 +207,6 @@ export function VerificationRequestActions({ request }: Props) {
               </div>
             </div>
 
-            {/* Report Attachment */}
             {request.report_pdf_path && (
               <>
                 <Separator />
@@ -225,23 +222,22 @@ export function VerificationRequestActions({ request }: Props) {
               </>
             )}
 
-            {/* Admin Actions */}
             {!isCompleted && (
               <>
                 <Separator />
                 <div className="space-y-3">
                   <h3 className="text-sm font-semibold text-foreground">Management Actions</h3>
                   <div className="flex flex-col gap-2">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="w-full justify-start border-primary/20 hover:bg-primary/5"
                       onClick={() => setReassignOpen(true)}
                     >
                       <UserCog className="mr-2 h-4 w-4 text-primary" />
                       Reassign Request
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="w-full justify-start text-destructive border-destructive/20 hover:bg-destructive/5 hover:text-destructive"
                       onClick={() => setCancelOpen(true)}
                     >
@@ -256,7 +252,6 @@ export function VerificationRequestActions({ request }: Props) {
         </SheetContent>
       </Sheet>
 
-      {/* Reassign Dialog */}
       <Dialog open={reassignOpen} onOpenChange={setReassignOpen}>
         <DialogContent>
           <DialogHeader>
@@ -265,12 +260,12 @@ export function VerificationRequestActions({ request }: Props) {
               You can manually assign this request to a specific RCI psychologist, or re-run the algorithm to automatically pick the best available one.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Select Psychologist</Label>
-              <Select 
-                value={selectedPsychologistId} 
+              <Select
+                value={selectedPsychologistId}
                 onValueChange={setSelectedPsychologistId}
                 disabled={loadingPsychologists}
               >
@@ -301,8 +296,8 @@ export function VerificationRequestActions({ request }: Props) {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setReassignOpen(false)}>Close</Button>
-            <Button 
-              onClick={() => reassignMutation.mutate()} 
+            <Button
+              onClick={() => reassignMutation.mutate()}
               disabled={reassignMutation.isPending}
             >
               {reassignMutation.isPending ? "Assigning..." : "Confirm Assignment"}
@@ -311,7 +306,6 @@ export function VerificationRequestActions({ request }: Props) {
         </DialogContent>
       </Dialog>
 
-      {/* Cancel Alert Dialog */}
       <AlertDialog open={cancelOpen} onOpenChange={setCancelOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -320,14 +314,14 @@ export function VerificationRequestActions({ request }: Props) {
               Cancel Verification Request
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to cancel this verification request? 
+              Are you sure you want to cancel this verification request?
               <br/><br/>
               <strong>₹100 will be automatically refunded</strong> to the wallet of the user who requested this verification. The session status will be updated to "Cancelled". This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Keep Request</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={(e) => { e.preventDefault(); cancelMutation.mutate(); }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={cancelMutation.isPending}

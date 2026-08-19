@@ -120,7 +120,7 @@ export function ClinicOrgProfilePage() {
 
       <Card className="border-0 shadow-xl overflow-hidden bg-background/60 backdrop-blur-md rounded-2xl relative pt-0 gap-0">
         <div className="w-full flex justify-center pt-10 pb-6 bg-gradient-to-br from-primary/10 via-background to-primary/5">
-          {/* Profile Logo Avatar */}
+
           <div className="relative group/logo">
             <div className="h-32 w-32 rounded-2xl border-4 border-background bg-card shadow-xl overflow-hidden flex items-center justify-center">
               {profile?.logo_url ? (
@@ -130,7 +130,6 @@ export function ClinicOrgProfilePage() {
               )}
             </div>
 
-            {/* Logo Overlay & Upload Button */}
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/logo:opacity-100 transition-opacity duration-300 rounded-2xl flex items-center justify-center cursor-pointer"
               onClick={() => fileInputLogoRef.current?.click()}>
               <input

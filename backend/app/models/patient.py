@@ -17,32 +17,28 @@ from sqlalchemy.sql import func
 from app.database import Base
 from app.utils.id_generator import generate_id
 
-
 class Patient(Base):
     __tablename__ = "patients"
 
     id = Column(String, primary_key=True, default=lambda: generate_id("PAT"))
     user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
 
-    # Clinic visibility — if set, all staff in this clinic can see the patient
     clinic_id = Column(String, nullable=True, index=True)
 
-    patient_type = Column(String, nullable=False, default="new")  # "new", "existing", "anonymous"
+    patient_type = Column(String, nullable=False, default="new")
     first_name = Column(String, default="Anonymous")
     last_name = Column(String, nullable=True)
     email = Column(String, nullable=True)
     phone_number = Column(String, nullable=True)
     date_of_birth = Column(Date, nullable=True)
-    age = Column(Integer, nullable=True)           # legacy; auto-computed from date_of_birth
+    age = Column(Integer, nullable=True)
     gender = Column(String, nullable=True)
     gender_confidence = Column(Float, nullable=True)
     consent_given = Column(Boolean, default=False)
 
-    # Socio-cultural context
-    background = Column(Text, nullable=True)   # socio-cultural background
-    environment = Column(Text, nullable=True)  # living situation, support system
-    
-    # Advanced Context Fields
+    background = Column(Text, nullable=True)
+    environment = Column(Text, nullable=True)
+
     living_condition = Column(String, nullable=True)
     family_structure = Column(String, nullable=True)
     residence_type = Column(String, nullable=True)
@@ -53,12 +49,10 @@ class Patient(Base):
 
     notes = Column(Text, default="")
 
-    # Session tracking
     total_sessions = Column(Integer, default=0)
     first_session_date = Column(DateTime(timezone=True), server_default=func.now())
     last_session_date = Column(DateTime(timezone=True), nullable=True)
 
-    # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -82,7 +76,6 @@ class Patient(Base):
         name_str = f"{self.first_name} {self.last_name}" if self.last_name else self.first_name
         return f"<Patient {self.id} ({name_str})>"
 
-
 class Session(Base):
     """
     Metadata record for a TAT analysis session.
@@ -97,15 +90,12 @@ class Session(Base):
     user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
     patient_id = Column(String, ForeignKey("patients.id"), nullable=False, index=True)
 
-    # File references (relative to DATA_STORE_DIR)
-    session_data_path = Column(String, nullable=False)   # e.g. "sessions/<user_id>/<file>.json"
-    pdf_filename = Column(String, nullable=True)          # e.g. "reports/<user_id>/<file>.pdf"
+    session_data_path = Column(String, nullable=False)
+    pdf_filename = Column(String, nullable=True)
 
-    # Quick-access metadata
-    cards_examined = Column(String, nullable=True)        # comma-separated card IDs
-    patient_name = Column(String, nullable=True)          # denormalized for listing
+    cards_examined = Column(String, nullable=True)
+    patient_name = Column(String, nullable=True)
 
-    # Validation
     validation_status = Column(String, default="Draft")
     validator_name = Column(String, nullable=True)
     validator_license = Column(String, nullable=True)
@@ -113,7 +103,6 @@ class Session(Base):
     validation_notes = Column(Text, nullable=True)
     assigned_psychologist_id = Column(String, ForeignKey("users.id"), nullable=True)
 
-    # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     def __repr__(self) -> str:

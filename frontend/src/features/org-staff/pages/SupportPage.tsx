@@ -62,7 +62,7 @@ export function SupportPage() {
   const filteredTickets = useMemo(() => {
     if (!tickets) return [];
     return tickets.filter((ticket) => {
-      const matchesSearch = ticket.subject.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      const matchesSearch = ticket.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             ticket.message.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesFilter = filter === "all" || ticket.status === filter;
       return matchesSearch && matchesFilter;
@@ -173,11 +173,11 @@ export function SupportPage() {
                       Manage and track your support history.
                     </CardDescription>
                   </div>
-                  
+
                   <div className="relative max-w-xs w-full">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      placeholder="Search tickets..." 
+                    <Input
+                      placeholder="Search tickets..."
                       className="pl-9 bg-background/50 border-primary/20 focus:border-primary/50 transition-all rounded-full h-10"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
@@ -185,7 +185,7 @@ export function SupportPage() {
                   </div>
                 </div>
               </CardHeader>
-              
+
               <CardContent className="flex-1 flex flex-col p-0">
                 <Tabs value={filter} onValueChange={(v) => setFilter(v as any)} className="w-full flex flex-col h-full">
                   <div className="px-6 pt-5">
@@ -195,7 +195,7 @@ export function SupportPage() {
                       <TabsTrigger value="closed" className="rounded-full data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all font-semibold">Closed</TabsTrigger>
                     </TabsList>
                   </div>
-                  
+
                   <div className="flex-1 p-6">
                     {isLoading ? (
                       <div className="h-full flex items-center justify-center min-h-[300px]">
@@ -208,13 +208,13 @@ export function SupportPage() {
                         </div>
                         <h3 className="text-xl font-bold text-text mb-2">No Tickets Found</h3>
                         <p className="text-sm text-text/50 max-w-[300px]">
-                          {searchQuery || filter !== "all" 
-                            ? "No tickets match your current filters." 
+                          {searchQuery || filter !== "all"
+                            ? "No tickets match your current filters."
                             : "You haven't submitted any support requests yet. We're here when you need us!"}
                         </p>
                         {(searchQuery || filter !== "all") && (
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             onClick={() => { setSearchQuery(""); setFilter("all"); }}
                             className="mt-4 text-primary hover:text-primary/80 font-semibold"
                           >
@@ -239,7 +239,7 @@ export function SupportPage() {
                               className="group p-5 rounded-2xl border border-border/40 bg-card hover:bg-accent/5 hover:border-primary/30 transition-all cursor-pointer shadow-sm hover:shadow-md relative overflow-hidden"
                             >
                               <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary/50 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                              
+
                               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-3">
                                 <div className="flex-1 min-w-0">
                                   <div className="flex flex-wrap items-center gap-3 mb-1">

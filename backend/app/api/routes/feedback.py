@@ -10,7 +10,6 @@ from app.schemas.analysis import FeedbackRequest
 
 router = APIRouter(prefix="/api/feedback", tags=["feedback"])
 
-
 @router.post("")
 async def submit_feedback(req: FeedbackRequest):
     """Record a clinician correction for active learning."""
@@ -25,7 +24,6 @@ async def submit_feedback(req: FeedbackRequest):
         return {"status": "recorded", "file": filename}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @router.get("")
 async def get_feedback(
@@ -44,7 +42,6 @@ async def get_feedback(
         return {"count": len(records), "records": records}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @router.get("/stats")
 async def feedback_stats():

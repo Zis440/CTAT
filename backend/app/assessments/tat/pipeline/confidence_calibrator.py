@@ -17,11 +17,10 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-
 class ConfidenceCalibrator:
     """Adjusts confidence based on historical prediction accuracy."""
 
-    MIN_RECORDS_FOR_CALIBRATION = 15  # need at least this many records
+    MIN_RECORDS_FOR_CALIBRATION = 15
 
     def __init__(self, feedback_store):
         self.feedback = feedback_store
@@ -41,9 +40,8 @@ class ConfidenceCalibrator:
 
         records = self.feedback.get_feedback(feedback_type=feedback_type)
         if len(records) < self.MIN_RECORDS_FOR_CALIBRATION:
-            return 1.0  # not enough data
+            return 1.0
 
-        # Compute agreement rate
         agreements = 0
         total = 0
         for r in records:
@@ -53,22 +51,20 @@ class ConfidenceCalibrator:
                 continue
             total += 1
 
-            # Check if clinician agreed with the system's top prediction
-            # This depends on feedback_type:
             if feedback_type in ("need_correction", "defense_correction"):
-                # Original should have a 'need' or 'defense' key
+
                 orig_val = original.get("need") or original.get("defense")
                 corr_val = corrected.get("need") or corrected.get("defense")
                 if orig_val and corr_val and orig_val == corr_val:
                     agreements += 1
             elif feedback_type == "score_override":
-                # For scores, check if difference < 10%
+
                 orig_score = original.get("score", 0)
                 corr_score = corrected.get("score", 0)
                 if abs(orig_score - corr_score) < 10:
                     agreements += 1
             else:
-                # Generic: check if original == corrected
+
                 if original == corrected:
                     agreements += 1
 

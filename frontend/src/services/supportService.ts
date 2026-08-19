@@ -69,7 +69,7 @@ export async function replyToTicket(ticketId: string, message: string, file?: Fi
   if (file) {
     formData.append("file", file);
   }
-  
+
   const response = await apiClient.post(`/support/${ticketId}/messages`, formData, {
     headers: {
       "Content-Type": "multipart/form-data",

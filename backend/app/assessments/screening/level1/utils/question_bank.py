@@ -1,5 +1,3 @@
-# Rephrased Questions Bank
-# All items rephrased to avoid copyright while keeping exact response scales and scoring logic.
 
 QUESTIONS = {
     "pss": {
@@ -84,7 +82,6 @@ QUESTIONS = {
         ]
     },
 }
-
 
 def get_all_questions():
     """Return the full question bank. Frontend uses this to render questionnaires."""

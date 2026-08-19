@@ -52,11 +52,9 @@ export function ClinicPatientsPage() {
   };
   const basePath = getBasePath();
 
-  // API Data state
   const [patientList, setPatientList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Form state
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
@@ -73,7 +71,6 @@ export function ClinicPatientsPage() {
   const [socioeconomicStatus, setSocioeconomicStatus] = useState("");
   const [clinicalNotes, setClinicalNotes] = useState("");
 
-  // Search & Filter state
   const [searchQuery, setSearchQuery] = useState("");
   const [genderFilter, setGenderFilter] = useState("all");
 
@@ -134,7 +131,6 @@ export function ClinicPatientsPage() {
       setIsAddOpen(false);
       loadPatients();
 
-      // Reset form
       setName("");
       setLastName("");
       setPhone("");
@@ -164,7 +160,6 @@ export function ClinicPatientsPage() {
       toast.error(err?.response?.data?.detail || "Failed to remove patient");
     }
   };
-
 
   return (
     <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -332,7 +327,6 @@ export function ClinicPatientsPage() {
           )}
         </div>
 
-
       </div>
 
       <Card className="border-primary/10 bg-background/50 backdrop-blur-sm relative overflow-hidden pb-0">
@@ -368,10 +362,10 @@ export function ClinicPatientsPage() {
             <div className="flex w-full max-w-sm items-center space-x-2">
               <div className="relative w-full">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  type="search" 
+                <Input
+                  type="search"
                   placeholder={`Search ${isOrg ? "candidates" : "patients"}...`}
-                  className="pl-8 bg-background/50" 
+                  className="pl-8 bg-background/50"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -473,17 +467,17 @@ export function ClinicPatientsPage() {
                   ));
                 }
                 const filtered = patientList.filter(patient => {
-                const matchesSearch = !searchQuery.trim() || 
+                const matchesSearch = !searchQuery.trim() ||
                   `${patient.first_name || ""} ${patient.last_name || ""}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
                   patient.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                   (patient.phone_number || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
                   (patient.email || "").toLowerCase().includes(searchQuery.toLowerCase());
-                
+
                 const matchesGender = genderFilter === "all" || (patient.gender && patient.gender.toLowerCase() === genderFilter.toLowerCase());
-                
+
                 return matchesSearch && matchesGender;
               });
-              
+
               if (filtered.length === 0) {
                 return (
                   <TableRow className="max-md:block">
@@ -495,7 +489,7 @@ export function ClinicPatientsPage() {
                   </TableRow>
                 );
               }
-              
+
               return filtered.map((patient) => {
                 const displayName = [patient.first_name, patient.last_name].filter(Boolean).join(" ") || patient.id;
                 return (
@@ -565,7 +559,7 @@ export function ClinicPatientsPage() {
           {(() => {
             if (isLoading) return "Loading...";
             const filtered = patientList.filter(p => {
-              const matchesSearch = !searchQuery.trim() || 
+              const matchesSearch = !searchQuery.trim() ||
                 `${p.first_name || ""} ${p.last_name || ""}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 p.id.toLowerCase().includes(searchQuery.toLowerCase());
               const matchesGender = genderFilter === "all" || (p.gender && p.gender.toLowerCase() === genderFilter.toLowerCase());
@@ -581,7 +575,7 @@ export function ClinicPatientsPage() {
         </p>
         {(() => {
             const filtered = patientList.filter(p => {
-              const matchesSearch = !searchQuery.trim() || 
+              const matchesSearch = !searchQuery.trim() ||
                 `${p.first_name || ""} ${p.last_name || ""}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 p.id.toLowerCase().includes(searchQuery.toLowerCase());
               const matchesGender = genderFilter === "all" || (p.gender && p.gender.toLowerCase() === genderFilter.toLowerCase());
@@ -624,4 +618,3 @@ export function ClinicPatientsPage() {
     </div>
   );
 }
-

@@ -33,7 +33,6 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/analysis", tags=["analysis"])
 
-
 @router.post("/analyze")
 def analyze_card_endpoint(
     req: AnalyzeCardRequest,
@@ -45,7 +44,7 @@ def analyze_card_endpoint(
     if current_user.role == UserRole.super_admin:
         raise HTTPException(status_code=403, detail="Super Admin accounts cannot perform assessments.")
     try:
-        # Load patient from the SQLAlchemy model via the request-scoped DB session
+
         patient = None
         try:
             db_patient = db.query(Patient).filter(Patient.id == req.patientId).first()
@@ -67,12 +66,9 @@ def analyze_card_endpoint(
         except Exception:
             pass
 
-        # Fallback to anonymous profile if not found
-
         if patient is None:
             patient = PatientProfile(patient_id=req.patientId, patient_type="anonymous")
 
-        # ── Audit logging ────────────────────────────────────────────────
         audit = get_audit_logger()
         audit_session_id = audit.start_session(
             patient_id=req.patientId,
@@ -108,12 +104,11 @@ def analyze_card_endpoint(
             defense_engine=engines.get('defense_engine'),
         )
 
-        # ── Log scores to audit trail ────────────────────────────────────
         try:
             scores = res.get('scores', res.get('quantitative_scores', {}))
             if isinstance(scores, dict):
                 for dim, score_val in scores.items():
-                    confidence = 0.5  # default heuristic confidence
+                    confidence = 0.5
                     if isinstance(score_val, dict):
                         confidence = score_val.get('confidence', 0.5)
                         score_val = score_val.get('score', score_val.get('value', 0))
@@ -139,7 +134,6 @@ def analyze_card_endpoint(
     except Exception as e:
         logger.error("analyze_card_endpoint failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
-
 
 def _try_historical_comparison(patient_id: str, agg: dict, db: DBSession):
     """Attempt to load the latest previous session for historical comparison."""
@@ -172,11 +166,9 @@ def _process_session_aggregation(
     results = req.card_results
     if not results:
         raise HTTPException(status_code=400, detail="No card results provided")
-        
+
     cards_str = ",".join(sorted(results.keys()))
-    
-    # Check for a recently created session (within the last 10 minutes) with the same patient and cards
-    # to avoid duplicate session records and double-billing between sequential /aggregate and /report calls.
+
     import datetime as dt
     now_utc = dt.datetime.now(dt.timezone.utc)
     existing_session = db.query(Session).filter(
@@ -188,11 +180,9 @@ def _process_session_aggregation(
         created_at = existing_session.created_at
         if created_at.tzinfo is None:
             created_at = created_at.replace(tzinfo=dt.timezone.utc)
-            
-        # If it exists in DB with a session_data_path, it's a completed session.
-        # We always want to load it instead of double-billing.
+
         if existing_session.session_data_path:
-            # Load the existing aggregation from disk
+
             from app.database import DATA_STORE_DIR
             json_path = DATA_STORE_DIR / existing_session.session_data_path
             if json_path.exists():
@@ -200,7 +190,7 @@ def _process_session_aggregation(
                     existing_data = json.load(f)
                 agg = existing_data.get("report_summary")
                 if agg:
-                    # Attach db metadata to the returned aggregation
+
                     agg["_db_metadata"] = {
                         "id": existing_session.id,
                         "user_id": existing_session.user_id,
@@ -210,16 +200,13 @@ def _process_session_aggregation(
                     }
                     return agg, existing_session
 
-    # Removed Idempotency Check as requested by user
-    # 2. Billing
-    # Load patient info for transaction desc and DB record
     db_patient = db.query(Patient).filter(Patient.id == req.patientId).first()
     patient_name = "Anonymous"
     if db_patient:
         patient_name = f"{db_patient.first_name} {db_patient.last_name or ''}".strip()
 
         from app.wallet.router import _get_wallet, _record_transaction, _get_target_user_id, get_assessment_price
-        
+
         base_cost_paise = get_assessment_price(current_user, getattr(req, "assessment_name", "Narrative Intelligence"), db)
         final_cost_paise = base_cost_paise
 
@@ -230,16 +217,13 @@ def _process_session_aggregation(
         from app.models.wallet import TransactionType
         target_user_id = _get_target_user_id(current_user, db)
         wallet = _get_wallet(target_user_id, db, lock=True)
-        
+
         if wallet.balance_paise < total_needed:
             raise HTTPException(
                 status_code=402,
                 detail=f"Insufficient balance. Required ₹{total_needed/100:.2f}, available ₹{wallet.balance_paise/100:.2f}",
             )
 
-        # Money is only reserved/checked here. Deduction happens AFTER report successfully generates.
-
-    # 3. Compute Aggregation
     from app.assessments.tat.pipeline.multicard_dynamics_engine import MulticardDynamicsEngine
     request_engine = MulticardDynamicsEngine(engines['nlp_processor'])
 
@@ -252,7 +236,7 @@ def _process_session_aggregation(
 
     if engines.get('medication_engine') and engines.get('ollama_humanizer'):
         try:
-            # Clear stale cache so updated prompts always generate fresh human-readable output
+
             from app.assessments.tat.engines.clinical.medication import clear_medication_cache
             clear_medication_cache()
             med_res = get_medication_and_humanize(
@@ -274,7 +258,6 @@ def _process_session_aggregation(
         except Exception as e:
             logger.warning("Error fetching past session for comparison: %s", e)
 
-    # 4. Deduct Wallet and Save Session
     if not skip_billing:
         current_user_name = f"{current_user.first_name} {current_user.last_name or ''}".strip()
         wallet.balance_paise -= final_cost_paise
@@ -300,7 +283,7 @@ def _process_session_aggregation(
 
     timestamp = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
     serializable_agg = make_serializable(agg)
-    
+
     patient_info = {
         "patient_id": db_patient.id if db_patient else req.patientId,
         "patient_type": db_patient.patient_type if db_patient else "anonymous",
@@ -341,14 +324,14 @@ def _process_session_aggregation(
         validation_status="Pending Verification" if getattr(req, 'request_psychologist_validation', False) else "System Generated"
     )
     db.add(session_record)
-    
+
     if db_patient:
         db_patient.total_sessions = (db_patient.total_sessions or 0) + 1
         db_patient.last_session_date = dt.datetime.now()
-        
+
     db.commit()
     db.refresh(session_record)
-    
+
     if getattr(req, 'request_psychologist_validation', False):
         try:
             from app.services.verification_service import assign_verification_request
@@ -356,7 +339,6 @@ def _process_session_aggregation(
         except Exception as e:
             logger.error("Failed to create and assign VerificationRequest during aggregation: %s", e)
 
-    # Attach db metadata to the returned aggregation so the frontend can immediately display the correct status
     agg["_db_metadata"] = {
         "id": session_record.id,
         "user_id": session_record.user_id,
@@ -373,9 +355,9 @@ def _process_session_aggregation(
         action="ASSESSMENT_COMPLETION",
         details={
             "assessment_id": session_record.id,
-            "patient_id": req.patientId, 
+            "patient_id": req.patientId,
             "patient_name": session_record.patient_name,
-            "assessment_name": getattr(req, "assessment_name", "Narrative Intelligence"), 
+            "assessment_name": getattr(req, "assessment_name", "Narrative Intelligence"),
             "cards_examined": cards_str,
             "performed_by": f"{current_user.first_name} {current_user.last_name or ''}".strip(),
             "clinic_or_org_name": current_user.clinic_name or "Independent Psychologist"
@@ -383,7 +365,6 @@ def _process_session_aggregation(
     )
 
     return agg, session_record
-
 
 @router.post("/aggregate")
 def aggregate_endpoint(
@@ -402,7 +383,6 @@ def aggregate_endpoint(
     agg, _ = _process_session_aggregation(req, current_user, db)
     return make_serializable(agg)
 
-
 def _generate_pdf_report_internal(
     req: AggregateRequest,
     current_user: User,
@@ -410,7 +390,7 @@ def _generate_pdf_report_internal(
     agg: dict,
     session_record: Session
 ) -> tuple[Path, str]:
-    # Load patient info for the PDF
+
     db_patient = db.query(Patient).filter(Patient.id == req.patientId).first()
     if db_patient:
         patient_info = {
@@ -430,7 +410,7 @@ def _generate_pdf_report_internal(
     timestamp = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
     safe_name = req.assessment_name.replace(' ', '_')
     filename = f"{safe_name}_TAT_Report_{timestamp}.pdf"
-    
+
     pdf_path, pdf_relative = build_report_path(
         user_id=current_user.id,
         assessment_slug="tat",
@@ -441,7 +421,7 @@ def _generate_pdf_report_internal(
         role_str = current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role)
         if role_str.startswith('UserRole.'):
             role_str = role_str.replace('UserRole.', '')
-        
+
         user_info = {
             "name": f"{current_user.first_name} {current_user.last_name or ''}".strip(),
             "designation": current_user.specialization or current_user.designation or role_str.replace('_', ' ').title(),
@@ -455,17 +435,16 @@ def _generate_pdf_report_internal(
             "role": role_str,
         }
 
-        # Fetch clinic branding info if this is a clinic staff/admin
         clinic_info = None
         if current_user.clinic_id:
             from app.models.user import UserRole
             from app.models.clinic import ClinicProfile
             clinic_admin = db.query(User).filter(
-                User.clinic_id == current_user.clinic_id, 
+                User.clinic_id == current_user.clinic_id,
                 User.role.in_([UserRole.clinic_admin, UserRole.org_admin])
             ).first()
             if clinic_admin:
-                # Try to get the proper clinic logo from the ClinicProfile table first
+
                 clinic_logo_path = None
                 clinic_profile = db.query(ClinicProfile).filter(ClinicProfile.clinic_id == current_user.clinic_id).first()
                 if clinic_profile and clinic_profile.logo_path:
@@ -480,14 +459,12 @@ def _generate_pdf_report_internal(
                     "email": clinic_admin.email or "",
                     "logo_path": clinic_logo_path,
                 }
-                
-                # Fallback to clinic admin's RCI/ROC if staff doesn't have one
+
                 if not user_info["rci_number"] and getattr(clinic_admin, 'rci_number', None):
                     user_info["rci_number"] = clinic_admin.rci_number
                 if not user_info["roc_number"] and getattr(clinic_admin, 'roc_number', None):
                     user_info["roc_number"] = clinic_admin.roc_number
 
-                # Fallback: if admin still has no RCI/ROC, try to find ANY staff member in the organization who does.
                 if not user_info["rci_number"]:
                     staff_with_rci = db.query(User).filter(
                         User.clinic_id == current_user.clinic_id,
@@ -506,13 +483,12 @@ def _generate_pdf_report_internal(
                     if staff_with_roc:
                         user_info["roc_number"] = staff_with_roc.roc_number
 
-        # Fetch verification audit log
         from app.models.audit_log import AuditLog
         audit_record = db.query(AuditLog).filter(
             AuditLog.target_user_id == current_user.id,
             AuditLog.action == "verification_approved"
         ).order_by(AuditLog.timestamp.desc()).first()
-        
+
         verification_audit = None
         if audit_record:
             verification_audit = {
@@ -532,12 +508,10 @@ def _generate_pdf_report_internal(
             clinic_info=clinic_info,
             verification_audit=verification_audit
         )
-        
-        # Update Session record with the PDF path
+
         if not session_record.pdf_filename:
             session_record.pdf_filename = pdf_relative
-            
-            # Since we modify the JSON file to include pdf_filename originally, we can update the JSON too
+
             from app.database import DATA_STORE_DIR
             if session_record.session_data_path:
                 session_file = DATA_STORE_DIR / session_record.session_data_path
@@ -548,7 +522,7 @@ def _generate_pdf_report_internal(
                         f.seek(0)
                         json.dump(data, f, indent=2, default=str)
                         f.truncate()
-                        
+
             db.commit()
 
         audit_service.log_activity(
@@ -559,9 +533,9 @@ def _generate_pdf_report_internal(
             action="REPORT_GENERATION",
             details={
                 "assessment_id": session_record.id,
-                "patient_id": req.patientId, 
+                "patient_id": req.patientId,
                 "patient_name": session_record.patient_name,
-                "assessment_name": getattr(req, "assessment_name", "Narrative Intelligence"), 
+                "assessment_name": getattr(req, "assessment_name", "Narrative Intelligence"),
                 "filename": filename,
                 "performed_by": f"{current_user.first_name} {current_user.last_name or ''}".strip(),
                 "clinic_or_org_name": current_user.clinic_name or "Independent Psychologist"
@@ -576,7 +550,6 @@ def _generate_pdf_report_internal(
 
     return pdf_path, filename
 
-
 @router.post("/report")
 def generate_pdf_report(
     req: AggregateRequest,
@@ -587,13 +560,11 @@ def generate_pdf_report(
     from app.models.user import UserRole
     if current_user.role == UserRole.super_admin:
         raise HTTPException(status_code=403, detail="Super Admin accounts cannot perform assessments.")
-        
-    # Get or compute aggregation (will hit cache 99% of the time since /aggregate ran just before)
+
     agg, session_record = _process_session_aggregation(req, current_user, db)
-    
+
     output_path, filename = _generate_pdf_report_internal(req, current_user, db, agg, session_record)
     return FileResponse(output_path, media_type="application/pdf", filename=filename)
-
 
 @router.get("/debug_report")
 def debug_pdf_report(
@@ -602,12 +573,12 @@ def debug_pdf_report(
 ):
     import traceback
     from fastapi.responses import PlainTextResponse
-    
+
     try:
         session_record = db.query(Session).filter(Session.id == session_id).first()
         if not session_record:
             return PlainTextResponse("Session not found")
-            
+
         current_user = db.query(User).filter(User.id == session_record.user_id).first()
         if not current_user:
              current_user = db.query(User).filter(User.role.in_(["individual_psychologist", "clinic_staff", "org_admin", "super_admin"])).first()
@@ -618,23 +589,21 @@ def debug_pdf_report(
             assessment_name="Narrative Intelligence",
             request_psychologist_validation=True
         )
-        
-        # Load from JSON
+
         from app.database import DATA_STORE_DIR
         session_file = DATA_STORE_DIR / session_record.session_data_path
         with open(session_file, "r") as f:
             data = json.load(f)
             req.card_results = data.get("card_results", {})
-            
+
         agg, session_record_ret = _process_session_aggregation(req, current_user, db)
-        
+
         _generate_pdf_report_internal(req, current_user, db, agg, session_record_ret)
         return PlainTextResponse("SUCCESS: PDF generated perfectly.")
     except Exception as e:
         import sys
         tb = traceback.format_exc()
-        
-        # Check cache explicitly here
+
         try:
             results = req.card_results
             cards_str = ",".join(sorted(results.keys())) if results else ""

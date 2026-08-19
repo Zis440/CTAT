@@ -16,7 +16,6 @@ Age groups covered:
 
 from typing import Dict, Tuple, Optional
 
-
 def get_age_group(age: int) -> str:
     """Map a user's age to the correct norm table key."""
     if age <= 24:
@@ -28,24 +27,9 @@ def get_age_group(age: int) -> str:
     else:
         return "35_44"
 
-
-# ---------------------------------------------------------------------------
-# Table A.1 — Raw‑to‑Scaled Score conversion tables
-# Keys:   (subtest, age_group)
-# Values: list of (max_raw_score, scaled_score) tuples, sorted ascending.
-#         To look up: find the first entry where raw_score <= max_raw.
-# ---------------------------------------------------------------------------
-
-# Helper: build a lookup from list of (upper_bound, scaled_score) pairs
 def _build_lookup(ranges: list) -> list:
     """Return sorted list of (upper_bound_inclusive, scaled_score)."""
     return sorted(ranges, key=lambda x: x[0])
-
-
-# ============================================================
-# CC — Symbol-Number Association Task (Claves) → maps to Symbol-Number Association Task
-# Max possible raw score = 66
-# ============================================================
 
 CC_TABLES: Dict[str, list] = {
     "20_24": _build_lookup([
@@ -74,12 +58,6 @@ CC_TABLES: Dict[str, list] = {
     ]),
 }
 
-
-# ============================================================
-# BS — Visual Pattern Search Task (Búsqueda de Símbolos) → maps to Symbol Game
-# Max possible raw score = 60
-# ============================================================
-
 BS_TABLES: Dict[str, list] = {
     "20_24": _build_lookup([
         (3, 1), (8, 2), (12, 3), (15, 4), (17, 5),
@@ -106,12 +84,6 @@ BS_TABLES: Dict[str, list] = {
         (48, 16), (50, 17), (52, 18), (60, 19),
     ]),
 }
-
-
-# ============================================================
-# SLN — Letter-Number Sequencing → maps to Pattern Memory Game
-# Max possible raw score = 30
-# ============================================================
 
 SLN_TABLES: Dict[str, list] = {
     "20_24": _build_lookup([
@@ -140,12 +112,6 @@ SLN_TABLES: Dict[str, list] = {
     ]),
 }
 
-
-# ============================================================
-# RD — Sequential Memory Challenge (supplementary) → used as additional cognitive metric
-# Max possible raw score = 48
-# ============================================================
-
 RD_TABLES: Dict[str, list] = {
     "20_24": _build_lookup([
         (11, 1), (12, 2), (13, 3), (14, 4), (16, 5),
@@ -172,12 +138,6 @@ RD_TABLES: Dict[str, list] = {
         (36, 16), (38, 17), (40, 18), (48, 19),
     ]),
 }
-
-
-# ============================================================
-# Table A.5 — Processing Speed Composite Index (IVP)
-# Input: sum of scaled scores for CC + BS (range 2–38)
-# ============================================================
 
 IVP_TABLE: Dict[int, dict] = {
     2: {"ivp": 50, "percentile": 0.1, "ci_90": (46, 67), "ci_95": (46, 69)},
@@ -219,20 +179,15 @@ IVP_TABLE: Dict[int, dict] = {
     38: {"ivp": 150, "percentile": 99.9, "ci_90": (133, 152), "ci_95": (131, 154)},
 }
 
-
-# ---------------------------------------------------------------------------
-# Lookup Functions
-# ---------------------------------------------------------------------------
-
 def raw_to_scaled(raw_score: int, subtest: str, age: int) -> int:
     """
     Convert a raw score to a scaled score (1–19) for a given subtest and age.
-    
+
     Args:
         raw_score: The raw score from the game/task
         subtest: One of 'CC', 'BS', 'SLN', 'RD'
         age: User's age in years
-    
+
     Returns:
         Scaled score (1–19). Returns 1 if raw_score is 0 or below minimum.
     """
@@ -253,24 +208,21 @@ def raw_to_scaled(raw_score: int, subtest: str, age: int) -> int:
         if raw_score <= upper_bound:
             return scaled
 
-    # If raw_score exceeds all entries, return maximum scaled score
     return lookup[-1][1]
-
 
 def compute_processing_speed_index(cc_scaled: int, bs_scaled: int) -> dict:
     """
     Compute the Processing Speed Index (IVP) composite from the sum of
     CC and BS scaled scores.
-    
+
     Returns dict with: ivp, percentile, ci_90, ci_95, classification
     """
     sum_scaled = cc_scaled + bs_scaled
-    sum_scaled = max(2, min(38, sum_scaled))  # Clamp to valid range
+    sum_scaled = max(2, min(38, sum_scaled))
 
     entry = IVP_TABLE[sum_scaled]
     ivp = entry["ivp"]
 
-    # Classification
     if ivp <= 69:
         classification = "Extremely Low"
     elif ivp <= 79:
@@ -295,19 +247,18 @@ def compute_processing_speed_index(cc_scaled: int, bs_scaled: int) -> dict:
         "classification": classification,
     }
 
-
 def score_cognitive_game(game_type: str, raw_score: float, age: int,
                          movement_count: int, completion_time: float) -> dict:
     """
     Full scoring pipeline for a single cognitive game.
-    
+
     Args:
         game_type: 'symbol', 'code_number', 'pattern_memory', 'tat'
         raw_score: The raw score from the game
         age: User's age
         movement_count: Number of user interactions
         completion_time: Seconds taken
-    
+
     Returns:
         Complete scoring result with raw, scaled, efficiency metrics
     """
@@ -330,16 +281,14 @@ def score_cognitive_game(game_type: str, raw_score: float, age: int,
         result["scaled_score"] = scaled
         result["subtest"] = subtest
 
-        # Efficiency index: scaled score adjusted by time pressure and movement economy
-        # Higher is better. Penalise excessive movements, reward speed.
-        time_factor = max(0.5, 1.0 - (completion_time / 240))  # 240s = 2x limit
+        time_factor = max(0.5, 1.0 - (completion_time / 240))
         movement_penalty = max(0.7, 1.0 - (movement_count / 200) * 0.3)
         result["cognitive_efficiency_index"] = round(scaled * time_factor * movement_penalty, 2)
     else:
-        # NPIA: scored 0-10 qualitatively, no subtest lookup needed
+
         result["scaled_score"] = None
         result["qualitative_score"] = raw_score
-        # NPIA efficiency: based on story completeness vs time
+
         result["cognitive_efficiency_index"] = round(raw_score * (1.0 - (completion_time / 240) * 0.2), 2)
 
     return result

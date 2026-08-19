@@ -12,10 +12,6 @@ import numpy as np
 from typing import List, Optional, Dict, Any
 from collections import Counter
 
-# ============================================================================
-# REPRODUCIBILITY SEED CONTROL  (§1)
-# ============================================================================
-
 def set_reproducibility_seed(seed: int = 42):
     """
     Set deterministic seeds across all RNG sources.
@@ -31,11 +27,6 @@ def set_reproducibility_seed(seed: int = 42):
     except ImportError:
         pass
 
-
-# ============================================================================
-# NUMERIC PRECISION  (§1)
-# ============================================================================
-
 def round_metric(value, decimals: int = 2) -> float:
     """
     Standardized rounding for all scoring metrics.
@@ -47,7 +38,6 @@ def round_metric(value, decimals: int = 2) -> float:
         return round(float(value), decimals)
     except (TypeError, ValueError):
         return 0.0
-
 
 def clamp(value, lo: float = 0.0, hi: float = 100.0) -> float:
     """
@@ -61,16 +51,11 @@ def clamp(value, lo: float = 0.0, hi: float = 100.0) -> float:
     except (TypeError, ValueError):
         return lo
 
-
-# ============================================================================
-# INPUT QUALITY DETECTION  (§9)
-# ============================================================================
-
 def detect_input_quality(text: str) -> Dict[str, Any]:
     """
     Validate narrative input for edge cases.
     Returns quality classification and metadata.
-    
+
     Quality levels:
         "valid"      — Normal narrative, proceed with full analysis
         "empty"      — No text provided
@@ -79,14 +64,13 @@ def detect_input_quality(text: str) -> Dict[str, Any]:
     """
     if not text or not text.strip():
         return {"quality": "empty", "word_count": 0, "repetition_ratio": 0.0}
-    
+
     words = text.strip().split()
     word_count = len(words)
-    
+
     if word_count < 10:
         return {"quality": "too_short", "word_count": word_count, "repetition_ratio": 0.0}
-    
-    # Repetition detection
+
     lower_words = [w.lower() for w in words]
     counts = Counter(lower_words)
     if counts:
@@ -94,16 +78,11 @@ def detect_input_quality(text: str) -> Dict[str, Any]:
         repetition_ratio = most_common_count / max(1, word_count)
     else:
         repetition_ratio = 0.0
-    
+
     if repetition_ratio > 0.6:
         return {"quality": "repetitive", "word_count": word_count, "repetition_ratio": repetition_ratio}
-    
+
     return {"quality": "valid", "word_count": word_count, "repetition_ratio": repetition_ratio}
-
-
-# ============================================================================
-# VOLATILITY COMPUTATION  (§2, §3)
-# ============================================================================
 
 def compute_volatility(values: List[float]) -> float:
     """
@@ -113,17 +92,15 @@ def compute_volatility(values: List[float]) -> float:
     """
     if not values or len(values) < 2:
         return 0.0
-    
+
     std = float(np.std(values))
     mean = float(np.mean(values))
-    
+
     if mean == 0:
         return min(1.0, std)
-    
-    # Coefficient of variation, clamped to [0, 1]
+
     cv = std / abs(mean)
     return round_metric(min(1.0, cv), 4)
-
 
 def compute_peak_intensity(values: List[float]) -> float:
     """
@@ -132,11 +109,10 @@ def compute_peak_intensity(values: List[float]) -> float:
     """
     if not values or len(values) < 2:
         return 0.0
-    
+
     mean = float(np.mean(values))
     peak = max(abs(v - mean) for v in values)
     return round_metric(peak)
-
 
 def compute_stability_coefficient(volatility: float) -> float:
     """
@@ -145,15 +121,10 @@ def compute_stability_coefficient(volatility: float) -> float:
     """
     return round_metric(max(0.0, min(1.0, 1.0 - volatility)), 4)
 
-
-# ============================================================================
-# EGO TRAJECTORY CLASSIFIER  (§8)
-# ============================================================================
-
 def classify_ego_trajectory(series: List[float]) -> str:
     """
     Classify ego strength trajectory across sessions.
-    
+
     Returns:
         "Stable"           — variance < 5% of mean
         "Gradual Decline"  — monotonic decrease trend
@@ -161,55 +132,47 @@ def classify_ego_trajectory(series: List[float]) -> str:
     """
     if not series or len(series) < 2:
         return "Stable"
-    
+
     mean = float(np.mean(series))
     std = float(np.std(series))
-    
-    # Check for low variance → Stable
+
     if mean > 0 and (std / abs(mean)) < 0.05:
         return "Stable"
-    
-    # Check for monotonic decline
+
     diffs = [series[i+1] - series[i] for i in range(len(series) - 1)]
     if all(d <= 0 for d in diffs) and sum(diffs) < -std:
         return "Gradual Decline"
-    
-    # Check for spike
+
     if std > 0:
         deviations = [abs(v - mean) / std for v in series]
         if max(deviations) > 2.0:
             return "Situational Spike"
-    
+
     return "Stable"
-
-
-# ============================================================================
-# DUAL-LAYER AGGREGATION HELPER  (§2)
-# ============================================================================
 
 def dual_layer_aggregate(card_values: List[float]) -> Dict[str, float]:
     """
     Compute the dual-layer aggregation for a list of per-card metric values.
-    
+
     Formula:
         Final = WeightedMean + (PeakIntensity × StabilityCoefficient)
-    
+
     Returns dict with: mean, peak, volatility, stability_coeff, final
     """
     if not card_values:
         return {"mean": 0.0, "peak": 0.0, "volatility": 0.0, "stability_coeff": 1.0, "final": 0.0}
-    
+
     if len(card_values) == 1:
         v = round_metric(card_values[0])
         return {"mean": v, "peak": 0.0, "volatility": 0.0, "stability_coeff": 1.0, "final": v}
-    
+
     mean = round_metric(float(np.mean(card_values)))
     peak = compute_peak_intensity(card_values)
     volatility = compute_volatility(card_values)
     stability = compute_stability_coefficient(volatility)
-    
-    final = round_metric(mean + (peak * stability * 0.1))  # 0.1 dampening to avoid overshooting
-    
+
+    final = round_metric(mean + (peak * stability * 0.1))
+
     return {
         "mean": mean,
         "peak": peak,
@@ -218,14 +181,8 @@ def dual_layer_aggregate(card_values: List[float]) -> Dict[str, float]:
         "final": final
     }
 
-
-# ============================================================================
-# §1 GLOBAL METRIC BOUNDING (Hard Cap Enforcement)
-# ============================================================================
-
-# Metric → (lower_bound, upper_bound)
 METRIC_BOUNDS = {
-    # 0–100 scale metrics
+
     'anxiety_level': (0, 100),
     'conflict_internal': (0, 100),
     'conflict_interpersonal': (0, 100),
@@ -239,17 +196,16 @@ METRIC_BOUNDS = {
     'social_cognition': (0, 100),
     'peak_anxiety_index': (0, 100),
     'emotional_volatility_index': (0, 100),
-    # 0–10 scale metrics (internal only; affective_integration is now 0–100 in output)
-    'affective_integration': (0, 100),  # v4.0: normalized to 0–100 (was 0–10)
+
+    'affective_integration': (0, 100),
     'regulation_index': (0, 10),
-    # 0–1 scale metrics
+
     'stability_index': (0, 1),
     'need_stability': (0, 1),
     'press_stability': (0, 1),
     'conflict_persistence': (0, 1),
     'trait_convergence': (0, 1),
 }
-
 
 def apply_global_bounds(metrics_dict: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -269,34 +225,27 @@ def apply_global_bounds(metrics_dict: Dict[str, Any]) -> Dict[str, Any]:
 
     return metrics_dict
 
-
-# ============================================================================
-# §5 AFFECTIVE INTEGRATION RECALIBRATION
-# ============================================================================
-
 def compute_affective_integration(events: list, words: list) -> float:
     """
     §5: Blended emotional complexity detection.
-    
+
     Formula:
-        affective_integration = 
+        affective_integration =
            (0.4 * diversity_scaled) +
            (0.3 * transition_score_scaled) +
            (0.2 * emotional_depth_weight) +
            (0.1 * coexistence_bonus)
-    
+
     Result scaled to 0–10.
     """
     if not events:
-        return 5.0  # neutral baseline
+        return 5.0
 
-    # Step 1: Emotional Diversity Index
     all_emotions = [e.get('emotion', '').lower() for e in events if e.get('emotion')]
     unique_emotions = len(set(all_emotions))
     total_mentions = max(1, len(all_emotions))
-    diversity = unique_emotions / total_mentions  # 0–1
+    diversity = unique_emotions / total_mentions
 
-    # Step 2: Emotional Transition Score (polarity switches)
     valences = [e.get('valence', 0) for e in events]
     polarity_labels = []
     for v in valences:
@@ -312,41 +261,33 @@ def compute_affective_integration(events: list, words: list) -> float:
         if polarity_labels[i] != polarity_labels[i - 1]
     )
     total_segments = max(1, len(polarity_labels) - 1)
-    transition_score = polarity_switches / total_segments  # 0–1
+    transition_score = polarity_switches / total_segments
 
-    # Step 3: Emotional Depth Weight (word-based)
     depth_tokens = {
         'guilt', 'shame', 'pride', 'longing', 'grief', 'remorse',
         'anguish', 'torn', 'conflicted', 'ambivalent', 'bittersweet',
         'nostalgic', 'yearning', 'despair', 'elation', 'dread'
     }
     depth_count = sum(1 for w in words if w.lower() in depth_tokens)
-    emotional_depth_weight = min(1.0, depth_count / max(1, len(words) * 0.05))  # 0–1
+    emotional_depth_weight = min(1.0, depth_count / max(1, len(words) * 0.05))
 
-    # Step 4: Emotional Coexistence (opposing valence within proximity)
     coexistence_bonus = 0.0
-    WINDOW = 3  # events within 3 positions
+    WINDOW = 3
     for i in range(len(valences)):
         for j in range(max(0, i - WINDOW), min(len(valences), i + WINDOW + 1)):
             if i != j:
-                if (valences[i] > 0.2 and valences[j] < -0.2) or \
+                if (valences[i] > 0.2 and valences[j] < -0.2) or\
                    (valences[i] < -0.2 and valences[j] > 0.2):
                     coexistence_bonus = 0.5
                     break
         if coexistence_bonus > 0:
             break
 
-    # Blended formula, scaled to 0–10
-    raw = (0.4 * diversity) + (0.3 * transition_score) + \
+    raw = (0.4 * diversity) + (0.3 * transition_score) +\
           (0.2 * emotional_depth_weight) + (0.1 * coexistence_bonus)
 
     affective_integration = round_metric(raw * 10, 2)
     return max(0.0, min(10.0, affective_integration))
-
-
-# ============================================================================
-# §10 CONFIDENCE INTERVAL COMPUTATION
-# ============================================================================
 
 def compute_confidence_interval(score: float, n_events: int, scale_max: float = 100.0) -> dict:
     """
@@ -355,17 +296,16 @@ def compute_confidence_interval(score: float, n_events: int, scale_max: float = 
     Returns: {"value": score, "lower": lo, "upper": hi, "margin": margin}
     """
     if n_events <= 0:
-        margin = scale_max * 0.15  # 15% margin when no events
+        margin = scale_max * 0.15
     else:
-        # Standard error decreases with more events; base SE is ~10% of scale
+
         base_se = scale_max * 0.10
         se = base_se / (n_events ** 0.5)
-        margin = round_metric(se * 1.96, 1)  # 95% CI
+        margin = round_metric(se * 1.96, 1)
 
     lo = round_metric(max(0, score - margin), 1)
     hi = round_metric(min(scale_max, score + margin), 1)
     return {"value": round_metric(score, 1), "lower": lo, "upper": hi, "margin": round_metric(margin, 1)}
-
 
 def cap_extreme_scores(scores_dict: dict, psychosis_markers: bool = False) -> dict:
     """
@@ -388,14 +328,12 @@ def cap_extreme_scores(scores_dict: dict, psychosis_markers: bool = False) -> di
         if key in scores_dict and isinstance(scores_dict[key], (int, float)):
             val = float(scores_dict[key])
 
-            # Reality testing: stricter threshold
             if key == 'reality_testing':
                 if cog_complexity <= 60:
-                    val = min(val, 85.0)  # cap at 85 without high complexity
+                    val = min(val, 85.0)
                 else:
-                    val = min(val, 90.0)  # even with complexity, cap at 90
+                    val = min(val, 90.0)
 
-            # General cap: >90 -> 88
             if val > 90:
                 val = round_metric(88.0)
             elif val < 5:
@@ -403,7 +341,6 @@ def cap_extreme_scores(scores_dict: dict, psychosis_markers: bool = False) -> di
 
             scores_dict[key] = round_metric(val)
     return scores_dict
-
 
 def apply_precision_score_cap(
     scores_dict: dict,
@@ -424,13 +361,13 @@ def apply_precision_score_cap(
     Otherwise: maximum per dimension = 8.8 (or 88 on 0-100 scale).
     Applied especially to: Social Cognition, Object Relations, Narrative Coherence.
     """
-    # Dimensions subject to this cap
+
     PRECISION_CAP_DIMS = {
         'social_cognition', 'object_relations', 'narrative_coherence',
         'ego_strength', 'reality_testing', 'emotional_stability',
         'cognitive_complexity'
     }
-    # Check if all perfection criteria are met
+
     cog_ok = cognitive_complexity >= 7.0 or cognitive_complexity >= 70.0
     all_criteria_met = (
         word_count > 150
@@ -442,15 +379,14 @@ def apply_precision_score_cap(
     for key in PRECISION_CAP_DIMS:
         if key in scores_dict and isinstance(scores_dict[key], (int, float)):
             val = float(scores_dict[key])
-            # Determine the scale (0-10 or 0-100)
+
             cap_value = 10.0 if val <= 10.0 else 100.0
             max_allowed = cap_value if all_criteria_met else (8.8 if cap_value == 10.0 else 88.0)
             if val > max_allowed:
-                # Proportionally reduce to 8.5-8.8 range
+
                 reduced = max(8.5 if cap_value == 10.0 else 85.0, min(max_allowed, val))
                 scores_dict[key] = round_metric(reduced)
     return scores_dict
-
 
 def generate_variance_justification(dim_name: str, dim_value: float,
                                      n_events: int, valence_std: float = 0.0,
@@ -485,11 +421,6 @@ def generate_variance_justification(dim_name: str, dim_value: float,
 
     return f"{dim_name}: {level} ({dim_value:.1f}) — {reason}"
 
-
-# ============================================================================
-# §11 PSYCHOMETRIC INTEGRITY FUNCTIONS
-# ============================================================================
-
 def compute_internal_consistency(card_scores_list: List[dict]) -> float:
     """
     Compute internal consistency of dimension scores across cards.
@@ -501,12 +432,10 @@ def compute_internal_consistency(card_scores_list: List[dict]) -> float:
     if not card_scores_list or len(card_scores_list) < 2:
         return 0.0
 
-    # Collect dimension keys present in all cards
     common_keys = set(card_scores_list[0].keys())
     for cs in card_scores_list[1:]:
         common_keys &= set(cs.keys())
 
-    # Filter to numeric dimensions only
     numeric_keys = sorted(
         k for k in common_keys
         if all(isinstance(cs.get(k), (int, float)) for cs in card_scores_list)
@@ -518,46 +447,34 @@ def compute_internal_consistency(card_scores_list: List[dict]) -> float:
     n_cards = len(card_scores_list)
     k = len(numeric_keys)
 
-    # ----------------------------------------------------------------
-    # 2-CARD CASE: Split-half correlation (Spearman-Brown)
-    # Cronbach's alpha is unreliable with only 2 observations per item.
-    # Instead, correlate the two cards' dimension vectors.
-    # ----------------------------------------------------------------
     if n_cards == 2:
         v1 = np.array([float(card_scores_list[0][key]) for key in numeric_keys])
         v2 = np.array([float(card_scores_list[1][key]) for key in numeric_keys])
         std1, std2 = float(np.std(v1)), float(np.std(v2))
         if std1 == 0 or std2 == 0:
-            return 0.5  # indeterminate — return neutral
+            return 0.5
         r = float(np.corrcoef(v1, v2)[0, 1])
-        r = max(0.0, r)  # floor at 0 (negative = inconsistent)
-        # Spearman-Brown prophecy formula: reliability = 2r / (1 + r)
+        r = max(0.0, r)
+
         alpha = (2 * r) / (1 + r) if (1 + r) > 0 else 0.0
         return round_metric(max(0.0, min(1.0, alpha)), 3)
 
-    # ----------------------------------------------------------------
-    # 3+ CARD CASE: Cronbach's alpha with sample variance (ddof=1)
-    # ----------------------------------------------------------------
-    # Build item scores matrix
     item_scores = []
     for key in numeric_keys:
         vals = [float(cs[key]) for cs in card_scores_list]
         item_scores.append(vals)
 
-    # Sample variance of each item (ddof=1 = Bessel correction)
     item_vars = [float(np.var(vals, ddof=1)) for vals in item_scores]
     sum_item_vars = sum(item_vars)
 
-    # Total variance (sum of all items per card, then sample variance)
     totals = [sum(item_scores[j][i] for j in range(k)) for i in range(n_cards)]
     total_var = float(np.var(totals, ddof=1))
 
     if total_var == 0:
-        return 1.0  # perfect consistency (no variance)
+        return 1.0
 
     alpha = (k / (k - 1)) * (1 - sum_item_vars / total_var)
     return round_metric(max(0.0, min(1.0, alpha)), 3)
-
 
 def compute_cross_card_convergence(card_scores_list: List[dict]) -> float:
     """
@@ -567,7 +484,6 @@ def compute_cross_card_convergence(card_scores_list: List[dict]) -> float:
     if not card_scores_list or len(card_scores_list) < 2:
         return 0.0
 
-    # Collect numeric keys common to all cards
     common_keys = set(card_scores_list[0].keys())
     for cs in card_scores_list[1:]:
         common_keys &= set(cs.keys())
@@ -577,12 +493,10 @@ def compute_cross_card_convergence(card_scores_list: List[dict]) -> float:
     if len(numeric_keys) < 3:
         return 0.0
 
-    # Build vectors per card
     vectors = []
     for cs in card_scores_list:
         vectors.append([float(cs[k]) for k in numeric_keys])
 
-    # Pairwise correlations
     correlations = []
     for i in range(len(vectors)):
         for j in range(i + 1, len(vectors)):
@@ -591,10 +505,9 @@ def compute_cross_card_convergence(card_scores_list: List[dict]) -> float:
                 correlations.append(0.0)
             else:
                 corr = float(np.corrcoef(v1, v2)[0, 1])
-                correlations.append(max(0.0, corr))  # floor at 0
+                correlations.append(max(0.0, corr))
 
     return round_metric(float(np.mean(correlations)) if correlations else 0.0, 3)
-
 
 def compute_interpretive_confidence(
     n_cards: int,
@@ -612,31 +525,27 @@ def compute_interpretive_confidence(
       - Consistency gate: if α < 0.3, cap at 0.50
     Returns score in [0, 1].
     """
-    card_factor = min(1.0, n_cards / 6.0)  # 6+ cards = full confidence
-    length_factor = min(1.0, avg_word_count / 150.0)  # 150+ words = full
-    theme_factor = min(1.0, n_themes / 4.0)  # 4+ themes = full
+    card_factor = min(1.0, n_cards / 6.0)
+    length_factor = min(1.0, avg_word_count / 150.0)
+    theme_factor = min(1.0, n_themes / 4.0)
 
-    # Compute base confidence
     if internal_consistency is not None and internal_consistency > 0:
-        # 4-factor model: card (30%), length (25%), themes (20%), consistency (25%)
-        consistency_factor = min(1.0, internal_consistency / 0.7)  # 0.7+ alpha = full
-        raw = (0.30 * card_factor) + (0.25 * length_factor) + \
+
+        consistency_factor = min(1.0, internal_consistency / 0.7)
+        raw = (0.30 * card_factor) + (0.25 * length_factor) +\
               (0.20 * theme_factor) + (0.25 * consistency_factor)
     else:
         raw = (0.40 * card_factor) + (0.35 * length_factor) + (0.25 * theme_factor)
 
     confidence = max(0.0, min(1.0, raw))
 
-    # Safeguard: cap for low card count
     if n_cards <= 2:
         confidence = min(confidence, 0.60)
 
-    # Safeguard: consistency gate
     if internal_consistency is not None and internal_consistency < 0.3:
         confidence = min(confidence, 0.50)
 
     return round_metric(confidence, 3)
-
 
 def check_narrative_complexity_threshold(word_count: int, n_events: int, n_unique_emotions: int) -> str:
     """
@@ -662,11 +571,6 @@ def check_narrative_complexity_threshold(word_count: int, n_events: int, n_uniqu
     elif score >= 2:
         return "marginal"
     return "insufficient"
-
-
-# ============================================================================
-# §8 VALIDATION LAYER (Pre-render anomaly detection)
-# ============================================================================
 
 def validate_metrics(metrics_dict: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -697,7 +601,6 @@ def validate_metrics(metrics_dict: Dict[str, Any]) -> Dict[str, Any]:
                     })
                     metrics_dict[key] = round_metric(max(lo, min(hi, fval)))
 
-    # Check for any percentage-like key exceeding 100
     for key, val in metrics_dict.items():
         if isinstance(val, (int, float)) and key not in METRIC_BOUNDS:
             if 'percent' in key.lower() or 'confidence' in key.lower():
@@ -710,33 +613,26 @@ def validate_metrics(metrics_dict: Dict[str, Any]) -> Dict[str, Any]:
                     })
                     metrics_dict[key] = 100.0
 
-    # Store log internally (hidden from report)
     if _validation_log:
         metrics_dict['_validation_log'] = _validation_log
 
     return metrics_dict
 
-
-# ============================================================================
-# PRE-OUTPUT VALIDATION GATE (v3.3)
-# ============================================================================
-
-# Tokens that can NEVER be Authority Figure
 _INVALID_AUTHORITY_TOKENS = {
-    # Objects
+
     "violin", "book", "gun", "picture", "painting", "letter", "piano",
     "desk", "chair", "table", "bed", "door", "window", "mirror", "lamp",
     "candle", "knife", "rope", "crops", "harvest", "tools", "plow",
     "money", "car", "boat", "train", "horse", "photograph", "diary",
     "medicine", "clock", "key", "flower", "tree", "bridge",
-    # Environmental
+
     "drought", "poverty", "weather", "war", "famine", "disease",
     "economy", "government", "society", "nature", "storm", "flood",
     "earthquake", "fire", "darkness", "night", "school", "city",
     "village", "town", "country", "world", "land", "field", "farm",
     "river", "mountain", "forest", "road", "house", "home", "room",
     "building", "church", "temple", "hospital", "prison", "market",
-    # Abstract nouns
+
     "mistake", "error", "problem", "issue", "failure", "success",
     "hope", "fear", "love", "hate", "desire", "dream", "thought",
     "idea", "feeling", "emotion", "belief", "truth", "fate", "destiny",
@@ -762,7 +658,6 @@ _NEGATIVE_ENDING_MARKERS = {
     "darkness", "despair", "abandoned", "no hope", "no way out",
 }
 
-
 def validate_and_autocorrect_analysis(analysis: Dict[str, Any]) -> Dict[str, Any]:
     """
     v3.3 Pre-output validation gate.
@@ -771,9 +666,6 @@ def validate_and_autocorrect_analysis(analysis: Dict[str, Any]) -> Dict[str, Any
     """
     corrections = []
 
-    # ----------------------------------------------------------------
-    # Rule 1: Authority Figure validation
-    # ----------------------------------------------------------------
     rel_patterns = analysis.get("relational_patterns", {})
     valid_figures = rel_patterns.get("valid_figure_types", [])
     hero_entities = {f["entity"] for f in valid_figures if f.get("type") == "Hero"}
@@ -783,7 +675,6 @@ def validate_and_autocorrect_analysis(analysis: Dict[str, Any]) -> Dict[str, Any
             continue
         entity_lower = fig["entity"].lower()
 
-        # Cannot be an object/env/abstract
         if entity_lower in _INVALID_AUTHORITY_TOKENS:
             fig["type"] = "Environmental Press" if entity_lower in {
                 "drought","poverty","weather","war","famine","disease",
@@ -792,13 +683,11 @@ def validate_and_autocorrect_analysis(analysis: Dict[str, Any]) -> Dict[str, Any
             fig["authority_validation"] = "FAIL (auto-corrected by gate)"
             corrections.append(f"Authority→{fig['type']}: '{fig['entity']}'")
 
-        # Cannot be the Hero
         elif fig["entity"] in hero_entities:
             fig["type"] = "Peer"
             fig["authority_validation"] = "FAIL (Hero cannot be Authority)"
             corrections.append(f"Authority→Peer (was Hero): '{fig['entity']}'")
 
-    # If no valid Authority Figures remain, mark None
     remaining_auth = [f for f in valid_figures if f.get("type") == "Authority Figure"]
     analysis.setdefault("relational_patterns", {})["authority_present"] = (
         bool(remaining_auth)
@@ -806,13 +695,11 @@ def validate_and_autocorrect_analysis(analysis: Dict[str, Any]) -> Dict[str, Any
     if not remaining_auth:
         analysis["relational_patterns"]["authority_display"] = "None"
 
-    # ---- Contemporary Figure validation ----
     for fig in valid_figures:
         if fig.get("type") != "Contemporary":
             continue
         entity_lower = fig["entity"].lower()
 
-        # Cannot be an object/env/abstract
         if entity_lower in _INVALID_AUTHORITY_TOKENS:
             fig["type"] = "Symbolic Object"
             fig["authority_validation"] = "FAIL (Contemporary→Object by gate)"
@@ -827,9 +714,6 @@ def validate_and_autocorrect_analysis(analysis: Dict[str, Any]) -> Dict[str, Any
         bool(remaining_contemp)
     )
 
-    # ----------------------------------------------------------------
-    # Rule 2: Conflict 1.00 lock + Resolution penalty
-    # ----------------------------------------------------------------
     conflicts = analysis.get("conflict_structure", [])
     global_cs = analysis.get("global_conflict_score", {})
     top_divergence = max(
@@ -839,16 +723,15 @@ def validate_and_autocorrect_analysis(analysis: Dict[str, Any]) -> Dict[str, Any
     for c in conflicts:
         intensity = c.get("intensity", 0)
         status = c.get("status", "Unresolved")
-        # Lock: 1.00 only if divergence >= 0.9 and Unresolved
+
         if intensity >= 1.0 and (top_divergence < 0.9 or "resolved" in status.lower()):
             c["intensity"] = 0.88
             corrections.append(f"Conflict intensity capped 1.00→0.88: {c.get('type')}")
-        # Resolved conflicts cannot have intensity > 0.80
+
         if "resolved" in status.lower() and intensity > 0.80:
             c["intensity"] = round(min(intensity, 0.80), 2)
             corrections.append(f"Resolved conflict capped: {c.get('type')}")
 
-    # Re-compute global conflict after any corrections
     if conflicts:
         sorted_c = sorted(conflicts, key=lambda x: -x.get("intensity", 0))
         top2 = sorted_c[:2]
@@ -864,9 +747,6 @@ def validate_and_autocorrect_analysis(analysis: Dict[str, Any]) -> Dict[str, Any
             )
             analysis["global_conflict_score"]["global_conflict"] = round(new_global, 2)
 
-    # ----------------------------------------------------------------
-    # Rule 3: Resolution detection re-check
-    # ----------------------------------------------------------------
     story_text = analysis.get("story_text", "")
     story_lower = story_text.lower()
     repair_count = sum(1 for m in _REPAIR_MARKERS if m in story_lower)
@@ -874,23 +754,20 @@ def validate_and_autocorrect_analysis(analysis: Dict[str, Any]) -> Dict[str, Any
 
     for c in conflicts:
         status = c.get("status", "")
-        # Adaptive narratives CANNOT be Unresolved
+
         if status == "Unresolved" and repair_count >= 2 and neg_count == 0:
             c["status"] = "Partially Resolved"
             corrections.append(f"Resolution corrected Unresolved→Partially Resolved: {c.get('type')}")
-        # Strong adaptive narrative → Resolved
+
         if status in ("Unresolved", "Partially Resolved") and repair_count >= 3 and neg_count == 0:
             c["status"] = "Resolved (Adaptive Integration)"
             corrections.append(f"Resolution upgraded to Resolved: {c.get('type')}")
 
-    # ----------------------------------------------------------------
-    # Rule 4: Score cap — no 10-scale metric above 88 (0-100 scale)
-    # ----------------------------------------------------------------
     CAPPED_KEYS = [
         "reality_testing", "ego_strength", "emotional_stability",
         "narrative_coherence", "social_cognition"
     ]
-    # Determine perfection criteria (Rule 3)
+
     story_text_for_cap = analysis.get("story_text", "")
     wc_for_cap = len(story_text_for_cap.split())
     for key in CAPPED_KEYS:
@@ -898,13 +775,10 @@ def validate_and_autocorrect_analysis(analysis: Dict[str, Any]) -> Dict[str, Any
                       analysis.get("quantitative_scores", {})]:
             val = store.get(key)
             if isinstance(val, (int, float)) and val > 88:
-                # Rule 3: cap to 88 unless all perfection criteria met
+
                 store[key] = 88.0
                 corrections.append(f"Score cap (Rule 3): {key} {val:.1f}→88.0")
 
-    # ----------------------------------------------------------------
-    # Rule 4: Ego Trend Volatility normalization for ≤3 cards
-    # ----------------------------------------------------------------
     n_cards = len(analysis.get("card_analyses", analysis.get("cards", []))) if isinstance(
         analysis.get("card_analyses", analysis.get("cards", [])), list
     ) else 0
@@ -914,7 +788,7 @@ def validate_and_autocorrect_analysis(analysis: Dict[str, Any]) -> Dict[str, Any
         scaled_vol = round(raw_vol * 0.35, 3)
         trend_change = float(ego_traj.get("trend_change", raw_vol))
         scaled_change = round(trend_change * 0.35, 3)
-        # Interpret scaled change
+
         if scaled_change < 1.0:
             trend_label = "Stable"
         elif scaled_change < 2.0:
@@ -927,9 +801,6 @@ def validate_and_autocorrect_analysis(analysis: Dict[str, Any]) -> Dict[str, Any
             ego_traj["n_cards_scale_applied"] = n_cards
             corrections.append(f"Ego volatility scaled (×0.35 for {n_cards} cards): {raw_vol:.3f}→{scaled_vol:.3f} [{trend_label}]")
 
-    # ----------------------------------------------------------------
-    # Rule 5: Attachment style ↔ security sync
-    # ----------------------------------------------------------------
     rp = analysis.get("relational_patterns", {})
     att = rp.get("attachment_classification", {})
     style = att.get("style", "")
@@ -950,9 +821,6 @@ def validate_and_autocorrect_analysis(analysis: Dict[str, Any]) -> Dict[str, Any
         rp["attachment_consistency_check"] = "FAIL (auto-corrected by gate)"
         corrections.append(f"Attachment security capped for {style}: {security:.2f}→0.60")
 
-    # ----------------------------------------------------------------
-    # Summary
-    # ----------------------------------------------------------------
     analysis["validation_report"] = {
         "gate": "v3.3 Pre-Output Validation",
         "corrections_made": len(corrections),

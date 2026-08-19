@@ -48,7 +48,7 @@ function FormattedValue({ value }: { value: any }) {
         return <FormattedValue value={parsed} />;
       }
     } catch (e) {
-      // Ignore
+
     }
   }
 
@@ -80,9 +80,9 @@ export function AssessmentAuditLogsSheet({
     if (open && assessmentId) {
       setIsLoading(true);
       setError(null);
-      
+
       const realAssessmentId = assessmentId.replace('SCR_', '');
-      
+
       apiClient
         .get(`/audit-logs?assessment_id=${realAssessmentId}`)
         .then((res) => setLogs(res.data))

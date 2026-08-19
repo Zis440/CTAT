@@ -33,7 +33,7 @@ export function ClinicWalletPage() {
   const fetchTransactions = async () => {
     setTxLoading(true);
     try {
-      // If date strings are empty, pass undefined.
+
       const data = await getTransactions(
         20,
         0,
@@ -53,18 +53,15 @@ export function ClinicWalletPage() {
     }
   };
 
-
-  // Always refresh on mount (separate from filter-change refresh)
   useEffect(() => {
     fetchBalance();
     fetchTransactions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, []);
 
-  // Re-fetch when filters change
   useEffect(() => {
     fetchTransactions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [typeFilter, dateFrom, dateTo]);
 
   let roleSuffix = "Psyichub";
@@ -81,8 +78,6 @@ export function ClinicWalletPage() {
         <title>{pageTitle}</title>
       </Helmet>
 
-
-
       <div className="flex items-center justify-between">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -97,7 +92,6 @@ export function ClinicWalletPage() {
             Manage your balance and recharge via Razorpay.
           </p>
         </motion.div>
-
 
       </div>
 

@@ -13,7 +13,6 @@ router = APIRouter(
     tags=["Assessments"]
 )
 
-
 def _assessment_to_response(a: Assessment) -> AssessmentResponse:
     """Manually map ORM object to response schema (snake_case → camelCase)."""
     return AssessmentResponse(
@@ -27,7 +26,6 @@ def _assessment_to_response(a: Assessment) -> AssessmentResponse:
         isComingSoon=a.is_coming_soon or False,
     )
 
-
 @router.get("", response_model=List[AssessmentResponse])
 def get_assessments(db: Session = Depends(get_db)):
     """
@@ -35,18 +33,16 @@ def get_assessments(db: Session = Depends(get_db)):
     Any authenticated user can read (Individual Psychologists, Clinic Staff, etc.).
     """
     assessments = db.query(Assessment).order_by(Assessment.id).all()
-    
-    # Custom sort to ensure Employee Mental Health is second
+
     def sort_key(a: Assessment):
         if a.slug == 'tat':
             return (1, '')
         elif a.slug == 'screening_level1' or "Employee Mental" in a.name:
             return (2, '')
         return (3, a.id)
-        
+
     assessments.sort(key=sort_key)
     return [_assessment_to_response(a) for a in assessments]
-
 
 @router.put("/{assessment_id}", response_model=AssessmentResponse)
 def update_assessment(
@@ -65,7 +61,6 @@ def update_assessment(
             detail="Assessment not found"
         )
 
-    # Update fields if provided
     if assessment_in.name is not None:
         assessment.name = assessment_in.name
     if assessment_in.category is not None:
@@ -79,7 +74,6 @@ def update_assessment(
     if assessment_in.orgPrice is not None:
         assessment.org_price = assessment_in.orgPrice
 
-    # Touch updated_at
     assessment.updated_at = func.now()
 
     db.commit()

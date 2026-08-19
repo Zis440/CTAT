@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 
-const EXPIRATION_MS = 24 * 60 * 60 * 1000; // 24 hours
+const EXPIRATION_MS = 24 * 60 * 60 * 1000;
 
 export function useSessionExpiration() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);

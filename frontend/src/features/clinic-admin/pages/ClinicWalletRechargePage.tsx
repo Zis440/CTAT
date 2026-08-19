@@ -7,8 +7,6 @@ import { getWalletBalance, getTransactions } from "@/services/walletService";
 import RechargeForm from "@/components/wallet/RechargeForm";
 import { useAuthStore } from "@/store/useAuthStore";
 
-
-
 import { CreditCard } from "lucide-react";
 
 export function ClinicWalletRechargePage() {
@@ -21,7 +19,7 @@ export function ClinicWalletRechargePage() {
       const b = await getWalletBalance();
       setBalance(b);
     } catch {
-      // Ignored for now
+
     }
   };
 
@@ -30,7 +28,7 @@ export function ClinicWalletRechargePage() {
       const data = await getTransactions(20, 0);
       setTransactions(data.transactions);
     } catch {
-      // Ignored for now
+
     }
   };
 
@@ -49,7 +47,7 @@ export function ClinicWalletRechargePage() {
   if (user?.role === "clinic_staff") roleSuffix = "Clinic Staff";
   if (user?.role === "org_admin") roleSuffix = "Organization Admin";
   if (user?.role === "org_staff") roleSuffix = "Organization Staff";
-  
+
   const pageTitle = `Recharge | ${roleSuffix}`;
 
   return (

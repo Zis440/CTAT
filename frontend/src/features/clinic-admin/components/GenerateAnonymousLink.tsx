@@ -24,7 +24,7 @@ export function GenerateAnonymousLink() {
       toast.error("Please select an assessment.");
       return;
     }
-    
+
     setIsGenerating(true);
     setGeneratedLink(null);
     try {
@@ -44,7 +44,7 @@ export function GenerateAnonymousLink() {
         assessment_id: parseInt(selectedAssessment),
         expires_in_days: 1
       });
-      
+
       const token = res.data.token;
       const fullUrl = `${window.location.origin}/assessment/${token}`;
       setGeneratedLink(fullUrl);
@@ -90,10 +90,10 @@ export function GenerateAnonymousLink() {
             </SelectContent>
           </Select>
         </div>
-        
-        <Button 
-          className="w-full bg-purple-600 hover:bg-purple-700 text-white" 
-          onClick={handleGenerate} 
+
+        <Button
+          className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+          onClick={handleGenerate}
           disabled={isGenerating || !selectedAssessment}
         >
           {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}

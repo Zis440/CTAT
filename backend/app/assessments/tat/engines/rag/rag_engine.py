@@ -27,11 +27,6 @@ from dataclasses import dataclass, field, asdict
 
 logger = logging.getLogger(__name__)
 
-
-# ============================================================================
-# DATA CLASSES
-# ============================================================================
-
 @dataclass
 class DocumentChunk:
     """A single text chunk from a corpus document."""
@@ -45,7 +40,6 @@ class DocumentChunk:
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
-
 @dataclass
 class RetrievedPassage:
     """A passage returned from similarity search."""
@@ -58,11 +52,6 @@ class RetrievedPassage:
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
-
-
-# ============================================================================
-# RAG ENGINE
-# ============================================================================
 
 class RAGEngine:
     """
@@ -92,26 +81,19 @@ class RAGEngine:
         self.chunk_overlap = chunk_overlap
         self.top_k = top_k
 
-        # Lazy-loaded resources
         self._embedding_model = None
         self._faiss_index = None
         self._chunks: List[DocumentChunk] = []
         self._index_built = False
 
-        # Paths for persistent storage
         self.index_dir.mkdir(parents=True, exist_ok=True)
         self._index_file = self.index_dir / "faiss_index.bin"
         self._chunks_file = self.index_dir / "chunks.pkl"
         self._manifest_file = self.index_dir / "manifest.json"
 
-        # Cache for repeated queries within a session
         self._query_cache: Dict[str, List[RetrievedPassage]] = {}
 
         logger.info("RAGEngine created (lazy init, index not yet built)")
-
-    # ------------------------------------------------------------------
-    # PUBLIC API
-    # ------------------------------------------------------------------
 
     def ensure_index_built(self) -> bool:
         """
@@ -122,13 +104,12 @@ class RAGEngine:
             return True
 
         try:
-            # Try loading persisted index first
+
             if self._load_persisted_index():
                 self._index_built = True
                 logger.info("RAG index loaded from disk")
                 return True
 
-            # Build fresh index from corpus
             logger.info("Building RAG index from corpus...")
             start = time.time()
 
@@ -165,12 +146,10 @@ class RAGEngine:
 
         k = top_k or self.top_k
 
-        # Check session cache
         cache_key = f"{query.strip()[:200]}_{k}"
         if cache_key in self._query_cache:
             return self._query_cache[cache_key]
 
-        # Ensure index exists
         if not self.ensure_index_built():
             logger.warning("RAG retrieve called but index unavailable")
             return []
@@ -185,7 +164,6 @@ class RAGEngine:
             )
             query_vec = np.array(query_embedding, dtype=np.float32)
 
-            # Clamp k to available chunks
             actual_k = min(k, len(self._chunks))
             if actual_k == 0:
                 return []
@@ -206,7 +184,6 @@ class RAGEngine:
                     chunk_index=chunk.chunk_index,
                 ))
 
-            # Cache the result
             self._query_cache[cache_key] = passages
             return passages
 
@@ -262,7 +239,6 @@ class RAGEngine:
             total += len(entry)
         return "\n".join(lines)
 
-    # Domain-specific query prefixes for targeted retrieval
     DOMAIN_QUERY_PREFIXES = {
         "needs_presses": "Murray need press scoring TAT personality assessment",
         "conflict": "conflict resolution defense mechanism psychological tension TAT",
@@ -295,7 +271,7 @@ class RAGEngine:
 
         source_filter: substring matched against passage source_file (case-insensitive).
         """
-        # Retrieve a larger set to compensate for post-filtering
+
         k = (top_k or self.top_k) * 3
         all_passages = self.retrieve(query, top_k=k)
         source_lower = source_filter.lower()
@@ -332,10 +308,6 @@ class RAGEngine:
             "chunk_overlap": self.chunk_overlap,
         }
 
-    # ------------------------------------------------------------------
-    # DOCUMENT INGESTION
-    # ------------------------------------------------------------------
-
     def _ingest_all_documents(self) -> List[DocumentChunk]:
         """Ingest all documents from corpus directories."""
         all_chunks: List[DocumentChunk] = []
@@ -345,7 +317,6 @@ class RAGEngine:
                 logger.warning(f"Corpus dir not found: {corpus_dir}")
                 continue
 
-            # Process PDFs
             for pdf_file in corpus_dir.glob("*.pdf"):
                 try:
                     chunks = self._ingest_pdf(pdf_file)
@@ -356,7 +327,6 @@ class RAGEngine:
                 except Exception as e:
                     logger.warning(f"Failed to ingest {pdf_file.name}: {e}")
 
-            # Process CSV files (e.g., MEDICATION.csv)
             for csv_file in corpus_dir.glob("*.csv"):
                 try:
                     chunks = self._ingest_csv(csv_file)
@@ -367,7 +337,6 @@ class RAGEngine:
                 except Exception as e:
                     logger.warning(f"Failed to ingest {csv_file.name}: {e}")
 
-            # Process plain text files
             for txt_file in corpus_dir.glob("*.txt"):
                 try:
                     chunks = self._ingest_text(txt_file)
@@ -441,10 +410,9 @@ class RAGEngine:
 
             df = pd.read_csv(csv_path, encoding="utf-8", on_bad_lines="skip")
 
-            # Convert groups of rows into text chunks
             row_texts = []
             for _, row in df.iterrows():
-                # Concatenate all non-null values
+
                 parts = []
                 for col in df.columns:
                     val = row.get(col)
@@ -453,7 +421,6 @@ class RAGEngine:
                 if parts:
                     row_texts.append(". ".join(parts))
 
-            # Group rows into chunks
             current_text = ""
             chunk_idx = 0
             for row_text in row_texts:
@@ -505,10 +472,6 @@ class RAGEngine:
 
         return chunks
 
-    # ------------------------------------------------------------------
-    # TEXT CHUNKING
-    # ------------------------------------------------------------------
-
     def _chunk_text(self, text: str) -> List[str]:
         """
         Split text into overlapping chunks of approximately chunk_size
@@ -517,7 +480,6 @@ class RAGEngine:
         if not text or len(text.strip()) < 20:
             return []
 
-        # Split on sentence boundaries
         import re
         sentences = re.split(r'(?<=[.!?])\s+', text)
 
@@ -533,7 +495,6 @@ class RAGEngine:
                 if current_chunk:
                     chunks.append(current_chunk.strip())
 
-                # Handle overlap: carry last portion forward
                 if self.chunk_overlap > 0 and current_chunk:
                     overlap_text = current_chunk[-self.chunk_overlap:]
                     current_chunk = overlap_text + " " + sentence
@@ -549,10 +510,6 @@ class RAGEngine:
             chunks.append(current_chunk.strip())
 
         return chunks
-
-    # ------------------------------------------------------------------
-    # FAISS INDEX
-    # ------------------------------------------------------------------
 
     def _get_embedding_model(self):
         """Lazy-load the sentence transformer model (single load)."""
@@ -574,7 +531,6 @@ class RAGEngine:
         model = self._get_embedding_model()
         texts = [c.text for c in chunks]
 
-        # Generate embeddings in batches
         logger.info(f"Generating embeddings for {len(texts)} chunks...")
         embeddings = model.encode(
             texts,
@@ -586,7 +542,6 @@ class RAGEngine:
         embeddings = np.array(embeddings, dtype=np.float32)
         dim = embeddings.shape[1]
 
-        # Build flat inner-product index (cosine sim with normalized vecs)
         self._faiss_index = faiss.IndexFlatIP(dim)
         self._faiss_index.add(embeddings)
 
@@ -606,7 +561,6 @@ class RAGEngine:
             with open(self._chunks_file, "wb") as f:
                 pickle.dump(self._chunks, f)
 
-            # Write manifest for integrity checking
             manifest = {
                 "num_chunks": len(self._chunks),
                 "embedding_model": self.embedding_model_name,
@@ -635,7 +589,6 @@ class RAGEngine:
         try:
             import faiss
 
-            # Check if corpus has changed
             with open(self._manifest_file) as f:
                 manifest = json.load(f)
 
@@ -644,7 +597,6 @@ class RAGEngine:
                 logger.info("Corpus changed since last index, rebuilding...")
                 return False
 
-            # Load index and chunks
             self._faiss_index = faiss.read_index(str(self._index_file))
 
             with open(self._chunks_file, "rb") as f:
@@ -672,10 +624,6 @@ class RAGEngine:
                     hasher.update(f.name.encode())
                     hasher.update(str(f.stat().st_size).encode())
         return hasher.hexdigest()[:16]
-
-    # ------------------------------------------------------------------
-    # FEEDBACK-DRIVEN KNOWLEDGE INGESTION (3.4)
-    # ------------------------------------------------------------------
 
     def ingest_clinical_note(
         self,
@@ -707,7 +655,6 @@ class RAGEngine:
         if not text or not text.strip():
             return 0
 
-        # Ensure index exists before adding to it
         if not self.ensure_index_built():
             logger.warning("Cannot ingest note: RAG index not available")
             return 0
@@ -716,12 +663,10 @@ class RAGEngine:
             import faiss
             import numpy as np
 
-            # Chunk the text
             chunks_text = self._chunk_text(text)
             if not chunks_text:
                 return 0
 
-            # Create DocumentChunk objects
             new_chunks = []
             base_idx = len(self._chunks)
             for i, chunk_text in enumerate(chunks_text):
@@ -735,7 +680,6 @@ class RAGEngine:
                 )
                 new_chunks.append(chunk)
 
-            # Generate embeddings
             model = self._get_embedding_model()
             embeddings = model.encode(
                 [c.text for c in new_chunks],
@@ -744,14 +688,11 @@ class RAGEngine:
             )
             embeddings = np.array(embeddings, dtype=np.float32)
 
-            # Add to FAISS index
             self._faiss_index.add(embeddings)
             self._chunks.extend(new_chunks)
 
-            # Clear query cache (new data may change results)
             self._query_cache.clear()
 
-            # Persist updated index
             self._persist_index()
 
             logger.info(

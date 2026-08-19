@@ -187,7 +187,7 @@ export function ClinicStaffSidebar() {
         )}
         {CLINIC_STAFF_NAV.map((group, idx) => {
           const visibleItems = group.items.filter(item => {
-            if (!item.permissionKey) return true; // always show items with no permission gate
+            if (!item.permissionKey) return true;
             const perms = user?.module_permissions;
             if (!perms) return false;
             return !!perms[item.permissionKey];

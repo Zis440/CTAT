@@ -36,16 +36,13 @@ def _log_activity_sync(user_id: str, method: str, path: str, status_code: int, i
 class ActivityLoggerMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         start_time = time.time()
-        
-        # Process request
+
         response = await call_next(request)
-        
-        # Skip logging for noisy paths
+
         path = request.url.path
         if path.startswith(("/health", "/readiness", "/api/auth/avatar", "/docs", "/openapi.json")):
             return response
-            
-        # Try to extract user ID from Authorization header
+
         user_id = "ANONYMOUS"
         auth_header = request.headers.get("Authorization")
         if auth_header and auth_header.startswith("Bearer "):
@@ -55,29 +52,27 @@ class ActivityLoggerMiddleware(BaseHTTPMiddleware):
                 if "sub" in payload:
                     user_id = payload["sub"]
             except JWTError:
-                pass  # Ignore invalid tokens here, let auth dependencies handle it
-                
+                pass
+
         process_time = round((time.time() - start_time) * 1000, 2)
         ip_address = request.client.host if request.client else "unknown"
-        
-        # Skip DB audit for unauthenticated requests (ANONYMOUS doesn't exist in users table)
+
         if user_id == "ANONYMOUS":
             return response
 
         referer = request.headers.get("referer", "")
 
-        # Run DB operation in thread pool to avoid blocking async loop
         loop = asyncio.get_running_loop()
         loop.run_in_executor(
-            None, 
-            _log_activity_sync, 
-            user_id, 
-            request.method, 
-            path, 
-            response.status_code, 
-            ip_address, 
+            None,
+            _log_activity_sync,
+            user_id,
+            request.method,
+            path,
+            response.status_code,
+            ip_address,
             process_time,
             referer
         )
-        
+
         return response

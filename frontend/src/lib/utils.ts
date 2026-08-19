@@ -16,10 +16,10 @@ export function getApiBaseUrl(): string {
 export function getMediaUrl(path: string | undefined): string {
   if (!path) return "";
   if (path.startsWith("http")) return path;
-  
+
   const apiBase = getApiBaseUrl();
   const origin = apiBase.replace(/\/api\/?$/, "");
-  
+
   return `${origin}${path.startsWith("/") ? "" : "/"}${path}`;
 }
 

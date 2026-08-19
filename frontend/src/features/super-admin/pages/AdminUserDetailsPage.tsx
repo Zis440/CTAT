@@ -80,7 +80,6 @@ export function AdminUserDetailsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  // form state
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -246,10 +245,9 @@ export function AdminUserDetailsPage() {
       </Helmet>
 
       <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-        {/* ── Top bar: Actions & Edit Switch ── */}
+
         <div className="flex items-center justify-end">
 
-          {/* Edit Mode Switch and Actions */}
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
@@ -282,18 +280,17 @@ export function AdminUserDetailsPage() {
           </div>
         </div>
 
-        {/* ── Identity Card ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
           <Card className="border-primary/10 bg-background/80 backdrop-blur-sm overflow-hidden">
-            {/* Gradient accent strip */}
+
             <div className="h-1 bg-gradient-to-r from-primary/60 via-primary to-primary/60" />
             <CardContent className="pt-6">
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-                {/* Avatar */}
+
                 <Avatar className="h-16 w-16 rounded-full border-2 border-primary/20 bg-primary/10 shrink-0">
                   <AvatarImage src={getMediaUrl(user.avatar_url)} alt={displayName} className="object-cover" />
                   <AvatarFallback className="text-xl font-bold text-primary">
@@ -301,7 +298,6 @@ export function AdminUserDetailsPage() {
                   </AvatarFallback>
                 </Avatar>
 
-                {/* Name + meta */}
                 <div className="flex-1 text-center sm:text-left space-y-3">
                   {isEditing ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg">
@@ -332,7 +328,6 @@ export function AdminUserDetailsPage() {
                     </Badge>
                   </div>
 
-                  {/* Contact Info */}
                   <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 pt-2 border-t border-primary/10">
                     <div className="space-y-1">
                       <Label className="text-muted-foreground font-bold text-[10px] uppercase tracking-wider">Email</Label>
@@ -368,7 +363,6 @@ export function AdminUserDetailsPage() {
           </Card>
         </motion.div>
 
-        {/* ── Account Details ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -456,7 +450,6 @@ export function AdminUserDetailsPage() {
           </Card>
         </motion.div>
 
-        {/* ── Professional Information ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -532,7 +525,6 @@ export function AdminUserDetailsPage() {
           </Card>
         </motion.div>
 
-        {/* ── System Status ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -566,7 +558,6 @@ export function AdminUserDetailsPage() {
           </Card>
         </motion.div>
 
-        {/* ── Action Bar (visible in edit mode) ── */}
         {isEditing && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}

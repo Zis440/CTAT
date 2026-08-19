@@ -1,6 +1,3 @@
-# ============================================================================
-# PER-CARD ANALYSIS FUNCTION
-# ============================================================================
 
 import numpy as np
 import logging
@@ -88,7 +85,6 @@ def _get_age_context(age):
             ),
         }
 
-
 def _get_gender_context(gender, nlp_processor=None):
     """Return interpretive context and adjustments based on patient gender.
     Uses Sentence-BERT embedding similarity for robust classification.
@@ -102,7 +98,6 @@ def _get_gender_context(gender, nlp_processor=None):
             "gender_normalized": False,
         }
 
-    # ── Transformer-based classification via cosine similarity ──
     gender_category = _classify_gender_embedding(gender, nlp_processor)
 
     if gender_category == "female":
@@ -148,7 +143,7 @@ def _get_gender_context(gender, nlp_processor=None):
             "gender_normalized": True,
         }
     else:
-        # Non-binary or other gender identities
+
         return {
             "label": f"Non-binary / Other ({gender})",
             "guidance": (
@@ -162,8 +157,6 @@ def _get_gender_context(gender, nlp_processor=None):
             "gender_normalized": True,
         }
 
-
-# ── Gender prototype sentences for embedding-based classification ──
 _GENDER_PROTOTYPES = {
     "male": [
         "The patient is male.",
@@ -188,9 +181,7 @@ _GENDER_PROTOTYPES = {
     ],
 }
 
-# Cache for prototype embeddings (computed once per process)
 _gender_proto_cache = {}
-
 
 def _classify_gender_embedding(gender_input: str, nlp_processor=None) -> str:
     """Classify gender using Sentence-BERT cosine similarity to prototypes.
@@ -200,23 +191,21 @@ def _classify_gender_embedding(gender_input: str, nlp_processor=None) -> str:
     """
     global _gender_proto_cache
 
-    # ── Primary path: transformer embedding similarity ──
     if nlp_processor is not None and hasattr(nlp_processor, 'get_embeddings'):
         try:
-            # Build / cache prototype embeddings on first call
+
             if not _gender_proto_cache:
                 for category, sentences in _GENDER_PROTOTYPES.items():
                     _gender_proto_cache[category] = nlp_processor.get_embeddings(sentences)
 
-            # Embed the input gender string as a short sentence
             query = f"The patient's gender is {gender_input}."
-            query_emb = nlp_processor.get_embeddings([query])[0]  # shape (dim,)
+            query_emb = nlp_processor.get_embeddings([query])[0]
 
             best_category = "nonbinary"
             best_score = -1.0
 
             for category, proto_embs in _gender_proto_cache.items():
-                # Cosine similarity: query vs each prototype, take mean
+
                 norms = np.linalg.norm(proto_embs, axis=1, keepdims=True) * np.linalg.norm(query_emb) + 1e-8
                 sims = np.dot(proto_embs, query_emb) / norms.squeeze()
                 avg_sim = float(np.mean(sims))
@@ -229,7 +218,6 @@ def _classify_gender_embedding(gender_input: str, nlp_processor=None) -> str:
         except Exception as e:
             print(f"⚠ Gender embedding classification failed ({e}), using fallback")
 
-    # ── Fallback: token-set matching (only if NLP processor unavailable) ──
     g = gender_input.strip().lower()
     g_tokens = set(g.replace('-', ' ').replace('_', ' ').split())
     male_tokens = {'male', 'man', 'boy', 'm'}
@@ -243,7 +231,6 @@ def _classify_gender_embedding(gender_input: str, nlp_processor=None) -> str:
         return "male"
     return "nonbinary"
 
-
 def analyze_card(card_id, story_text, patient_profile,
                  semantic_engine, murray_engine, theme_engine,
                  relational_engine, quantitative_scorer, scoring_engine,
@@ -255,12 +242,11 @@ def analyze_card(card_id, story_text, patient_profile,
     Comprehensive analysis of a single TAT card using provided engines.
     rag_engine: optional RAG engine for KB-grounded analysis enrichment.
     """
-    # --- PRODUCTION HARDENING: Reproducibility seed (§1) ---
+
     set_reproducibility_seed(42)
 
-    # --- PRODUCTION HARDENING: Input validation (§9) ---
     input_quality = detect_input_quality(story_text)
-    
+
     if input_quality["quality"] == "empty":
         print(f"⚠ Card {card_id}: Empty narrative — returning safe defaults")
         return {
@@ -287,28 +273,21 @@ def analyze_card(card_id, story_text, patient_profile,
     print(f"ANALYZING CARD: {card_id}")
     print(f"{'='*80}\n")
 
-    # --- Age-Aware Context ---
     patient_age = getattr(patient_profile, 'age', None)
     age_context = _get_age_context(patient_age)
 
-    # --- Gender-Aware Context (v4.0 — follows TAT manual card norms) ---
     patient_gender = getattr(patient_profile, 'gender', None)
-    # Pass the NLP processor from the semantic engine for transformer-based classification
+
     _nlp = getattr(semantic_engine, 'processor', None)
     gender_context = _get_gender_context(patient_gender, nlp_processor=_nlp)
 
-    # --- Gender Target Alignment (Card PCIP) ---
     card_tags = get_card_target_tags(str(card_id))
     ca_engine = ContextAdjustmentEngine()
     gender_target_alignment = ca_engine.compute_gender_target_alignment(patient_gender, card_tags)
-    
-    # Store in context
+
     gender_context['card_tags'] = card_tags
     gender_context['target_alignment'] = gender_target_alignment
 
-    # ------------------------------------------------------------------
-    # Language Detection (EN / HI / BN)
-    # ------------------------------------------------------------------
     print("🌐 Detecting narrative language...")
     detected_language = detect_language(story_text)
     print(f"  ✅ Language: {detected_language['language_name']} (confidence={detected_language['confidence']:.2f}, method={detected_language['method']})")
@@ -327,26 +306,22 @@ def analyze_card(card_id, story_text, patient_profile,
         '_input_quality': input_quality,
         'detected_language': detected_language,
         'transcription_policy': 'verbatim',
-        '_engine_warnings': [],  # Aggregates non-fatal engine failures
+        '_engine_warnings': [],
     }
 
-    # ------------------------------------------------------------------
-    # 0. Objective CNN Visual Analysis
-    # ------------------------------------------------------------------
     print("👁️ Extracting objective visual facts from TAT image...")
     if visual_engine:
         import os
         _BACKEND_ROOT = Path(__file__).parent.parent.parent.resolve()
         image_path = os.path.join(_BACKEND_ROOT, "data", "tat_cards", f"{card_id}.jpg")
-        
-        # Fallback to .webp or other if .jpg doesn't exist
+
         if not os.path.exists(image_path):
              for ext in [".webp", ".jpeg"]:
                   test_path = os.path.join(_BACKEND_ROOT, "data", "tat_cards", f"{card_id}{ext}")
                   if os.path.exists(test_path):
                        image_path = test_path
                        break
-                       
+
         visual_extraction = visual_engine.analyze_image(image_path, card_id)
         analysis['visual_extraction'] = visual_extraction
         print(f"  ✅ Extracted {visual_extraction.get('raw_detections', 0)} objects, {visual_extraction.get('people_count', 0)} people.")
@@ -354,18 +329,12 @@ def analyze_card(card_id, story_text, patient_profile,
         analysis['visual_extraction'] = {}
         print("  ⚠ Visual engine not provided.")
 
-    # ------------------------------------------------------------------
-    # 1. Semantic Narrative Parsing
-    # ------------------------------------------------------------------
     print("📖 Parsing narrative events...")
     events = semantic_engine.parse_story(story_text)
     event_dicts = [e.to_dict() for e in events]
     analysis['events'] = event_dicts
     print(f"  ✅ Events extracted: {len(events)}")
-    
-    # ------------------------------------------------------------------
-    # 1b. Perceptual Distortion Check (Cross-Modal Validation)
-    # ------------------------------------------------------------------
+
     print("🧠 Checking for perceptual distortions (CNN Vision vs NLP Story)...")
     distortions = evaluate_perceptual_distortions(analysis['visual_extraction'], event_dicts, story_text)
     analysis['perceptual_distortions'] = distortions
@@ -376,9 +345,6 @@ def analyze_card(card_id, story_text, patient_profile,
     else:
          print("  ✅ Narrative aligns with visual reality.")
 
-    # ------------------------------------------------------------------
-    # 2. Murray Need-Press Inference
-    # ------------------------------------------------------------------
     print("🎯 Inferring Murray needs and presses...")
     murray = murray_engine.infer_from_events(event_dicts, rag_engine=rag_engine)
     analysis['murray'] = murray
@@ -387,22 +353,18 @@ def analyze_card(card_id, story_text, patient_profile,
     print(f"  \u2705 Top needs: {', '.join([_strip_np(n) for n,_ in murray['needs'][:3]])}")
     print(f"  \u2705 Full profile computed: {len(murray.get('needs_full_profile', []))} needs")
 
-    # ------------------------------------------------------------------
-    # 3. Theme Detection
-    # ------------------------------------------------------------------
     print("🎨 Detecting narrative themes...")
     try:
         themes_result = theme_engine.extract_themes([story_text])
         analysis['themes'] = themes_result.get('themes', [])
-        
-        # Add Amplified Themes from Gender Target Alignment
+
         amplified = analysis.get('gender_context', {}).get('target_alignment', {}).get('amplified_themes', [])
         if amplified:
             for theme in amplified:
                 if theme not in analysis['themes']:
                     analysis['themes'].append(theme)
             print(f"  ✅ Added {len(amplified)} gender-aligned themes")
-            
+
         print(f"  ✅ Themes detected: {len(analysis['themes'])}")
     except Exception as e:
         logger.error(f"Theme detection failed: {e}", exc_info=True)
@@ -410,9 +372,6 @@ def analyze_card(card_id, story_text, patient_profile,
         analysis['themes'] = []
         analysis['_engine_warnings'].append(f"Theme detection failed: {e}")
 
-    # ------------------------------------------------------------------
-    # 4. Relational Field Analysis
-    # ------------------------------------------------------------------
     print("🕸️ Building relational field...")
     try:
         relational_engine.build_graph(event_dicts)
@@ -425,20 +384,16 @@ def analyze_card(card_id, story_text, patient_profile,
         analysis['relational_patterns'] = {}
         analysis['_engine_warnings'].append(f"Relational field failed: {e}")
 
-    # ------------------------------------------------------------------
-    # 4b. Conflict Structure Analysis (PARALLEL)
-    # ------------------------------------------------------------------
     print("⚔️ Analyzing Conflict Structure...")
     if conflict_engine:
         try:
-            # Pass narrative text and parsed events
+
             conflicts = conflict_engine.detect_conflicts(story_text, event_dicts)
             analysis['conflict_structure'] = conflicts
             print(f"  ✅ Prototype conflicts detected: {len(conflicts)}")
             if conflicts:
                 print(f"     Top Conflict: {conflicts[0]['type']} (Intent: {conflicts[0]['intensity']:.2f})")
 
-            # --- v3.1: Murray-derived conflict semantics ---
             murray_result = analysis.get('murray', {})
             if murray_result:
                 murray_conflicts = conflict_engine.detect_conflicts_from_murray(
@@ -448,7 +403,7 @@ def analyze_card(card_id, story_text, patient_profile,
                     is_single_card=True,
                     rag_engine=rag_engine,
                 )
-                # Merge: Murray conflicts take precedence, add prototype ones not already present
+
                 existing_types = {c['type'] for c in murray_conflicts}
                 for pc in conflicts:
                     if pc['type'] not in existing_types:
@@ -463,7 +418,6 @@ def analyze_card(card_id, story_text, patient_profile,
     else:
         analysis['conflict_structure'] = []
 
-    # --- v3.2 Fix 2: Compute harmonized global conflict score ---
     if conflict_engine and analysis.get('conflict_structure'):
         try:
             global_conflict = conflict_engine.compute_global_conflict_score(analysis['conflict_structure'])
@@ -477,15 +431,12 @@ def analyze_card(card_id, story_text, patient_profile,
     else:
         analysis['global_conflict_score'] = {"global_conflict": 0.0, "method": "no_conflicts"}
 
-    # ------------------------------------------------------------------
-    # 4c. Environment Classification (v2.0 — Fused NLP + Press)
-    # ------------------------------------------------------------------
     print("🌍 Classifying Psychological Environment...")
     if environment_classifier and 'murray' in analysis:
         try:
-            # Extract presses from Murray result
+
             presses = analysis['murray'].get('presses', [])
-            # Use fused classification if NLP processor is available
+
             if hasattr(environment_classifier, 'classify_fused') and environment_classifier.nlp_processor:
                 env_result = environment_classifier.classify_fused(presses, story_text)
                 print(f"  ✅ Environment Type: {env_result['primary']} (fused, confidence={env_result.get('primary_confidence', 0):.2f})")
@@ -503,28 +454,20 @@ def analyze_card(card_id, story_text, patient_profile,
     else:
         analysis['environment_classification'] = {}
 
-    # ------------------------------------------------------------------
-    # 5. Quantitative Scoring
-    # ------------------------------------------------------------------
     print("📊 Quantitative scoring...")
     quant_scores = quantitative_scorer.score_story(story_text, events=event_dicts)
     analysis['quantitative_scores'] = quant_scores
     print(f"  ✅ Overall complexity: {quant_scores.get('complexity',0):.1f}")
 
-    # ------------------------------------------------------------------
-    # 6. Multi-dimensional Scoring
-    # ------------------------------------------------------------------
     print("⚙️ Multi-dimensional scoring...")
     tat_scores = scoring_engine.score_story(story_text, events=event_dicts)
-    
-    # --- Context Adjustment Layer ---
+
     print("⚙️ Applying Context Adjustment Layer...")
     try:
         context_engine = ContextAdjustmentEngine()
-        
-        # Build patient data dict
+
         demo_data = getattr(patient_profile, 'demographic_data', {}) if hasattr(patient_profile, 'demographic_data') else {}
-        
+
         patient_data = {
             "age": patient_age,
             "gender": patient_gender,
@@ -536,26 +479,25 @@ def analyze_card(card_id, story_text, patient_profile,
             "occupation": demo_data.get("occupation", getattr(patient_profile, "occupation", "Unknown")),
             "socioeconomic_status": demo_data.get("socioeconomic_status", getattr(patient_profile, "socioeconomic_status", "Unknown"))
         }
-        
+
         observed_themes = analysis.get('themes', [])
         context_result = context_engine.process_patient_context(patient_data, observed_themes)
-        
+
         base_overall = tat_scores['overall_score']
         final_score = context_engine.apply_context_adjustment_layer(base_overall, context_result['psychological_context_score'])
-        
+
         analysis['context_adjustment'] = context_result
         analysis['base_psychological_score'] = base_overall
         analysis['overall_score'] = round(final_score, 2)
-        
+
         print(f"  ✅ Base Score: {base_overall:.2f} | PCS: {context_result['psychological_context_score']} | Final: {final_score:.2f}")
     except Exception as e:
         logger.error(f"Context Adjustment Layer failed: {e}", exc_info=True)
         print(f"  ⚠ Context Adjustment Layer failed: {e}")
         analysis['overall_score'] = tat_scores['overall_score']
 
-    # Apply Gender Target Confidence Modifier to Scoring Confidence
     alignment_mod = analysis.get('gender_context', {}).get('target_alignment', {}).get('confidence_modifier', 0.0)
-    adjusted_confidence = min(1.0, max(0.0, tat_scores['confidence'] + (alignment_mod * 0.5))) # Apply half the modifier to overall scoring confidence
+    adjusted_confidence = min(1.0, max(0.0, tat_scores['confidence'] + (alignment_mod * 0.5)))
 
     analysis.update({
         'dimension_scores': tat_scores['dimension_scores'],
@@ -564,7 +506,6 @@ def analyze_card(card_id, story_text, patient_profile,
     for k, v in tat_scores['dimension_scores'].items():
         analysis[k] = v
 
-    # --- PRODUCTION CORRECTION: Nuclear bounding on all dimension_scores ---
     from app.utils.production_utils import METRIC_BOUNDS
     dims = analysis.get('dimension_scores', {})
     for dk in list(dims.keys()):
@@ -573,11 +514,8 @@ def analyze_card(card_id, story_text, patient_profile,
             lo, hi = METRIC_BOUNDS.get(dk, (0, 100))
             bounded = max(lo, min(hi, float(val)))
             dims[dk] = bounded
-            analysis[dk] = bounded  # sync top-level key too
+            analysis[dk] = bounded
 
-    # --- v3.3 Fix 4: Score Synchronization — unify dual scoring systems ---
-    # For shared metric keys, take the minimum (conservative) value and write
-    # it into BOTH quantitative_scores and dimension_scores so they always match.
     SHARED_METRIC_KEYS = {
         'ego_strength', 'reality_testing', 'emotional_stability',
         'narrative_coherence', 'social_cognition'
@@ -588,9 +526,9 @@ def analyze_card(card_id, story_text, patient_profile,
         qval = quant.get(shared_key)
         dval = dims.get(shared_key)
         if qval is not None and dval is not None:
-            # Use the average of two independent calculations (not min, to avoid systematic underreporting)
+
             unified = (float(qval) + float(dval)) / 2.0
-            # Apply hard cap at 95 for non-psychosis narratives (raised from 88 to avoid over-suppression)
+
             unified = min(unified, 95.0)
             quant[shared_key] = round(unified, 2)
             dims[shared_key] = round(unified, 2)
@@ -598,9 +536,6 @@ def analyze_card(card_id, story_text, patient_profile,
     analysis['quantitative_scores'] = quant
     analysis['dimension_scores'] = dims
 
-    # --- v3.3 Fix 4b: hero_ego_strength ↔ ego_strength reconciliation ---
-    # Quantitative scorer outputs 'hero_ego_strength', dimension scorer outputs 'ego_strength'.
-    # Ensure both keys always carry the same value everywhere.
     hero_val = quant.get('hero_ego_strength')
     ego_dim_val = dims.get('ego_strength')
     if hero_val is not None and ego_dim_val is not None:
@@ -608,7 +543,7 @@ def analyze_card(card_id, story_text, patient_profile,
         unified_ego = min(unified_ego, 95.0)
         quant['hero_ego_strength'] = unified_ego
         dims['ego_strength'] = unified_ego
-        # Also keep both names in both dicts for any downstream consumer
+
         quant['ego_strength'] = unified_ego
         dims['hero_ego_strength'] = unified_ego
         analysis['hero_ego_strength'] = unified_ego
@@ -628,39 +563,31 @@ def analyze_card(card_id, story_text, patient_profile,
     analysis['quantitative_scores'] = quant
     analysis['dimension_scores'] = dims
 
-    # ------------------------------------------------------------------
-    # 7. Psychosis Risk
-    # ------------------------------------------------------------------
     analysis["psychosis_risk"] = detect_psychosis_risk(analysis)
 
-    # ------------------------------------------------------------------
-    # 8. Cultural Context + Gender Normalization (v4.0)
-    # ------------------------------------------------------------------
     print("🇮🇳 Applying Cultural Context Sensitivity...")
     background = patient_profile.demographic_data.get('background', '').lower()
     story_lower = story_text.lower()
     indian_factors = []
     cultural_normalization_notes = []
 
-    # --- Gender-Specific Card Norms (injected from gender_context) ---
     if gender_context.get('gender_normalized'):
         for norm in gender_context.get('card_norms', []):
-            # Only add the norm if it's relevant to the current card being analyzed
+
             card_id_str = str(card_id).lower()
             norm_lower = norm.lower()
-            # Broad match: does this norm mention any part of the card_id?
+
             card_num = card_id_str.replace('card', '').replace('_', '').strip()
             if card_num and card_num in norm_lower:
                 cultural_normalization_notes.append(
                     f"[Gender Norm — {gender_context['label']}] {norm}"
                 )
-        # Always add the gender guidance as a general normalization note
+
         cultural_normalization_notes.append(
             f"[Gender Context] {gender_context['guidance']}"
         )
         print(f"  👤 Gender normalization applied: {gender_context['label']}")
 
-    # Original detections (preserved)
     if 'joint' in background or 'family' in story_lower:
         indian_factors.append('joint_family_dynamics')
     if 'urban' in background:
@@ -670,7 +597,6 @@ def analyze_card(card_id, story_text, patient_profile,
     if 'education' in background or 'study' in story_lower:
         indian_factors.append('education_pressure')
 
-    # --- Recalibration v3.0: Expanded cultural markers ---
     if any(w in story_lower for w in ['obey', 'obedience', 'elders', 'respect elders', 'duty']):
         indian_factors.append('hierarchical_family_norms')
         cultural_normalization_notes.append(
@@ -704,18 +630,15 @@ def analyze_card(card_id, story_text, patient_profile,
     if cultural_normalization_notes:
         print(f"  📝 Cultural normalization notes: {len(cultural_normalization_notes)} applied")
 
-    # ------------------------------------------------------------------
-    # 9. Coping / Defense Mechanisms (aggregated for easy access)
-    # ------------------------------------------------------------------
     try:
         if defense_engine:
             card_defenses = defense_engine.infer_from_events(event_dicts)
         else:
-            # Fallback: try creating one (will work only if nlp_processor is available)
+
             from app.assessments.tat.engines.inference.defense_inference_engine import DefenseInferenceEngine
             _fallback_def_engine = DefenseInferenceEngine(semantic_engine.processor if hasattr(semantic_engine, 'processor') else None)
             card_defenses = _fallback_def_engine.infer_from_events(event_dicts)
-        # Sort and keep top 3 per card as per enforcement rule
+
         card_defenses = sorted(card_defenses, key=lambda x: x.get('confidence', 0), reverse=True)[:3]
         analysis['defense_mechanisms'] = card_defenses
     except Exception as e:
@@ -727,17 +650,14 @@ def analyze_card(card_id, story_text, patient_profile,
     coping = []
     for d in analysis.get('defense_mechanisms', []):
         coping.append(d.get("defense", "Unknown"))
-        
+
     for ev in event_dicts:
         if ev.get("event_type") == "defense" and ev.get("text"):
             coping.append(ev["text"][:60])
         if ev.get("defense_mechanism"):
             coping.append(ev["defense_mechanism"])
-    analysis['coping_mechanisms'] = list(dict.fromkeys(coping))[:5]  # deduplicated, top 5
+    analysis['coping_mechanisms'] = list(dict.fromkeys(coping))[:5]
 
-    # ------------------------------------------------------------------
-    # 9b. Meta-Reasoning Psychodynamic Inference (LLM-verified)
-    # ------------------------------------------------------------------
     if meta_reasoning_engine:
         print("🧠 Running Meta-Reasoning Psychodynamic Inference...")
         try:
@@ -758,16 +678,9 @@ def analyze_card(card_id, story_text, patient_profile,
             analysis['meta_reasoning'] = {}
             analysis['_engine_warnings'].append(f"Meta-reasoning failed: {e}")
 
-    # ------------------------------------------------------------------
-    # 10. Word count and confidence
-    # ------------------------------------------------------------------
     analysis['word_count'] = len(story_text.split())
     analysis['overall_confidence_process'] = min(1.0, analysis['word_count'] / 200)
 
-    # ------------------------------------------------------------------
-    # 10b. STRUCTURED 7-COMPONENT EXTRACTION (v9.0)
-    # ------------------------------------------------------------------
-    # Extracts the 7 mandatory psychodynamic components for the report
     print("📋 Extracting 7 mandatory psychodynamic components...")
     try:
         _relational = analysis.get('relational_patterns', {})
@@ -777,30 +690,26 @@ def analyze_card(card_id, story_text, patient_profile,
         _conflicts = analysis.get('conflict_structure', [])
         _defenses = analysis.get('defense_mechanisms', [])
 
-        # 1. Hero — entity with highest hero_score
         hero_entity = None
         hero_confidence = 0.0
         alignment_mod = analysis.get('gender_context', {}).get('target_alignment', {}).get('confidence_modifier', 0.0)
-        
+
         for fig in _valid_figs:
             if isinstance(fig, dict) and fig.get('type') == 'Hero':
                 hero_entity = fig.get('entity', 'Unknown')
                 hero_confidence = fig.get('role_confidence', 0)
-                # Apply gender alignment modifier
+
                 if alignment_mod != 0:
                     hero_confidence = min(1.0, max(0.0, hero_confidence + alignment_mod))
                     fig['role_confidence'] = hero_confidence
                 break
 
-        # 2. Needs — top Murray needs
         top_needs = [{'name': n, 'score': round(s, 3)} for n, s in _murray.get('needs', [])[:5]]
 
-        # 3. Environment / Press
         env_primary = _env.get('primary', 'N/A')
         env_confidence = _env.get('primary_confidence', 0)
         top_presses = [{'name': p, 'score': round(s, 3)} for p, s in _murray.get('presses', [])[:5]]
 
-        # 4. Authority Figure
         authority_entity = None
         authority_confidence = 0.0
         for fig in _valid_figs:
@@ -809,8 +718,6 @@ def analyze_card(card_id, story_text, patient_profile,
                 authority_confidence = fig.get('role_confidence', 0)
                 break
 
-        # 5. Contemporary Figure
-        # The relational engine may store type as "Contemporary" OR "Contemporary Figure"
         contemporary_entity = None
         contemporary_confidence = 0.0
         for fig in _valid_figs:
@@ -819,7 +726,6 @@ def analyze_card(card_id, story_text, patient_profile,
                 contemporary_confidence = fig.get('role_confidence', 0)
                 break
 
-        # 6. Conflict — top conflicts
         top_conflicts = []
         for c in _conflicts[:3]:
             top_conflicts.append({
@@ -828,7 +734,6 @@ def analyze_card(card_id, story_text, patient_profile,
                 'forces': c.get('forces', []),
             })
 
-        # 7. Defense Mechanisms — top defenses
         top_defenses = []
         for d in _defenses[:3]:
             top_defenses.append({
@@ -867,13 +772,10 @@ def analyze_card(card_id, story_text, patient_profile,
         analysis['structured_components'] = {}
         analysis['_engine_warnings'].append(f"Structured component extraction failed: {e}")
 
-    # ------------------------------------------------------------------
-    # 11. Pre-Output Validation Gate (v3.3)
-    # ------------------------------------------------------------------
     print("🔍 Running pre-output validation gate...")
     try:
         from app.utils.production_utils import validate_and_autocorrect_analysis
-        analysis['story_text'] = story_text  # ensure gate has access to text
+        analysis['story_text'] = story_text
         analysis = validate_and_autocorrect_analysis(analysis)
     except Exception as e:
         print(f"  ⚠ Validation gate failed (non-fatal): {e}")
@@ -884,12 +786,10 @@ def analyze_card(card_id, story_text, patient_profile,
 
     return analysis
 
-
 def detect_psychosis_risk(analysis):
     risk_score = 0
     flags = []
 
-    # Pull from dimension_scores (0-100 scale), falling back to top-level keys
     dims = analysis.get("dimension_scores", {})
 
     reality_testing = dims.get("reality_testing", analysis.get("reality_testing", 50))

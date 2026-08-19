@@ -48,7 +48,7 @@ interface PatientRecord {
   phone_number?: string | null;
 }
 
-type PatientType = "new" | "existing" /* | "anonymous" */;
+type PatientType = "new" | "existing" ;
 
 const newPatientSchema = z.object({
   first_name: z.string().min(2, "First name must be at least 2 characters"),
@@ -72,9 +72,6 @@ const newPatientSchema = z.object({
 const existingPatientSchema = z.object({
   patient_id: z.string().min(3, "Enter a valid Patient ID (e.g. PAT_XXXXXXXX)"),
 });
-
-
-
 
 const maskPhone = (phone: string | null | undefined) => {
   if (!phone) return "—";
@@ -142,7 +139,6 @@ export function IntakeView() {
     defaultValues: { first_name: "", last_name: "", email: "", phone_number: "", date_of_birth: undefined as unknown as Date, gender: "", background: "", environment: "", living_condition: "", family_structure: "", residence_type: "", environment_type: "", education_level: "", occupation: "", socioeconomic_status: "", notes: "" },
   });
 
-  // Auto-compute age from DOB
   const watchedDob = newForm.watch("date_of_birth");
   const computedAge = watchedDob
     ? Math.floor((Date.now() - new Date(watchedDob).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
@@ -153,8 +149,6 @@ export function IntakeView() {
     defaultValues: { patient_id: "" },
   });
 
-
-  // ── Patient search dropdown state ──
   const [allPatients, setAllPatients] = useState<PatientRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -162,7 +156,6 @@ export function IntakeView() {
   const [isFetchingPatients, setIsFetchingPatients] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // AlertDialog confirmation state
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingValues, setPendingValues] = useState<Record<string, any> | null>(null);
 
@@ -174,11 +167,9 @@ export function IntakeView() {
     message: string;
   } | null>(null);
 
-  // Screening Test specific payment dialog
   const [showScreeningPaymentDialog, setShowScreeningPaymentDialog] = useState(false);
   const [showScreeningShareDialog, setShowScreeningShareDialog] = useState(false);
 
-  // Fetch patients when "existing" tab is selected
   useEffect(() => {
     if (selectedType === "existing") {
       setIsFetchingPatients(true);
@@ -196,7 +187,6 @@ export function IntakeView() {
     }
   }, [selectedType]);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -207,7 +197,6 @@ export function IntakeView() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Filter patients by search query
   const filteredPatients = allPatients.filter((p) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
@@ -231,7 +220,7 @@ export function IntakeView() {
   const handleSubmit = async (values: Record<string, any>) => {
     setIsSubmitting(true);
     try {
-      // Convert Date to ISO string for the backend
+
       const payload = {
         patient_type: selectedType,
         ...values,
@@ -379,7 +368,6 @@ export function IntakeView() {
     }
   };
 
-  // Intercept form submission: validate first, then show confirmation dialog
   const handleFormValidated = (values: Record<string, any>) => {
     setPendingValues(values);
     setShowConfirm(true);
@@ -413,10 +401,6 @@ export function IntakeView() {
   };
 
   const breakdownItems: PaymentBreakdownItem[] = [];
-  //   title: "Start Anonymous Session?",
-  //   description: "An anonymous session will not save any patient data. Reports will still be generated.",
-  //   action: "Start Session",
-  // },
 
   const accountTypeMap: Record<string, string> = {
     org_admin: "Organization",
@@ -440,12 +424,10 @@ export function IntakeView() {
 
   return (
     <div className="w-full relative min-h-full isolate">
-      {/* <SkewedLines /> */}
+
       <Helmet>
         <title>{targetLabel} Intake | PsyicHub - Psychological Intelligence</title>
       </Helmet>
-
-
 
       <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="mb-8 text-center">
@@ -453,7 +435,6 @@ export function IntakeView() {
           <p className="text-muted-foreground">Select a session type, then initialize the {TEST_REGISTRY.find(t => t.slug === testType)?.name || "assessment"} evaluation.</p>
         </div>
 
-        {/* ── Patient Type Selector ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
           {PATIENT_OPTIONS.map(({ type, label, description, icon: Icon }) => {
             const isActive = selectedType === type;
@@ -481,7 +462,6 @@ export function IntakeView() {
           })}
         </div>
 
-        {/* ── New Patient Form ── */}
         {selectedType === "new" && (
           <Card className="animate-in fade-in slide-in-from-bottom-2 duration-300">
             <CardHeader>
@@ -807,7 +787,6 @@ export function IntakeView() {
           </Card>
         )}
 
-        {/* ── Existing Patient Form ── */}
         {selectedType === "existing" && (
           <Card className="animate-in fade-in slide-in-from-bottom-2 duration-300 overflow-visible">
             <CardHeader>
@@ -846,10 +825,9 @@ export function IntakeView() {
                             </div>
                           </FormControl>
 
-                          {/* Dropdown list */}
                           {isDropdownOpen && (
                             <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-popover shadow-xl animate-in fade-in slide-in-from-top-1 duration-150">
-                              {/* Header row */}
+
                               <div className="grid grid-cols-[1fr_1.4fr_1fr_1.5fr] gap-2 px-3 py-2 border-b border-border text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                                 <span>ID</span>
                                 <span>Name</span>
@@ -889,7 +867,6 @@ export function IntakeView() {
                     )}
                   />
 
-                  {/* Selected patient preview */}
                   {selectedPatient && (
                     <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm animate-in fade-in duration-200">
                       <span className="text-muted-foreground">Selected: </span>
@@ -918,7 +895,6 @@ export function IntakeView() {
 
       </div>
 
-      {/* Confirmation Dialog */}
       <PaymentConfirmationModal
         isOpen={showConfirm}
         onOpenChange={setShowConfirm}
@@ -929,7 +905,6 @@ export function IntakeView() {
         confirmText={confirmDialogMeta[selectedType as "new" | "existing"][intendedAction].action}
       />
 
-      {/* Secondary Dialog for Screening Tool Payment Confirmation */}
       <PaymentConfirmationModal
         isOpen={showScreeningPaymentDialog}
         onOpenChange={setShowScreeningPaymentDialog}
@@ -958,7 +933,6 @@ export function IntakeView() {
         }
       />
 
-      {/* Secondary Dialog for Screening Tool Share Link Confirmation */}
       <PaymentConfirmationModal
         isOpen={showScreeningShareDialog}
         onOpenChange={setShowScreeningShareDialog}
@@ -982,7 +956,6 @@ export function IntakeView() {
         }
       />
 
-      {/* Share Link Dialog */}
       <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -1015,7 +988,6 @@ export function IntakeView() {
         </DialogContent>
       </Dialog>
 
-      {/* Age Warning Dialog */}
       <AlertDialog open={ageWarning?.show || false} onOpenChange={(open) => !open && setAgeWarning(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

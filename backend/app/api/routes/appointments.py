@@ -33,8 +33,6 @@ from app.auth.dependencies import (
 
 router = APIRouter(prefix="/api/appointments", tags=["appointments"])
 
-
-# ── Helper ────────────────────────────────────────────────────────────────────
 def _build_admin_out(apt: Appointment, psych: User, patient: Patient, db: DBSession = None) -> AppointmentAdminOut:
     """Build an AppointmentAdminOut from joined ORM objects."""
     clinic_name = None
@@ -62,8 +60,6 @@ def _build_admin_out(apt: Appointment, psych: User, patient: Patient, db: DBSess
         patient_name=f"{patient.first_name} {patient.last_name or ''}".strip() if patient else None,
     )
 
-
-# ── Create ────────────────────────────────────────────────────────────────────
 @router.post("", response_model=AppointmentOut, status_code=201)
 def create_appointment(
     req: AppointmentCreate,
@@ -71,12 +67,11 @@ def create_appointment(
     db: DBSession = Depends(get_db),
 ):
     """Create a new appointment. The current user becomes the psychologist unless specified."""
-    # Validate patient exists and belongs to the user (or the user's clinic)
+
     patient = db.query(Patient).filter(Patient.id == req.patient_id).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
 
-    # Authorization: patient must belong to the user or the same clinic (Super Admins bypass this)
     if current_user.role != "super_admin" and patient.user_id != current_user.id:
         if not (current_user.clinic_id and patient.clinic_id == current_user.clinic_id):
             raise HTTPException(
@@ -84,12 +79,10 @@ def create_appointment(
                 detail="You can only create appointments for your own patients",
             )
 
-    # Determine psychologist: If Clinic Admin provides one, use it. Otherwise, default to current_user
     psychologist_id = current_user.id
     if req.psychologist_id and current_user.role in ["clinic_admin", "super_admin"]:
         psychologist_id = req.psychologist_id
 
-    # Determine clinic from patient or psychologist
     actual_clinic_id = patient.clinic_id
     if not actual_clinic_id:
         psych = db.query(User).filter(User.id == psychologist_id).first()
@@ -113,8 +106,6 @@ def create_appointment(
     db.refresh(apt)
     return apt
 
-
-# ── List own ──────────────────────────────────────────────────────────────────
 @router.get("", response_model=List[AppointmentOut])
 def list_appointments(
     status: Optional[str] = Query(None, description="Filter by status"),
@@ -127,13 +118,6 @@ def list_appointments(
         q = q.filter(Appointment.status == status)
     return q.order_by(Appointment.appointment_date.desc()).all()
 
-
-# ──────────────────────────────────────────────────────────────────────────────
-# IMPORTANT: Fixed-path routes MUST be defined BEFORE dynamic /{appointment_id}
-# routes, otherwise FastAPI will match "admin-all" as an appointment_id.
-# ──────────────────────────────────────────────────────────────────────────────
-
-# ── Admin: All appointments (Super Admin) ─────────────────────────────────────
 @router.get("/admin-all", response_model=List[AppointmentAdminOut])
 def list_all_appointments_admin(
     current_user: User = Depends(require_super_admin),
@@ -148,7 +132,6 @@ def list_all_appointments_admin(
         .all()
     )
     return [_build_admin_out(apt, psych, patient, db) for apt, psych, patient in results]
-
 
 @router.get("/admin/{appointment_id}", response_model=AppointmentAdminOut)
 def get_appointment_admin(
@@ -166,12 +149,10 @@ def get_appointment_admin(
     )
     if not result:
         raise HTTPException(status_code=404, detail="Appointment not found")
-    
+
     apt, psych, patient = result
     return _build_admin_out(apt, psych, patient, db)
 
-
-# ── Admin: Clinic appointments (Clinic Admin) ────────────────────────────────
 @router.get("/clinic-all", response_model=List[AppointmentAdminOut])
 def list_clinic_appointments(
     current_user: User = Depends(require_admin_or_above),
@@ -179,7 +160,7 @@ def list_clinic_appointments(
 ):
     """List appointments for the admin's clinic."""
     if current_user.role == UserRole.super_admin:
-        # Super admin sees everything
+
         results = (
             db.query(Appointment, User, Patient)
             .join(User, Appointment.psychologist_id == User.id)
@@ -201,7 +182,6 @@ def list_clinic_appointments(
         )
     return [_build_admin_out(apt, psych, patient, db) for apt, psych, patient in results]
 
-
 @router.get("/clinic/{appointment_id}", response_model=AppointmentAdminOut)
 def get_appointment_clinic(
     appointment_id: str,
@@ -210,29 +190,27 @@ def get_appointment_clinic(
 ):
     """Get a single appointment for Clinic Admin with detailed names."""
     actual_clinic_id = current_user.clinic_id or current_user.id
-    
+
     q = (
         db.query(Appointment, User, Patient)
         .join(User, Appointment.psychologist_id == User.id)
         .join(Patient, Appointment.patient_id == Patient.id)
         .filter(Appointment.id == appointment_id)
     )
-    
+
     if current_user.role != UserRole.super_admin:
         if not actual_clinic_id:
             raise HTTPException(status_code=400, detail="No clinic associated with your account")
         q = q.filter(Appointment.clinic_id == actual_clinic_id)
 
     result = q.first()
-    
+
     if not result:
         raise HTTPException(status_code=404, detail="Appointment not found or not in your clinic")
-    
+
     apt, psych, patient = result
     return _build_admin_out(apt, psych, patient, db)
 
-
-# ── Get by ID ─────────────────────────────────────────────────────────────────
 @router.get("/{appointment_id}", response_model=AppointmentAdminOut)
 def get_appointment(
     appointment_id: str,
@@ -252,7 +230,6 @@ def get_appointment(
 
     apt, psych, patient = result
 
-    # Authorization check
     if apt.psychologist_id != current_user.id:
         if current_user.role == UserRole.super_admin:
             pass
@@ -263,8 +240,6 @@ def get_appointment(
 
     return _build_admin_out(apt, psych, patient, db)
 
-
-# ── Update ────────────────────────────────────────────────────────────────────
 @router.patch("/{appointment_id}", response_model=AppointmentOut)
 def update_appointment(
     appointment_id: str,
@@ -277,7 +252,6 @@ def update_appointment(
     if not apt:
         raise HTTPException(status_code=404, detail="Appointment not found")
 
-    # Authorization: owner, clinic admin of same clinic, or super admin
     is_owner = apt.psychologist_id == current_user.id
     is_clinic_admin = (
         current_user.role == UserRole.clinic_admin
@@ -289,7 +263,6 @@ def update_appointment(
     if not (is_owner or is_clinic_admin or is_super_admin):
         raise HTTPException(status_code=403, detail="Not authorized to edit this appointment")
 
-    # Apply partial update
     update_data = req.model_dump(exclude_unset=True)
     if "status" in update_data:
         status_val = update_data["status"]
@@ -307,8 +280,6 @@ def update_appointment(
     db.refresh(apt)
     return apt
 
-
-# ── Delete ────────────────────────────────────────────────────────────────────
 @router.delete("/{appointment_id}", status_code=204)
 def delete_appointment(
     appointment_id: str,

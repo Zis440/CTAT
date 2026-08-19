@@ -11,12 +11,10 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-# revision identifiers, used by Alembic.
 revision: str = '1dae21e58313'
 down_revision: Union[str, Sequence[str], None] = 'c3d4e5f6a8b9'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     """Upgrade schema."""
@@ -33,8 +31,7 @@ def upgrade() -> None:
         op.add_column('user_verification_documents', sa.Column('verification_response', sa.JSON(), nullable=True))
     if 'verification_status' not in columns:
         op.add_column('user_verification_documents', sa.Column('verification_status', sa.String(length=50), nullable=True))
-    
-    # Drop old constraint (if it exists) and recreate properly
+
     try:
         op.drop_constraint('user_verification_documents_user_id_document_type_key', 'user_verification_documents', type_='unique')
     except Exception:
@@ -43,7 +40,6 @@ def upgrade() -> None:
         op.create_unique_constraint('uq_user_document_type', 'user_verification_documents', ['user_id', 'document_type'])
     except Exception:
         pass
-
 
 def downgrade() -> None:
     """Downgrade schema."""

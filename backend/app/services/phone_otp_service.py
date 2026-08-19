@@ -29,14 +29,12 @@ from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class PhoneVerificationResult:
     verified: bool
     phone_number: Optional[str] = None
     firebase_uid: Optional[str] = None
     error: Optional[str] = None
-
 
 class PhoneOTPService:
     """Verifies Firebase phone auth ID tokens on the backend."""
@@ -47,7 +45,6 @@ class PhoneOTPService:
         self.enabled = False
         self.project_id = os.getenv("FIREBASE_PROJECT_ID", "")
 
-        # Try to initialize Firebase Admin SDK
         service_account_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH", "")
 
         if service_account_path and os.path.exists(service_account_path):
@@ -65,7 +62,7 @@ class PhoneOTPService:
             except Exception as e:
                 logger.error(f"Firebase Admin SDK initialization failed: {e}")
         elif self.project_id:
-            # Try default credentials (useful in GCP environments)
+
             try:
                 import firebase_admin
                 from firebase_admin import auth
@@ -138,9 +135,7 @@ class PhoneOTPService:
                     error=f"Token verification failed: {str(e)}",
                 )
         else:
-            # DEV MODE: Accept any token and extract phone from it
-            # In dev mode, the frontend sends the phone number as the "token"
-            # Format: "dev_verified:<phone_number>"
+
             logger.warning("Phone OTP DEV MODE — accepting token without Firebase verification.")
             if id_token.startswith("dev_verified:"):
                 phone = id_token.replace("dev_verified:", "").strip()
@@ -150,7 +145,7 @@ class PhoneOTPService:
                     firebase_uid=f"dev_{phone}",
                 )
             else:
-                # In dev mode, still accept and extract a phone if it looks like one
+
                 return PhoneVerificationResult(
                     verified=True,
                     phone_number=id_token if id_token.startswith("+") else f"+91{id_token}",
@@ -171,9 +166,7 @@ class PhoneOTPService:
             self._auth.delete_user(firebase_uid)
             logger.info(f"Cleaned up Firebase user: {firebase_uid}")
         except Exception as e:
-            # Non-critical — log and continue
+
             logger.warning(f"Failed to cleanup Firebase user {firebase_uid}: {e}")
 
-
-# Singleton instance
 phone_otp_service = PhoneOTPService()

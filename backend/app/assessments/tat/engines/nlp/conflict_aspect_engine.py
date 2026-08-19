@@ -23,7 +23,6 @@ class Conflict:
     status: str
     evidence: str
 
-# Conflict Prototypes based on clinical literature
 CONFLICT_PROTOTYPES = {
     "Approach-Avoidance": [
         "The character wants something but is afraid to get it.",
@@ -63,7 +62,6 @@ CONFLICT_PROTOTYPES = {
     ]
 }
 
-# --- Recalibration: Conflict polarity mapping ---
 CONFLICT_POLARITY_MAP = {
     "Approach-Avoidance": "Approach–Avoidance",
     "Desire-Prohibition": "Approach–Avoidance",
@@ -73,7 +71,6 @@ CONFLICT_POLARITY_MAP = {
     "Affiliation-Rejection": "Approach–Avoidance",
 }
 
-# --- Recalibration: Conflict domain mapping ---
 CONFLICT_DOMAIN_MAP = {
     "Approach-Avoidance": "Intrapersonal",
     "Desire-Prohibition": "Intrapersonal",
@@ -83,7 +80,6 @@ CONFLICT_DOMAIN_MAP = {
     "Affiliation-Rejection": "Interpersonal",
 }
 
-# --- Recalibration: Resolution keyword sets (v3.1 expanded) ---
 RESOLUTION_KEYWORDS = {
     "Assertive": {"stood up", "confronted", "demanded", "insisted", "asserted",
                   "spoke up", "challenged", "declared", "took charge", "determined"},
@@ -98,7 +94,6 @@ RESOLUTION_KEYWORDS = {
                   "retaliated", "refused", "rejected", "destroyed"},
 }
 
-# v3.2 Fix 3: Narrative repair markers
 NARRATIVE_REPAIR_MARKERS = {
     "eventually", "understands", "learns", "improves", "supported",
     "realizes", "comes to", "begins to", "starts to", "manages to",
@@ -113,17 +108,15 @@ NEGATIVE_ENDING_MARKERS = {
     "suicide", "end", "darkness", "despair", "abandoned",
 }
 
-
 def _strip_np(val: str) -> str:
     """Strips internal 'n' or 'p' prefixes from Murray labels at display-level."""
     if isinstance(val, str):
-        # Handle older PascalCase like "nAchievement"
+
         if val.startswith('n') and len(val) > 1 and val[1].isupper():
             return val[1:]
         if val.startswith('p') and len(val) > 1 and val[1].isupper():
             return val[1:]
     return str(val)
-
 
 class ConflictAspectEngine:
     """
@@ -163,29 +156,25 @@ class ConflictAspectEngine:
         if not narrative_text.strip():
             return []
 
-        # 1. Global Narrative Embedding
         narrative_emb = self.processor.get_embeddings([narrative_text])
-        
+
         conflicts = []
 
-        # 2. Check against each conflict prototype
         for c_type, proto_embs in self.conflict_embs.items():
-            # Similarity: (1, dim) . (N, dim).T -> (1, N)
+
             sims = np.dot(narrative_emb, proto_embs.T) / (
                 np.linalg.norm(narrative_emb) * np.linalg.norm(proto_embs, axis=1) + 1e-8
             )
             score = np.mean(sims)
 
-            # Threshold for detection
-            if score > 0.45:  # Tunable threshold
-                # --- v3.2 Fix 3: Enhanced resolution detection ---
+            if score > 0.45:
+
                 resolution_pattern = self._classify_resolution_pattern(narrative_text)
                 resolution_status = self._determine_resolution_status(narrative_text, resolution_pattern)
 
                 conflict_polarity = CONFLICT_POLARITY_MAP.get(c_type, "Approach–Avoidance")
                 conflict_domain = CONFLICT_DOMAIN_MAP.get(c_type, "Intrapersonal")
 
-                # Determine Need vs Press from forces
                 forces = c_type.split("-")
                 primary_conflict = f"{_strip_np(forces[0])} (Need) vs {_strip_np(forces[1])} (Press)" if len(forces) >= 2 else _strip_np(c_type)
 
@@ -202,7 +191,6 @@ class ConflictAspectEngine:
                     "conflict_persistence_score": 0.0,
                 })
 
-        # --- KB augmentation: enrich conflict evidence ---
         conflicts = self._augment_with_kb(conflicts)
 
         return sorted(conflicts, key=lambda x: -x['intensity'])
@@ -225,7 +213,6 @@ class ConflictAspectEngine:
         """
         text_lower = narrative_text.lower()
 
-        # Extended adaptive integration markers (Rule 2 additions)
         ADAPTIVE_MARKERS = NARRATIVE_REPAIR_MARKERS | {
             "agreed", "mutually", "relief", "relieved", "confident",
             "stronger", "strengthened", "learned", "understood",
@@ -237,34 +224,27 @@ class ConflictAspectEngine:
         repair_count = sum(1 for marker in ADAPTIVE_MARKERS if marker in text_lower)
         negative_count = sum(1 for marker in NEGATIVE_ENDING_MARKERS if marker in text_lower)
 
-        # Final portion (last 25% of words)
         words = text_lower.split()
         final_portion = ' '.join(words[-(max(1, len(words) // 4)):]) if len(words) > 8 else text_lower
         final_repair = sum(1 for marker in ADAPTIVE_MARKERS if marker in final_portion)
         final_negative = sum(1 for marker in NEGATIVE_ENDING_MARKERS if marker in final_portion)
 
-        # ---- Tier 1: Resolved (Adaptive Integration) ----
-        # Strong repair signal AND ending is stabilized (no tension in final portion)
         if repair_count >= 2 and final_negative == 0 and resolution_pattern in ("Integrated", "Assertive"):
             return "Resolved (Adaptive Integration)"
 
-        # Upgrade: even 1 repair marker is enough if ending tone is clearly stable
         if repair_count >= 1 and final_repair > 0 and final_negative == 0 and resolution_pattern in ("Integrated", "Assertive"):
             return "Resolved (Adaptive Integration)"
 
-        # ---- Tier 2: Partially Resolved ----
-        # Repair occurred but emotional tension remains in ending
         if repair_count >= 1 and final_negative > 0:
             return "Partially Resolved"
         if repair_count >= 1 and resolution_pattern in ("Compliant", "Integrated", "Assertive"):
-            # Check if ending has any residual tension
+
             if final_negative == 0:
                 return "Resolved (Adaptive Integration)"
             return "Partially Resolved"
         if repair_count > 0 and negative_count > 0:
             return "Partially Resolved"
 
-        # ---- Tier 3: Unresolved ----
         if resolution_pattern in ("Avoidant", "Defensive"):
             return "Unresolved"
         if negative_count > repair_count and final_negative > 0:
@@ -282,34 +262,29 @@ class ConflictAspectEngine:
         if not conflicts:
             return {"global_conflict": 0.0, "method": "no_conflicts", "confidence": 0.0}
 
-        # Sort by intensity descending
         sorted_conflicts = sorted(conflicts, key=lambda c: -c.get('intensity', 0))
         intensities = [c.get('intensity', 0) for c in sorted_conflicts[:2]]
 
-        # Weighted mean of top-2 (weight: 0.6 for top, 0.4 for second)
         if len(intensities) >= 2:
             weighted_mean = intensities[0] * 0.6 + intensities[1] * 0.4
         else:
             weighted_mean = intensities[0]
 
-        # Resolution penalty: reduce by 20-40% if resolved
         resolved_any = any(
             'resolved' in c.get('status', '').lower()
             for c in sorted_conflicts[:2]
         )
         if resolved_any:
-            # Reduce by 30% (midpoint of 20-40%)
+
             resolution_penalty = 0.70
         else:
             resolution_penalty = 1.0
 
         global_score = weighted_mean * resolution_penalty
 
-        # Cap: cannot exceed highest divergence + 0.1
         max_allowed = intensities[0] + 0.1
         global_score = min(global_score, max_allowed)
 
-        # Clamp to [0, 1]
         global_score = max(0.0, min(1.0, global_score))
 
         return {
@@ -319,7 +294,6 @@ class ConflictAspectEngine:
             "resolution_penalty_applied": resolved_any,
             "confidence": min(0.9, 0.3 + len(conflicts) * 0.15),
         }
-
 
     def detect_conflicts_from_murray(
         self,
@@ -339,28 +313,22 @@ class ConflictAspectEngine:
         top_presses = murray_result.get('presses', [])[:3]
         resolution_pattern = self._classify_resolution_pattern(narrative_text)
 
-        # Compute intensity from need-press divergence
         need_scores = {n: s for n, s in top_needs}
         press_scores = {p: s for p, s in top_presses}
 
         conflicts = []
 
-        # Generate primary conflict: top need vs top press
         if top_needs and top_presses:
             primary_need, primary_need_score = top_needs[0]
             primary_press, primary_press_score = top_presses[0]
             divergence = abs(primary_need_score - primary_press_score)
-            intensity = min(1.0, divergence * 2.0 + 0.3)  # baseline + divergence
+            intensity = min(1.0, divergence * 2.0 + 0.3)
 
-            # Domain classification from need-press types
             domain = self._infer_conflict_domain(primary_need, primary_press)
             polarity = self._infer_polarity(primary_need, primary_press, resolution_pattern)
 
-            # --- v3.3 Fix 2: Use narrative repair markers for resolution ---
             resolution_status = self._determine_resolution_status(narrative_text, resolution_pattern)
 
-            # --- v3.3 Fix 3: Conflict 1.00 lock ---
-            # intensity = 1.00 only if: divergence >= 0.9 AND no resolution AND high event neg
             if intensity >= 0.95 and resolution_status != "Unresolved":
                 intensity = min(intensity, 0.88)
             elif intensity >= 1.0 and divergence < 0.9:
@@ -380,7 +348,6 @@ class ConflictAspectEngine:
                 "is_primary": True,
             })
 
-        # Secondary conflict: 2nd need vs 2nd press (if available)
         if len(top_needs) >= 2 and len(top_presses) >= 2:
             sec_need, sec_need_score = top_needs[1]
             sec_press, sec_press_score = top_presses[1]
@@ -390,7 +357,7 @@ class ConflictAspectEngine:
             polarity = self._infer_polarity(sec_need, sec_press, resolution_pattern)
 
             sec_resolution = self._determine_resolution_status(narrative_text, resolution_pattern)
-            # Fix 3: secondary conflict intensity lock
+
             if intensity >= 1.0 and divergence < 0.9:
                 intensity = min(intensity, 0.85)
 
@@ -408,11 +375,9 @@ class ConflictAspectEngine:
                 "is_primary": False,
             })
 
-        # If no needs or presses, fallback to prototype-based detection
         if not conflicts:
             conflicts = self.detect_conflicts(narrative_text, events)
 
-        # --- KB augmentation: enrich conflict evidence ---
         active_rag = rag_engine or self.rag_engine
         if active_rag:
             conflicts = self._augment_with_kb(conflicts, active_rag)
@@ -442,12 +407,12 @@ class ConflictAspectEngine:
                     kb_evidence = active_rag.format_context(passages, max_chars=800)
                 else:
                     kb_evidence = ""
-                
+
                 if kb_evidence:
                     for conflict in conflicts:
                         conflict["knowledge_base_evidence"] = kb_evidence
         except Exception:
-            pass  # KB augmentation is best-effort
+            pass
 
         return conflicts
 

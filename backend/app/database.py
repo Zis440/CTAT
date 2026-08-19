@@ -16,11 +16,9 @@ from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.pool import QueuePool
 
-# ── Data store root ───────────────────────────────────────────────────────────
-BASE_DIR = Path(__file__).parent.parent  # backend/
+BASE_DIR = Path(__file__).parent.parent
 DATA_STORE_DIR = BASE_DIR / "data_store"
 
-# ── Subdirectories (created at startup via ensure_data_store_dirs) ────────────
 AVATARS_DIR = DATA_STORE_DIR / "uploads" / "avatars"
 DOCUMENTS_DIR = DATA_STORE_DIR / "uploads" / "documents"
 REPORTS_DIR = DATA_STORE_DIR / "reports"
@@ -29,8 +27,6 @@ AUDIO_DIR = DATA_STORE_DIR / "audio"
 AUDIO_TEMP_DIR = AUDIO_DIR / "temp"
 SUPPORT_DIR = DATA_STORE_DIR / "uploads" / "support"
 
-# ── Database Configuration ────────────────────────────────────────────────────
-# DATABASE_URL must be set in the environment (e.g., via backend/.env)
 from dotenv import load_dotenv
 load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL", None)
@@ -42,11 +38,6 @@ if not DATABASE_URL:
         "  DATABASE_URL=postgresql://user:password@localhost:5432/psyichub"
     )
 
-# ── Connection Pooling Configuration (PostgreSQL) ─────────────────────────────
-# pool_size: pre-allocated persistent connections
-# max_overflow: additional connections above pool_size (total: 30)
-# pool_pre_ping: verify connection is alive before using (prevents stale connections)
-# pool_recycle: recycle connections after 1 hour (PostgreSQL closes idle after ~10 min)
 engine = create_engine(
     DATABASE_URL,
     poolclass=QueuePool,
@@ -56,7 +47,6 @@ engine = create_engine(
     pool_recycle=3600,
 )
 
-# Set PostgreSQL timezone to UTC for consistent timestamps
 @event.listens_for(engine, "connect")
 def set_postgresql_timezone(dbapi_conn, connection_record):
     cursor = dbapi_conn.cursor()
@@ -65,7 +55,6 @@ def set_postgresql_timezone(dbapi_conn, connection_record):
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
-
 
 def get_db():
     """FastAPI dependency — yields a DB session with proper transaction handling.
@@ -84,7 +73,6 @@ def get_db():
     finally:
         db.close()
 
-
 def ensure_data_store_dirs():
     """Create the data_store directory tree if it does not exist."""
     for d in [
@@ -99,27 +87,23 @@ def ensure_data_store_dirs():
     ]:
         d.mkdir(parents=True, exist_ok=True)
 
-
 def init_db():
     """Create all tables if they do not exist. Called during app lifespan startup.
 
     Creates enum types first (UserRole, AccountType, VerificationStatus, TransactionType)
     then creates all tables with proper indexes and constraints.
     """
-    # Ensure directory structure exists
+
     ensure_data_store_dirs()
 
-    # Import models so they register with Base.metadata before create_all
-    from app.models.user import User  # noqa: F401
-    from app.models.wallet import Wallet, WalletTransaction  # noqa: F401
-    from app.models.pricing import TestPricing  # noqa: F401
-    from app.models.patient import Patient, Session  # noqa: F401
-    from app.models.verification import UserVerificationDocument, VerificationDocumentRequirement  # noqa: F401
-    from app.models.support import SupportTicket, SupportMessage  # noqa: F401
-    from app.models.anonymous_link import AnonymousLink  # noqa: F401
+    from app.models.user import User
+    from app.models.wallet import Wallet, WalletTransaction
+    from app.models.pricing import TestPricing
+    from app.models.patient import Patient, Session
+    from app.models.verification import UserVerificationDocument, VerificationDocumentRequirement
+    from app.models.support import SupportTicket, SupportMessage
+    from app.models.anonymous_link import AnonymousLink
 
-    # ── Step 1: Create all tables FIRST ────────────────────────────────────────
-    # Must happen before any ALTER TABLE migrations so tables exist.
     try:
         with engine.begin() as connection:
             connection.execute(text("CREATE SCHEMA IF NOT EXISTS public"))
@@ -129,10 +113,6 @@ def init_db():
     Base.metadata.create_all(bind=engine)
     print("[OK] All tables created/verified in database")
 
-    # ── Step 2: Column migrations (each in its own transaction) ────────────────
-    # Each block is independent — a failure in one does NOT block the others.
-
-    # patients extra columns
     _run_migrations("patients", [
         "ALTER TABLE patients ADD COLUMN IF NOT EXISTS gender_confidence FLOAT",
         "ALTER TABLE patients ADD COLUMN IF NOT EXISTS living_condition VARCHAR",
@@ -144,12 +124,11 @@ def init_db():
         "ALTER TABLE patients ADD COLUMN IF NOT EXISTS socioeconomic_status VARCHAR",
     ])
 
-    # audit_logs rename (may already be done — ignore errors)
     try:
         with engine.begin() as conn:
             conn.execute(text("ALTER TABLE audit_logs RENAME COLUMN admin_id TO user_id"))
     except Exception:
-        pass  # Already renamed or column doesn't exist
+        pass
 
     _run_migrations("audit_logs", [
         "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS target_user_id VARCHAR",
@@ -164,7 +143,6 @@ def init_db():
         "ALTER TABLE screening_reports ADD COLUMN IF NOT EXISTS changes_history JSON",
     ])
 
-    # users terms of service columns
     _run_migrations("users", [
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMP WITH TIME ZONE",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_accepted_ip VARCHAR",
@@ -194,7 +172,6 @@ def init_db():
     _seed_default_pricing()
     _seed_assessments()
 
-
 def _run_migrations(table_name: str, statements: list):
     """Run a list of DDL statements in a single transaction, silently skipping errors."""
     try:
@@ -203,11 +180,10 @@ def _run_migrations(table_name: str, statements: list):
                 try:
                     conn.execute(text(stmt))
                 except Exception as e:
-                    # Column might already exist — not fatal
+
                     print(f"[MIGRATION] {table_name}: skipped — {e!r}")
     except Exception as e:
         print(f"[MIGRATION] {table_name}: transaction failed — {e!r}")
-
 
 def _seed_default_pricing():
     """Insert default pricing rows if the table is empty."""
@@ -220,9 +196,9 @@ def _seed_default_pricing():
             defaults = [
                 TestPricing(
                     test_type="TAT Full (20 cards)",
-                    individual_price_paise=3000,   # ₹30
-                    clinic_price_paise=3000,        # ₹30
-                    org_price_paise=2000,           # ₹20
+                    individual_price_paise=3000,
+                    clinic_price_paise=3000,
+                    org_price_paise=2000,
                 ),
                 TestPricing(
                     test_type="TAT Short (10 cards)",
@@ -253,10 +229,9 @@ def _seed_default_pricing():
     finally:
         db.close()
 
-
 def _seed_assessments():
     """Ensure all known assessments exist in the assessments table.
-    
+
     Uses upsert-style logic (insert if slug not present) so re-running
     is idempotent — existing rows with updated prices are NOT overwritten.
     """

@@ -41,7 +41,7 @@ def create_anonymous_link(
     Organization Staff/Admins can generate a one-time link for a candidate.
     Note: Org Admins view history only; this endpoint is for Org Staff.
     """
-    # Any logged in user can create an anonymous link
+
     pass
 
     assessment = db.query(Assessment).filter(Assessment.id == req.assessment_id).first()
@@ -84,7 +84,7 @@ def get_anonymous_links(
             raise HTTPException(status_code=403, detail="Access denied. Missing module permission: remote_assessment_link_management")
 
     if current_user.role == "org_admin":
-        # Show all links from users sharing the same clinic_id (org members)
+
         links = db.query(AnonymousLink, Assessment.name.label("assessment_name"), User)\
                   .outerjoin(Assessment, AnonymousLink.assessment_id == Assessment.id)\
                   .outerjoin(User, AnonymousLink.org_id == User.id)\
@@ -107,7 +107,7 @@ def get_anonymous_links(
             for link in links
         ]
     else:
-        # org_staff: only their own links
+
         links = db.query(AnonymousLink, Assessment.name.label("assessment_name"))\
                   .outerjoin(Assessment, AnonymousLink.assessment_id == Assessment.id)\
                   .filter(AnonymousLink.org_id == current_user.id)\
@@ -143,11 +143,10 @@ def revoke_anonymous_link(
     link = db.query(AnonymousLink).filter(AnonymousLink.token == token).first()
     if not link:
         raise HTTPException(status_code=404, detail="Link not found.")
-        
+
     if current_user.role != "org_admin" and link.org_id != current_user.id:
         raise HTTPException(status_code=403, detail="You can only revoke your own links.")
-        
-    # Revoke by expiring it immediately
+
     from datetime import datetime, timezone
     link.expires_at = datetime.now(timezone.utc)
     db.commit()
@@ -194,23 +193,23 @@ def validate_anonymous_link(token: str, db: DbSession = Depends(get_db)):
     link = db.query(AnonymousLink).filter(AnonymousLink.token == token).first()
     if not link:
         raise HTTPException(status_code=404, detail="Link not found.")
-    
+
     if link.used:
         raise HTTPException(status_code=400, detail="This link has already been used.")
-        
+
     from datetime import timezone
     now_utc = datetime.now(timezone.utc)
-    
+
     expires_at = link.expires_at
     if expires_at.tzinfo is None:
-        # SQLite stores naively, assume UTC since we try to store UTC
+
         expires_at = expires_at.replace(tzinfo=timezone.utc)
-        
+
     if expires_at < now_utc:
         raise HTTPException(status_code=400, detail="This link has expired.")
 
     assessment = db.query(Assessment).filter(Assessment.id == link.assessment_id).first()
-    
+
     patient = None
     if link.resulting_patient_id:
         patient_record = db.query(Patient).filter(Patient.id == link.resulting_patient_id).first()
@@ -220,7 +219,7 @@ def validate_anonymous_link(token: str, db: DbSession = Depends(get_db)):
                 "last_name": patient_record.last_name,
                 "email": patient_record.email,
             }
-            
+
     return {
         "valid": True,
         "assessment_name": assessment.name if assessment else "Unknown Assessment",
@@ -240,15 +239,14 @@ def record_anonymous_consent(token: str, request: Request, db: DbSession = Depen
     link = db.query(AnonymousLink).filter(AnonymousLink.token == token).first()
     if not link:
         raise HTTPException(status_code=404, detail="Link not found.")
-    
+
     if link.used:
         raise HTTPException(status_code=400, detail="This link has already been used.")
 
-    # Record consent
     link.consent_given = True
     link.consent_timestamp = datetime.utcnow()
     link.consent_ip_address = request.client.host if request.client else None
-    
+
     db.commit()
     return {"message": "Consent recorded successfully."}
 
@@ -260,19 +258,19 @@ def get_anonymous_screening_questions(token: str, db: DbSession = Depends(get_db
     link = db.query(AnonymousLink).filter(AnonymousLink.token == token).first()
     if not link:
         raise HTTPException(status_code=404, detail="Link not found.")
-    
+
     if link.used:
         raise HTTPException(status_code=400, detail="This link has already been used.")
-        
+
     from datetime import timezone, datetime
     now_utc = datetime.now(timezone.utc)
     expires_at = link.expires_at
     if expires_at.tzinfo is None:
         expires_at = expires_at.replace(tzinfo=timezone.utc)
-        
+
     if expires_at < now_utc:
         raise HTTPException(status_code=400, detail="This link has expired.")
-        
+
     from app.assessments.screening.level1.utils.question_bank import get_all_questions
     return get_all_questions()
 
@@ -299,7 +297,7 @@ def process_anonymous_assessment_background(
     from app.models.patient import Patient
     from app.services.patient_intake import PatientProfile
     import logging
-    
+
     logger = logging.getLogger(__name__)
     db = SessionLocal()
     try:
@@ -321,26 +319,23 @@ def process_anonymous_assessment_background(
         is_emhw = "Screening" in assessment_name or "Wellbeing" in assessment_name or "Mental Health" in assessment_name
 
         if is_emhw:
-            # Check wallet balance (actual deduction happens in background_generate_and_save_report upon success)
+
             from app.wallet.router import _get_target_user_id, _get_wallet, _record_transaction, get_assessment_price
             from app.models.wallet import TransactionType
-            
+
             charge_user_id = _get_target_user_id(user, db)
             wallet = _get_wallet(charge_user_id, db, lock=True)
-            
+
             required_balance = get_assessment_price(user, assessment_name, db)
-            
+
             if wallet.balance_paise < required_balance:
                 logger.error("Anonymous submit: Insufficient wallet balance for org_id %s. Proceeding to save assessment anyway.", org_id)
-                
-            # Save EMHW session
+
             from app.assessments.screening.level1 import models as screening_models
             from app.assessments.screening.level1.services.screening_level1_adapter import ScreeningLevel1Adapter
-            
-            # Initialize session
+
             db_assessment = ScreeningLevel1Adapter.initialize_session(db, user, core_patient_id=patient_id)
-            
-            # Save questionnaire responses
+
             q_responses = responses_data.get("questionnaire_responses", [])
             if q_responses:
                 db.add_all([
@@ -350,8 +345,7 @@ def process_anonymous_assessment_background(
                         score=q.get("score")
                     ) for q in q_responses
                 ])
-                
-            # Save game metrics
+
             g_metrics = responses_data.get("game_metrics", [])
             if g_metrics:
                 db.add_all([
@@ -363,13 +357,11 @@ def process_anonymous_assessment_background(
                         completion_time_seconds=g.get("completion_time_seconds")
                     ) for g in g_metrics
                 ])
-                
-            # Save patient context
+
             p_context = responses_data.get("patient_context")
             if p_context:
                 db_assessment.patient_context = p_context
-                
-            # Save story assessments
+
             s_assessments = responses_data.get("story_assessments", [])
             if s_assessments:
                 db.add_all([
@@ -381,7 +373,7 @@ def process_anonymous_assessment_background(
                         completion_time_seconds=story.get("completion_time_seconds")
                     ) for story in s_assessments
                 ])
-                
+
             from datetime import datetime
             db_assessment.end_time = datetime.utcnow()
             db.commit()
@@ -394,7 +386,7 @@ def process_anonymous_assessment_background(
                 org_id=getattr(user, "clinic_id", None),
                 action="ASSESSMENT_COMPLETION",
                 details={
-                    "assessment_id": db_assessment.id, 
+                    "assessment_id": db_assessment.id,
                     "assessment_name": assessment_name,
                     "patient_id": patient_id,
                     "patient_name": patient_name,
@@ -402,28 +394,27 @@ def process_anonymous_assessment_background(
                     "clinic_or_org_name": user.clinic_name or "Independent Psychologist"
                 }
             )
-            
-            # Trigger report generation in background to prevent request timeout
+
             import threading
             from app.api.routes.screening_level1 import background_generate_and_save_report
             threading.Thread(target=background_generate_and_save_report, args=(db_assessment.id,)).start()
-            
+
             logger.info("Anonymous EMHW assessment successfully processed for %s", patient_id)
             return {"type": "EMHW", "id": db_assessment.id}
-            
+
         else:
-            # TAT Logic
+
             from app.assessments.tat.pipeline.analysis import analyze_card
             from app.schemas.analysis import AggregateRequest
             from app.api.routes.analysis import _process_session_aggregation, _generate_pdf_report_internal
-            
+
             cards_data = responses_data.get("cards", [])
             card_results = {}
             for card in cards_data:
                 card_id = card.get("card_id")
                 story = card.get("story")
                 if not card_id or not story: continue
-                
+
                 res = analyze_card(
                     card_id=card_id,
                     story_text=story,
@@ -445,27 +436,25 @@ def process_anonymous_assessment_background(
                 logger.error("Anonymous submit: No valid cards analyzed.")
                 return
 
-            # Aggregate (wallet is deducted here)
             req = AggregateRequest(
                 patientId=patient_id,
                 assessment_name=assessment_name,
                 card_results=card_results,
                 request_psychologist_validation=request_validation
             )
-            
+
             agg, session_record = _process_session_aggregation(req, user, db, skip_billing=False)
-            
-            # Generate Report
+
             _generate_pdf_report_internal(req, user, db, agg, session_record)
-            
+
             logger.info("Anonymous TAT assessment successfully processed for %s", patient_id)
-            
+
             from app.models.anonymous_link import AnonymousLink
             link_record = db.query(AnonymousLink).filter(AnonymousLink.token == link_token).first()
             if link_record:
                 link_record.resulting_session_id = session_record.id
                 db.commit()
-                
+
             return {"type": "TAT", "id": session_record.id}
 
     except Exception as e:
@@ -473,7 +462,6 @@ def process_anonymous_assessment_background(
         return None
     finally:
         db.close()
-
 
 @router.post("/submit/{token}")
 def submit_anonymous_assessment(
@@ -488,7 +476,7 @@ def submit_anonymous_assessment(
     link = db.query(AnonymousLink).filter(AnonymousLink.token == token).first()
     if not link:
         raise HTTPException(status_code=404, detail="Link not found.")
-    
+
     if link.used:
         raise HTTPException(status_code=400, detail="This link has already been used.")
 
@@ -499,7 +487,7 @@ def submit_anonymous_assessment(
         patient_id = link.resulting_patient_id
         patient_name = f"{req.first_name} {req.last_name}".strip()
     else:
-        # Create Anonymous Patient
+
         new_patient = Patient(
             user_id=link.org_id,
             patient_type="anonymous",
@@ -513,15 +501,13 @@ def submit_anonymous_assessment(
         patient_id = new_patient.id
         patient_name = f"{req.first_name} {req.last_name}".strip()
 
-    # Mark link as used
     link.used = True
     link.used_at = datetime.utcnow()
     link.resulting_patient_id = patient_id
 
-    # Execute processing asynchronously in the background so the user doesn't wait
     assessment_record = db.query(Assessment).filter(Assessment.id == link.assessment_id).first()
     assessment_name = assessment_record.name if assessment_record else "Anonymous Assessment"
-    
+
     background_tasks.add_task(
         process_anonymous_assessment_background,
         link_token=token,
@@ -534,7 +520,7 @@ def submit_anonymous_assessment(
         request_validation=link.request_validation,
         responses_data=req.responses.copy()
     )
-    
+
     db.commit()
 
     return {"message": "Assessment submitted successfully."}

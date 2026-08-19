@@ -30,9 +30,6 @@ import json
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
-
-# ── Schemas ──────────────────────────────────────────────────────────────────
-
 class AdminCreateUserRequest(BaseModel):
     """Fields required to create a new user by super admin."""
     first_name: str
@@ -60,13 +57,11 @@ class AdminUpdateUserRequest(BaseModel):
     roc_number: Optional[str] = None
     can_assess: Optional[bool] = None
 
-
 class PaginatedUsersResponse(BaseModel):
     users: List[UserOut]
     total: int
     page: int
     page_size: int
-
 
 class AdminWalletTransactionOut(BaseModel):
     id: str
@@ -83,18 +78,15 @@ class AdminWalletTransactionOut(BaseModel):
     razorpay_payment_id: Optional[str] = None
     created_at: str
 
-
 class PaginatedAdminTransactionsResponse(BaseModel):
     transactions: List[AdminWalletTransactionOut]
     total: int
     page: int
     page_size: int
 
-
 class DailyIncomeOut(BaseModel):
     date: str
     amount_rupees: float
-
 
 class AdminIncomeOverviewOut(BaseModel):
     total_revenue_rupees: float
@@ -103,7 +95,6 @@ class AdminIncomeOverviewOut(BaseModel):
     today_revenue_rupees: float
     daily_breakdown: List[DailyIncomeOut]
     recent_transactions: List[AdminWalletTransactionOut]
-
 
 class AdminUpdatePatientRequest(BaseModel):
     first_name: Optional[str] = None
@@ -116,7 +107,6 @@ class AdminUpdatePatientRequest(BaseModel):
     background: Optional[str] = None
     environment: Optional[str] = None
     notes: Optional[str] = None
-
 
 class AdminPatientOut(BaseModel):
     id: str
@@ -168,7 +158,6 @@ class PaginatedAdminClinicsResponse(BaseModel):
     page: int
     page_size: int
 
-
 class MonthlyGrowthOut(BaseModel):
     month: str
     users: int
@@ -191,8 +180,6 @@ class AdminDashboardStatsOut(BaseModel):
     monthly_growth: List[MonthlyGrowthOut]
     recent_users: List[RecentUserOut]
 
-# ── Endpoints ────────────────────────────────────────────────────────────────
-
 @router.get("/dashboard-stats", response_model=AdminDashboardStatsOut)
 def get_dashboard_stats(
     admin: User = Depends(require_super_admin),
@@ -202,23 +189,22 @@ def get_dashboard_stats(
     from app.models.patient import Patient, Session
     from sqlalchemy import extract, func
     import datetime
-    
+
     base_user_query = db.query(User).filter(User.role != UserRole.super_admin)
-    
+
     total_users = base_user_query.count()
     active_users = base_user_query.filter(User.is_active == True).count()
-    
+
     clinics = base_user_query.filter(User.account_type == AccountType.clinic).count()
     individuals = base_user_query.filter(User.account_type == AccountType.individual).count()
-    
+
     pending_verifications = base_user_query.filter(User.verification_status == VerificationStatus.pending).count()
-    
+
     total_patients = db.query(Patient).count()
     total_sessions = db.query(Session).count()
-    
-    # Calculate monthly growth (new users per month for current year)
+
     current_year = datetime.datetime.now().year
-    
+
     monthly_counts = (
         db.query(
             extract('month', User.created_at).label('month'),
@@ -228,20 +214,19 @@ def get_dashboard_stats(
         .group_by(extract('month', User.created_at))
         .all()
     )
-    
-    month_names = {1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "May", 6: "Jun", 
+
+    month_names = {1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "May", 6: "Jun",
                    7: "Jul", 8: "Aug", 9: "Sep", 10: "Oct", 11: "Nov", 12: "Dec"}
-                   
+
     growth_dict = {month_names[i]: 0 for i in range(1, 13)}
-    
+
     for row in monthly_counts:
         month_idx = int(row.month) if row.month else None
         if month_idx and month_idx in month_names:
             growth_dict[month_names[month_idx]] = row.count
-            
+
     monthly_growth = [{"month": k, "users": v} for k, v in growth_dict.items()]
-    
-    # Recent users
+
     recent_users_q = db.query(User).filter(User.role != UserRole.super_admin).order_by(User.created_at.desc()).limit(5).all()
     recent_users = [
         {
@@ -252,7 +237,7 @@ def get_dashboard_stats(
             "created_at": u.created_at.isoformat() if u.created_at else ""
         } for u in recent_users_q
     ]
-    
+
     return AdminDashboardStatsOut(
         total_users=total_users,
         active_users=active_users,
@@ -264,7 +249,6 @@ def get_dashboard_stats(
         monthly_growth=monthly_growth,
         recent_users=recent_users
     )
-
 
 @router.post("/users", response_model=UserOut, status_code=201)
 def create_user(
@@ -304,18 +288,17 @@ def create_user(
         verification_status=VerificationStatus.approved,
         can_assess=can_assess,
     )
-    
+
     db.add(new_user)
     db.flush()
-    
+
     wallet = Wallet(user_id=new_user.id)
     db.add(wallet)
-    
+
     db.commit()
     db.refresh(new_user)
-    
-    return UserOut.model_validate(new_user)
 
+    return UserOut.model_validate(new_user)
 
 @router.get("/users", response_model=PaginatedUsersResponse)
 def list_all_users(
@@ -333,7 +316,6 @@ def list_all_users(
     """List all users with optional filters and pagination."""
     query = db.query(User).filter(User.id != admin.id)
 
-    # ── Filters ──────────────────────────────────────────────────────────
     if search:
         like = f"%{search}%"
         query = query.filter(
@@ -362,7 +344,7 @@ def list_all_users(
 
     if clinic_id:
         query = query.filter(User.clinic_id == clinic_id)
-        
+
     if account_type:
         try:
             from app.models.user import AccountType
@@ -370,7 +352,6 @@ def list_all_users(
         except ValueError:
             pass
 
-    # ── Sorting & Pagination ─────────────────────────────────────────────
     total = query.count()
     users = (
         query
@@ -387,7 +368,6 @@ def list_all_users(
         page_size=page_size,
     )
 
-
 @router.get("/users/{user_id}", response_model=UserOut)
 def get_user_detail(
     user_id: str,
@@ -399,7 +379,6 @@ def get_user_detail(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return UserOut.model_validate(user)
-
 
 @router.patch("/users/{user_id}", response_model=UserOut)
 def update_user(
@@ -413,7 +392,6 @@ def update_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Prevent de-activating yourself
     if user.id == admin.id and payload.is_active is False:
         raise HTTPException(status_code=400, detail="Cannot deactivate your own account")
 
@@ -456,13 +434,11 @@ def update_user(
         else:
             setattr(user, field, value)
 
-    # If verification_status was updated, create an audit log
     if "verification_status" in updates:
         new_status = updates["verification_status"]
         if new_status in (VerificationStatus.approved, VerificationStatus.rejected):
             from datetime import datetime
-            
-            # When approved, enable can_assess for individual psychologists
+
             if new_status == VerificationStatus.approved and user.role == UserRole.individual_psychologist:
                 user.can_assess = True
 
@@ -471,11 +447,10 @@ def update_user(
                 "reason": "Super Admin action via dashboard",
                 "timestamp": datetime.utcnow().isoformat()
             }
-            
-            # Create a simple verifiable hash of the event
+
             hash_input = f"{admin.id}:{user.id}:{action}:{details['timestamp']}"
             signature_hash = hashlib.sha256(hash_input.encode()).hexdigest()
-            
+
             audit_log = AuditLog(
                 user_id=admin.id,
                 target_user_id=user.id,
@@ -488,7 +463,6 @@ def update_user(
     db.commit()
     db.refresh(user)
     return UserOut.model_validate(user)
-
 
 @router.delete("/users/{user_id}")
 def delete_user(
@@ -519,24 +493,21 @@ def delete_user(
             db.execute(text("DELETE FROM support_tickets WHERE user_id = :uid"), {"uid": uid})
             db.execute(text("DELETE FROM user_verification_documents WHERE user_id = :uid"), {"uid": uid})
             db.execute(text("UPDATE screening_reports SET verified_by_id = NULL WHERE verified_by_id = :uid"), {"uid": uid})
-            # Patient cascade
+
             db.execute(text("UPDATE screening_reports SET patient_id = NULL WHERE patient_id IN (SELECT id FROM patients WHERE user_id = :uid)"), {"uid": uid})
             db.execute(text("UPDATE sessions SET assigned_psychologist_id = NULL WHERE assigned_psychologist_id = :uid"), {"uid": uid})
             db.execute(text("DELETE FROM sessions WHERE user_id = :uid OR patient_id IN (SELECT id FROM patients WHERE user_id = :uid)"), {"uid": uid})
             db.execute(text("DELETE FROM patients WHERE user_id = :uid"), {"uid": uid})
-            
-            # Wallet cascade
+
             db.execute(text("DELETE FROM wallet_transactions WHERE wallet_id IN (SELECT id FROM wallets WHERE user_id = :uid) OR created_by_id = :uid"), {"uid": uid})
             db.execute(text("DELETE FROM wallets WHERE user_id = :uid"), {"uid": uid})
-            
-            # Profiles
+
             db.execute(text("DELETE FROM clinic_profiles WHERE clinic_id = :uid"), {"uid": uid})
             db.execute(text("DELETE FROM org_profiles WHERE org_id = :uid"), {"uid": uid})
-            
-            # Finally user
+
             db.execute(text("DELETE FROM users WHERE id = :uid"), {"uid": uid})
-            
-            db.expunge(user)  # detach ORM object before committing the raw DELETE
+
+            db.expunge(user)
             db.commit()
             return {"detail": f"User {user.email} and all associated data permanently deleted."}
         except Exception as exc:
@@ -546,7 +517,6 @@ def delete_user(
         user.is_active = False
         db.commit()
         return {"detail": f"User {user.email} has been deactivated."}
-
 
 @router.get("/income/overview", response_model=AdminIncomeOverviewOut)
 def get_income_overview(
@@ -561,7 +531,6 @@ def get_income_overview(
     start_of_today = datetime(now.year, now.month, 1).replace(hour=0, minute=0, second=0, microsecond=0)
     start_of_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    # Base query for credits (recharges)
     base_query = db.query(func.sum(WalletTransaction.amount_paise)).filter(
         WalletTransaction.type == TransactionType.credit
     )
@@ -571,7 +540,6 @@ def get_income_overview(
     weekly_revenue_paise = base_query.filter(WalletTransaction.created_at >= seven_days_ago).scalar() or 0
     today_revenue_paise = base_query.filter(WalletTransaction.created_at >= start_of_today).scalar() or 0
 
-    # Daily breakdown for charting
     daily_results = (
         db.query(
             func.date(WalletTransaction.created_at).label("date"),
@@ -589,7 +557,6 @@ def get_income_overview(
         for row in daily_results
     ]
 
-    # Recent transactions
     recent_txs_raw = (
         db.query(WalletTransaction, User)
         .join(Wallet, Wallet.id == WalletTransaction.wallet_id)
@@ -599,7 +566,7 @@ def get_income_overview(
         .limit(5)
         .all()
     )
-    
+
     recent_transactions = [
         AdminWalletTransactionOut(
             id=tx.id,
@@ -628,7 +595,6 @@ def get_income_overview(
         recent_transactions=recent_transactions,
     )
 
-
 @router.get("/transactions", response_model=PaginatedAdminTransactionsResponse)
 def list_all_transactions(
     page: int = Query(1, ge=1),
@@ -654,7 +620,7 @@ def list_all_transactions(
             | (User.last_name.ilike(like))
             | (User.email.ilike(like))
         )
-        
+
     if type_filter:
         query = query.filter(WalletTransaction.type == type_filter)
     if date_from:
@@ -697,7 +663,6 @@ def list_all_transactions(
         page_size=page_size,
     )
 
-
 @router.get("/patients", response_model=PaginatedAdminPatientsResponse)
 def list_all_patients(
     page: int = Query(1, ge=1),
@@ -717,7 +682,7 @@ def list_all_patients(
             | (Patient.last_name.ilike(like))
             | (User.email.ilike(like))
         )
-        
+
     if patient_type:
         from app.models.user import AccountType
         if patient_type == "candidate":
@@ -768,7 +733,6 @@ def list_all_patients(
         page_size=page_size,
     )
 
-
 @router.get("/clinics", response_model=PaginatedAdminClinicsResponse)
 def list_all_clinics(
     page: int = Query(1, ge=1),
@@ -781,9 +745,9 @@ def list_all_clinics(
     db: Session = Depends(get_db),
 ):
     """Super Admin: View all clinics across the platform."""
-    # A clinic is essentially a User with role=clinic_admin and account_type=clinic
+
     from app.models.user import UserRole, AccountType, VerificationStatus
-    
+
     query = db.query(User).filter(User.role == UserRole.clinic_admin, User.account_type == AccountType.clinic)
 
     if search:
@@ -816,10 +780,9 @@ def list_all_clinics(
 
     clinics_out = []
     for user in results:
-        # Calculate staff count for this clinic (excluding the clinic_admin themselves, or including them if we just count all with this clinic_id)
+
         staff_count = db.query(User).filter(User.clinic_id == user.clinic_id, User.id != user.id).count() if user.clinic_id else 0
-        
-        # Calculate patient count for this clinic
+
         patient_count = db.query(Patient).filter(Patient.clinic_id == user.clinic_id).count() if user.clinic_id else 0
 
         clinics_out.append(
@@ -847,7 +810,6 @@ def list_all_clinics(
         page_size=page_size,
     )
 
-
 @router.get("/clinics/{clinic_id}", response_model=AdminClinicOut)
 def get_admin_clinic(
     clinic_id: str,
@@ -857,7 +819,6 @@ def get_admin_clinic(
     """Super Admin: Get clinic overview."""
     from app.models.user import UserRole, AccountType
 
-    # Find the clinic admin user to serve as the clinic's core info
     user = db.query(User).filter(
         (User.clinic_id == clinic_id) | (User.id == clinic_id),
         User.role == UserRole.clinic_admin,
@@ -923,7 +884,6 @@ def get_admin_organization(
         patient_count=patient_count
     )
 
-
 @router.get("/patients/{patient_id}", response_model=AdminPatientOut)
 def get_admin_patient(
     patient_id: str,
@@ -934,9 +894,9 @@ def get_admin_patient(
     patient = db.query(Patient).filter(Patient.id == patient_id).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
-        
+
     user = db.query(User).filter(User.id == patient.user_id).first()
-    
+
     return AdminPatientOut(
         id=patient.id,
         user_id=user.id if user else patient.user_id,
@@ -960,7 +920,6 @@ def get_admin_patient(
         last_session_date=patient.last_session_date.isoformat() if patient.last_session_date else None,
         created_at=patient.created_at.isoformat() if patient.created_at else None,
     )
-
 
 @router.put("/patients/{patient_id}", response_model=AdminPatientOut)
 def update_admin_patient(
@@ -987,7 +946,7 @@ def update_admin_patient(
 
     db.commit()
     db.refresh(patient)
-    
+
     from app.services.audit_service import audit_service
     audit_service.log_activity(
         db=db,
@@ -997,7 +956,7 @@ def update_admin_patient(
         action="CANDIDATE_UPDATED",
         details={"patient_id": patient_id, "updated_fields": list(update_data.keys())}
     )
-    
+
     user = db.query(User).filter(User.id == patient.user_id).first()
 
     return AdminPatientOut(
@@ -1024,7 +983,6 @@ def update_admin_patient(
         created_at=patient.created_at.isoformat() if patient.created_at else None,
     )
 
-
 @router.delete("/patients/{patient_id}")
 def delete_admin_patient(
     patient_id: str,
@@ -1035,11 +993,11 @@ def delete_admin_patient(
     patient = db.query(Patient).filter(Patient.id == patient_id).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
-        
+
     patient_user_id = patient.user_id
     db.delete(patient)
     db.commit()
-    
+
     from app.services.audit_service import audit_service
     audit_service.log_activity(
         db=db,
@@ -1049,11 +1007,8 @@ def delete_admin_patient(
         action="CANDIDATE_DELETED",
         details={"patient_id": patient_id}
     )
-    
+
     return {"status": "deleted", "patient_id": patient_id}
-
-
-# ── Password Resets ──────────────────────────────────────────────────────────
 
 from app.models.password_reset import PasswordResetRequest
 
@@ -1112,7 +1067,6 @@ def list_password_resets(
         page_size=page_size,
     )
 
-
 @router.get("/anonymous-links")
 def list_all_anonymous_links(
     admin: User = Depends(require_super_admin),
@@ -1121,7 +1075,7 @@ def list_all_anonymous_links(
     """Super Admin: View all anonymous links across the platform."""
     from app.models.anonymous_link import AnonymousLink
     from app.models.assessment import Assessment
-    
+
     links = db.query(AnonymousLink, Assessment.name.label("assessment_name"), User)\
               .outerjoin(Assessment, AnonymousLink.assessment_id == Assessment.id)\
               .outerjoin(User, AnonymousLink.org_id == User.id)\
@@ -1155,7 +1109,7 @@ def list_all_organizations(
 ):
     """Super Admin: View all organizations across the platform."""
     from app.models.user import UserRole, AccountType, VerificationStatus
-    
+
     query = db.query(User).filter(User.role == UserRole.org_admin, User.account_type == AccountType.organization)
 
     if search:

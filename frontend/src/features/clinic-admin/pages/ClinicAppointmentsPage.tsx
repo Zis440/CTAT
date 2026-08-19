@@ -25,7 +25,7 @@ import {
   Clock,
   User,
   AlertTriangle,
-  
+
   X,
   Trash2,
   Loader2,
@@ -67,8 +67,6 @@ import { apiClient } from "@/services/apiClient";
 import type { AuthUser } from "@/types/auth";
 import { format, parseISO, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, subMonths, isSameMonth, isSameDay, isToday } from "date-fns";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 const STATUS_STYLES: Record<string, string> = {
   scheduled: "border-blue-500/30 text-blue-400 bg-blue-500/10",
   confirmed: "border-green-500/30 text-green-400 bg-green-500/10",
@@ -92,8 +90,6 @@ function formatApptDateTime(date: string, time: string) {
     return `${date} ${time || ""}`;
   }
 }
-
-// ── Calendar View ─────────────────────────────────────────────────────────────
 
 interface CalendarViewProps {
   appointments: AppointmentAdmin[];
@@ -241,8 +237,6 @@ function CalendarView({ appointments }: CalendarViewProps) {
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
-
 const PAGE_SIZE = 30;
 
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
@@ -254,7 +248,6 @@ export function ClinicAppointmentsPage() {
   const { pageId } = useParams();
   const page = parseInt(pageId as string, 10) || 1;
 
-  // Data
   const [appointments, setAppointments] = useState<AppointmentAdmin[]>([]);
   const [patients, setPatients] = useState<any[]>([]);
   const [staffList, setStaffList] = useState<AuthUser[]>([]);
@@ -264,7 +257,6 @@ export function ClinicAppointmentsPage() {
   const [deletingAppointment, setDeletingAppointment] = useState<AppointmentAdmin | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Form State for Add
   const [selectedPatientId, setSelectedPatientId] = useState("");
   const [selectedStaffId, setSelectedStaffId] = useState("");
   const [date, setDate] = useState("");
@@ -300,7 +292,6 @@ export function ClinicAppointmentsPage() {
     });
   }, [staffList, staffSearchQuery]);
 
-  // Filters
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"date" | "patient_name" | "duration" | "status">("date");
@@ -356,7 +347,6 @@ export function ClinicAppointmentsPage() {
     loadData();
   }, [loadData]);
 
-  // Client-side filter + paginate
   const filtered = useMemo(() => {
     let list = [...appointments];
     if (statusFilter !== "all") {
@@ -383,7 +373,7 @@ export function ClinicAppointmentsPage() {
       } else if (sortBy === "status") {
         cmp = a.status.localeCompare(b.status);
       } else {
-        // Default to date and time
+
         const dtA = `${a.appointment_date || ""}T${a.start_time || "00:00"}`;
         const dtB = `${b.appointment_date || ""}T${b.start_time || "00:00"}`;
         cmp = dtA.localeCompare(dtB);
@@ -423,7 +413,7 @@ export function ClinicAppointmentsPage() {
       toast.success("Appointment scheduled.");
       setIsAddOpen(false);
       loadData();
-      // reset form
+
       setSelectedPatientId("");
       setSelectedStaffId("");
       setDate("");
@@ -457,7 +447,6 @@ export function ClinicAppointmentsPage() {
         <title>Appointments  | PsyicHub - Psychological Intelligence</title>
       </Helmet>
 
-      {/* Page Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2">
@@ -487,8 +476,8 @@ export function ClinicAppointmentsPage() {
                   <Popover open={isPatientDropdownOpen} onOpenChange={setIsPatientDropdownOpen}>
                     <PopoverTrigger asChild>
                       <Button variant="outline" role="combobox" aria-expanded={isPatientDropdownOpen} className="w-full justify-between bg-background/50 border-primary/15 h-10 font-normal">
-                        {selectedPatientId 
-                          ? `${patients.find(p => p.id === selectedPatientId)?.first_name} ${patients.find(p => p.id === selectedPatientId)?.last_name || ""}` 
+                        {selectedPatientId
+                          ? `${patients.find(p => p.id === selectedPatientId)?.first_name} ${patients.find(p => p.id === selectedPatientId)?.last_name || ""}`
                           : "Select a patient"}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
@@ -496,9 +485,9 @@ export function ClinicAppointmentsPage() {
                     <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
                       <div className="flex items-center border-b px-3">
                         <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-                        <input 
-                          className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50" 
-                          placeholder="Search patient..." 
+                        <input
+                          className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                          placeholder="Search patient..."
                           value={patientSearchQuery}
                           onChange={(e) => setPatientSearchQuery(e.target.value)}
                         />
@@ -508,7 +497,7 @@ export function ClinicAppointmentsPage() {
                           <div className="py-6 text-center text-sm text-muted-foreground">No patients found.</div>
                         ) : (
                           filteredPatients.map((patient) => (
-                            <div 
+                            <div
                               key={patient.id}
                               className={`relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 ${selectedPatientId === patient.id ? 'bg-accent text-accent-foreground' : ''}`}
                               onClick={() => {
@@ -555,15 +544,15 @@ export function ClinicAppointmentsPage() {
                     <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
                       <div className="flex items-center border-b px-3">
                         <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-                        <input 
-                          className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50" 
-                          placeholder="Search staff..." 
+                        <input
+                          className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                          placeholder="Search staff..."
                           value={staffSearchQuery}
                           onChange={(e) => setStaffSearchQuery(e.target.value)}
                         />
                       </div>
                       <div className="max-h-[300px] overflow-y-auto p-1">
-                        <div 
+                        <div
                           className={`relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 ${selectedStaffId === "none" ? 'bg-accent text-accent-foreground' : ''}`}
                           onClick={() => {
                             setSelectedStaffId("none");
@@ -580,7 +569,7 @@ export function ClinicAppointmentsPage() {
                           <div className="py-6 text-center text-sm text-muted-foreground">No staff found.</div>
                         ) : (
                           filteredStaffList.map((s) => (
-                            <div 
+                            <div
                               key={s.id}
                               className={`relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 ${selectedStaffId === s.id ? 'bg-accent text-accent-foreground' : ''}`}
                               onClick={() => {
@@ -643,7 +632,7 @@ export function ClinicAppointmentsPage() {
 
       <Card className="border-primary/10 bg-background/50 backdrop-blur-sm relative overflow-hidden pb-0">
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
-        {/* Selection mode banner OR filters */}
+
         {isSelectionMode ? (
           <div className="flex items-center justify-between p-4 bg-primary/10 border-b border-primary/20">
             <span className="text-base font-medium text-foreground">
@@ -699,14 +688,13 @@ export function ClinicAppointmentsPage() {
         ) : (
           <CardHeader className="pb-3 border-b border-border/50">
             <div className="flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between">
-              {/* Left Side: Search (if list) */}
+
               <div className="w-full xl:w-auto">
                 {viewMode === "list" && (
                   <SearchInput placeholder="Search patient or staff..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onClear={() => setSearchQuery("")} className="w-full sm:w-64" />
                 )}
               </div>
 
-              {/* Right Side: View toggles & Filters */}
               <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto xl:justify-end">
                 <div className="flex items-center gap-1 bg-primary/5 border border-primary/10 p-1 rounded-lg shrink-0">
                   <Button
@@ -974,7 +962,6 @@ export function ClinicAppointmentsPage() {
         </CardContent>
       </Card>
 
-      {/* Pagination footer */}
       {viewMode === "list" && totalPages >= 0 && (
         <div className="pt-6 pb-10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground w-full sm:w-auto text-center sm:text-left">
@@ -1039,7 +1026,6 @@ export function ClinicAppointmentsPage() {
         </div>
       )}
 
-      {/* Delete Confirmation */}
       <AlertDialog open={!!deletingAppointment} onOpenChange={(o) => !o && setDeletingAppointment(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

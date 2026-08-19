@@ -1,26 +1,5 @@
-/**
- * Firebase Phone OTP Verification Utility
- * =========================================
- * Handles phone number verification using Firebase Auth.
- * 
- * In production (Firebase configured):
- *   - Uses Firebase Client SDK for signInWithPhoneNumber
- *   - Sends real SMS OTP via Firebase
- *   - Returns a Firebase ID token on successful verification
- * 
- * In dev mode (Firebase not configured):
- *   - Simulates OTP flow
- *   - Returns a dev token that the backend accepts in dev mode
- * 
- * Setup:
- *   1. npm install firebase
- *   2. Set Firebase config in backend .env (FIREBASE_WEB_API_KEY, etc.)
- *   3. The config is fetched from GET /api/otp/firebase-config
- */
 
 import { apiClient } from "@/services/apiClient";
-
-// ── Types ────────────────────────────────────────────────────────────────────
 
 interface FirebaseConfig {
   apiKey: string;
@@ -42,8 +21,6 @@ const state: OTPState = {
   firebaseAuth: null,
   isFirebaseConfigured: false,
 };
-
-// ── Firebase Config ──────────────────────────────────────────────────────────
 
 async function getFirebaseConfig(): Promise<{ configured: boolean; config: FirebaseConfig | null }> {
   try {
@@ -81,22 +58,12 @@ async function initFirebase(): Promise<boolean> {
   }
 }
 
-// ── Public API ───────────────────────────────────────────────────────────────
-
-/**
- * Send OTP to a phone number.
- * 
- * @param phoneNumber - Phone number with country code (e.g., "+919876543210")
- * @param recaptchaContainerId - DOM element ID for invisible reCAPTCHA
- * @returns true if OTP was sent successfully
- */
 export async function sendOTP(
   phoneNumber: string,
   recaptchaContainerId: string = "recaptcha-container"
 ): Promise<boolean> {
   const firebaseReady = await initFirebase();
 
-  // Ensure phone has country code
   let formattedPhone = phoneNumber.replace(/\s|-/g, "");
   if (!formattedPhone.startsWith("+")) {
     formattedPhone = `+91${formattedPhone}`;
@@ -106,7 +73,6 @@ export async function sendOTP(
     try {
       const { signInWithPhoneNumber, RecaptchaVerifier } = await import("firebase/auth");
 
-      // Setup invisible reCAPTCHA
       const recaptchaVerifier = new RecaptchaVerifier(
         state.firebaseAuth,
         recaptchaContainerId,
@@ -125,19 +91,13 @@ export async function sendOTP(
       throw new Error(err.message || "Failed to send OTP. Please try again.");
     }
   } else {
-    // DEV MODE: Simulate OTP send
+
     console.log(`[OTP DEV MODE] Simulated OTP sent to ${formattedPhone}`);
     state.confirmationResult = { _devPhone: formattedPhone };
     return true;
   }
 }
 
-/**
- * Verify the OTP code entered by the user.
- * 
- * @param otpCode - 6-digit OTP code
- * @returns Firebase ID token (or dev token) that should be sent to backend
- */
 export async function verifyOTP(otpCode: string): Promise<string> {
   if (!state.confirmationResult) {
     throw new Error("No OTP request found. Please send OTP first.");
@@ -155,7 +115,7 @@ export async function verifyOTP(otpCode: string): Promise<string> {
       throw new Error(err.message || "OTP verification failed.");
     }
   } else {
-    // DEV MODE: Accept any 6-digit code
+
     if (otpCode.length === 6 && /^\d+$/.test(otpCode)) {
       const phone = state.confirmationResult._devPhone || "+910000000000";
       return `dev_verified:${phone}`;
@@ -164,13 +124,6 @@ export async function verifyOTP(otpCode: string): Promise<string> {
   }
 }
 
-/**
- * Verify phone via the backend endpoint (cross-check).
- * 
- * @param firebaseIdToken - Token from verifyOTP()
- * @param phoneNumber - Phone number for cross-checking
- * @returns Verified phone number from the backend
- */
 export async function verifyPhoneWithBackend(
   firebaseIdToken: string,
   phoneNumber: string
@@ -187,9 +140,6 @@ export async function verifyPhoneWithBackend(
   }
 }
 
-/**
- * Check if Firebase is configured (for UI conditional rendering).
- */
 export async function isFirebaseConfigured(): Promise<boolean> {
   const { configured } = await getFirebaseConfig();
   return configured;

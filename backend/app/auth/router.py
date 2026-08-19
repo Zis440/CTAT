@@ -59,12 +59,10 @@ def force_hash():
     from app.auth.jwt_utils import hash_password
     return {"hash": hash_password("password123")}
 
-
 def _create_wallet(user_id: str, db: Session) -> None:
     """Create an empty wallet for a newly registered user."""
     wallet = Wallet(user_id=user_id)
     db.add(wallet)
-
 
 def _resolve_avatar_url(user: User) -> str | None:
     """Return the best available avatar URL for a user."""
@@ -73,7 +71,6 @@ def _resolve_avatar_url(user: User) -> str | None:
     if user.oauth_avatar_url:
         return user.oauth_avatar_url
     return None
-
 
 def _user_to_out(user: User) -> UserOut:
     return UserOut(
@@ -107,15 +104,12 @@ def _user_to_out(user: User) -> UserOut:
         bio=user.bio,
     )
 
-
-# ── Register: Individual Psychologist ─────────────────────────────────────────
-
 @router.post("/register/individual", response_model=TokenResponse, status_code=201)
 @limiter.limit("3/minute")
 def register_individual(req: RegisterIndividualRequest, request: Request, db: Session = Depends(get_db)):
     if not req.terms_accepted:
         raise HTTPException(status_code=400, detail="Terms of Service and Privacy Policy must be accepted.")
-    # ── Phone OTP verification ────────────────────────────────────────────────
+
     if not req.phone_otp_token:
         raise HTTPException(status_code=400, detail="Phone verification is required. Please verify your phone number via OTP.")
 
@@ -124,12 +118,6 @@ def register_individual(req: RegisterIndividualRequest, request: Request, db: Se
         raise HTTPException(status_code=400, detail=otp_result.error or "Phone verification failed.")
 
     verified_phone = otp_result.phone_number or req.phone
-    # ──────────────────────────────────────────────────────────────────────────
-
-    # ── Advanced identity verification ────────────────────────────────────────
-    # If RCI number is provided, we record whether the crosscheck passed.
-    # Documents will be uploaded on the verification page.
-    # ──────────────────────────────────────────────────────────────────────────
 
     if db.query(User).filter(User.email == req.email).first():
         raise HTTPException(status_code=409, detail="Email already registered")
@@ -152,7 +140,7 @@ def register_individual(req: RegisterIndividualRequest, request: Request, db: Se
         date_of_birth=req.date_of_birth,
         gender=req.gender,
         address=req.address,
-        can_assess=True,  # All individual psychologists can run assessments
+        can_assess=True,
         terms_accepted_at=func.now(),
         terms_accepted_ip=request.client.host if request.client else None,
         ai_disclaimer_accepted=req.ai_disclaimer_accepted,
@@ -160,12 +148,11 @@ def register_individual(req: RegisterIndividualRequest, request: Request, db: Se
         professional_responsibility_accepted=req.professional_responsibility_accepted,
     )
     db.add(user)
-    db.flush()  # get user.id before commit
+    db.flush()
     _create_wallet(user.id, db)
     db.commit()
     db.refresh(user)
 
-    # Cleanup temporary Firebase user (non-blocking)
     if otp_result.firebase_uid:
         phone_otp_service.cleanup_firebase_user(otp_result.firebase_uid)
 
@@ -174,7 +161,7 @@ def register_individual(req: RegisterIndividualRequest, request: Request, db: Se
         user_id=user.id,
         action="REGISTER_INDIVIDUAL",
         details={
-            "rci_number": req.rci_number, 
+            "rci_number": req.rci_number,
             "email": req.email,
             "terms_accepted": True,
             "ai_disclaimer_accepted": req.ai_disclaimer_accepted,
@@ -187,15 +174,12 @@ def register_individual(req: RegisterIndividualRequest, request: Request, db: Se
     token = create_access_token({"sub": user.id, "role": user.role.value if isinstance(user.role, UserRole) else user.role})
     return TokenResponse(access_token=token, user=_user_to_out(user))
 
-
-# ── Register: Clinic ──────────────────────────────────────────────────────────
-
 @router.post("/register/clinic", response_model=TokenResponse, status_code=201)
 @limiter.limit("3/minute")
 def register_clinic(req: RegisterClinicRequest, request: Request, db: Session = Depends(get_db)):
     if not req.terms_accepted:
         raise HTTPException(status_code=400, detail="Terms of Service and Privacy Policy must be accepted.")
-    # ── Phone OTP verification ────────────────────────────────────────────────
+
     if not req.phone_otp_token:
         raise HTTPException(status_code=400, detail="Phone verification is required. Please verify your phone number via OTP.")
 
@@ -204,16 +188,11 @@ def register_clinic(req: RegisterClinicRequest, request: Request, db: Session = 
         raise HTTPException(status_code=400, detail=otp_result.error or "Phone verification failed.")
 
     verified_phone = otp_result.phone_number or req.phone
-    # ──────────────────────────────────────────────────────────────────────────
-
-    # ── Bank account verification (Razorpay) ──────────────────────────────────
-    # Bank verification is optional. If provided, we store it.
-    # ──────────────────────────────────────────────────────────────────────────
 
     if db.query(User).filter(User.email == req.email).first():
         raise HTTPException(status_code=409, detail="Email already registered")
 
-    clinic_id = str(uuid.uuid4())  # Shared ID for all staff of this clinic
+    clinic_id = str(uuid.uuid4())
 
     user = User(
         email=req.email,
@@ -244,7 +223,6 @@ def register_clinic(req: RegisterClinicRequest, request: Request, db: Session = 
     db.commit()
     db.refresh(user)
 
-    # Cleanup temporary Firebase user (non-blocking)
     if otp_result.firebase_uid:
         phone_otp_service.cleanup_firebase_user(otp_result.firebase_uid)
 
@@ -254,7 +232,7 @@ def register_clinic(req: RegisterClinicRequest, request: Request, db: Session = 
         org_id=clinic_id,
         action="REGISTER_CLINIC",
         details={
-            "clinic_name": req.clinic_name, 
+            "clinic_name": req.clinic_name,
             "clinic_type": req.clinic_type,
             "terms_accepted": True,
             "ai_disclaimer_accepted": req.ai_disclaimer_accepted,
@@ -267,15 +245,12 @@ def register_clinic(req: RegisterClinicRequest, request: Request, db: Session = 
     token = create_access_token({"sub": user.id, "role": user.role.value if isinstance(user.role, UserRole) else user.role})
     return TokenResponse(access_token=token, user=_user_to_out(user))
 
-
-# ── Register: Organization ──────────────────────────────────────────────────────
-
 @router.post("/register/organization", response_model=TokenResponse, status_code=201)
 @limiter.limit("3/minute")
 def register_organization(req: RegisterOrgRequest, request: Request, db: Session = Depends(get_db)):
     if not req.terms_accepted:
         raise HTTPException(status_code=400, detail="Terms of Service and Privacy Policy must be accepted.")
-    # ── Phone OTP verification ────────────────────────────────────────────────
+
     if not req.phone_otp_token:
         raise HTTPException(status_code=400, detail="Phone verification is required. Please verify your phone number via OTP.")
 
@@ -284,12 +259,11 @@ def register_organization(req: RegisterOrgRequest, request: Request, db: Session
         raise HTTPException(status_code=400, detail=otp_result.error or "Phone verification failed.")
 
     verified_phone = otp_result.phone_number or req.phone
-    # ──────────────────────────────────────────────────────────────────────────
 
     if db.query(User).filter(User.email == req.email).first():
         raise HTTPException(status_code=409, detail="Email already registered")
 
-    org_id = str(uuid.uuid4())  # Shared ID for all staff of this organization
+    org_id = str(uuid.uuid4())
 
     user = User(
         email=req.email,
@@ -300,14 +274,14 @@ def register_organization(req: RegisterOrgRequest, request: Request, db: Session
         phone=verified_phone,
         role=UserRole.org_admin,
         account_type=AccountType.organization,
-        clinic_id=org_id,  # Reusing clinic_id for org grouping
-        clinic_name=req.org_name,  # Reusing clinic_name for org name
+        clinic_id=org_id,
+        clinic_name=req.org_name,
         clinic_type=req.org_type,
         address=req.address,
         verification_status=VerificationStatus.not_submitted,
         date_of_birth=req.date_of_birth,
         gender=req.gender,
-        roc_number=req.cin_number,  # Reusing roc_number for cin_number
+        roc_number=req.cin_number,
         terms_accepted_at=func.now(),
         terms_accepted_ip=request.client.host if request.client else None,
         ai_disclaimer_accepted=req.ai_disclaimer_accepted,
@@ -316,8 +290,7 @@ def register_organization(req: RegisterOrgRequest, request: Request, db: Session
     )
     db.add(user)
     db.flush()
-    
-    # Create OrgProfile
+
     from app.models.org import OrgProfile
     org_profile = OrgProfile(
         org_id=org_id,
@@ -325,12 +298,11 @@ def register_organization(req: RegisterOrgRequest, request: Request, db: Session
         contact_email=req.email,
     )
     db.add(org_profile)
-    
+
     _create_wallet(user.id, db)
     db.commit()
     db.refresh(user)
 
-    # Cleanup temporary Firebase user (non-blocking)
     if otp_result.firebase_uid:
         phone_otp_service.cleanup_firebase_user(otp_result.firebase_uid)
 
@@ -340,7 +312,7 @@ def register_organization(req: RegisterOrgRequest, request: Request, db: Session
         org_id=org_id,
         action="REGISTER_ORGANIZATION",
         details={
-            "org_name": req.org_name, 
+            "org_name": req.org_name,
             "org_type": req.org_type,
             "terms_accepted": True,
             "ai_disclaimer_accepted": req.ai_disclaimer_accepted,
@@ -352,9 +324,6 @@ def register_organization(req: RegisterOrgRequest, request: Request, db: Session
 
     token = create_access_token({"sub": user.id, "role": user.role.value if isinstance(user.role, UserRole) else user.role})
     return TokenResponse(access_token=token, user=_user_to_out(user))
-
-
-# ── Login ─────────────────────────────────────────────────────────────────────
 
 @router.post("/login", response_model=TokenResponse)
 @limiter.limit("5/minute")
@@ -368,7 +337,6 @@ def login(req: LoginRequest, request: Request, db: Session = Depends(get_db)):
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Account is disabled. Contact support.")
 
-    # Option B: validate selected account type matches the user's stored role
     user_role_val = user.role.value if isinstance(user.role, UserRole) else user.role
     if req.account_type and req.account_type != user_role_val:
         raise HTTPException(
@@ -382,14 +350,11 @@ def login(req: LoginRequest, request: Request, db: Session = Depends(get_db)):
         user_id=user.id,
         org_id=user.clinic_id,
         action="LOGIN_SUCCESS",
-        details={"ip_address": "unknown"} # Could extract from Request if needed
+        details={"ip_address": "unknown"}
     )
 
     token = create_access_token({"sub": user.id, "role": user.role.value if isinstance(user.role, UserRole) else user.role})
     return TokenResponse(access_token=token, user=_user_to_out(user))
-
-
-# ── Get current user ──────────────────────────────────────────────────────────
 
 @router.get("/me", response_model=UserOut)
 def get_me(current_user: User = Depends(get_current_user)):
@@ -402,15 +367,14 @@ def delete_me(
 ):
     """Delete the current user's account permanently."""
     user_id = current_user.id
-    
-    # Audit log the deletion right before it happens
+
     audit_service.log_activity(
         db=db,
         user_id=user_id,
         action="ACCOUNT_DELETED",
         details={"reason": "User requested account deletion"}
     )
-    
+
     try:
         from sqlalchemy import text
         uid = user_id
@@ -424,23 +388,20 @@ def delete_me(
         db.execute(text("DELETE FROM support_tickets WHERE user_id = :uid"), {"uid": uid})
         db.execute(text("DELETE FROM user_verification_documents WHERE user_id = :uid"), {"uid": uid})
         db.execute(text("UPDATE screening_reports SET verified_by_id = NULL WHERE verified_by_id = :uid"), {"uid": uid})
-        # Patient cascade
+
         db.execute(text("UPDATE screening_reports SET patient_id = NULL WHERE patient_id IN (SELECT id FROM patients WHERE user_id = :uid)"), {"uid": uid})
         db.execute(text("UPDATE sessions SET assigned_psychologist_id = NULL WHERE assigned_psychologist_id = :uid"), {"uid": uid})
         db.execute(text("DELETE FROM sessions WHERE user_id = :uid OR patient_id IN (SELECT id FROM patients WHERE user_id = :uid)"), {"uid": uid})
         db.execute(text("DELETE FROM patients WHERE user_id = :uid"), {"uid": uid})
-        
-        # Wallet cascade
+
         db.execute(text("DELETE FROM wallet_transactions WHERE wallet_id IN (SELECT id FROM wallets WHERE user_id = :uid) OR created_by_id = :uid"), {"uid": uid})
         db.execute(text("DELETE FROM wallets WHERE user_id = :uid"), {"uid": uid})
-        
-        # Profiles
+
         db.execute(text("DELETE FROM clinic_profiles WHERE clinic_id = :uid"), {"uid": uid})
         db.execute(text("DELETE FROM org_profiles WHERE org_id = :uid"), {"uid": uid})
-        
-        # Finally user
+
         db.execute(text("DELETE FROM users WHERE id = :uid"), {"uid": uid})
-        
+
         db.expunge(current_user)
         db.commit()
     except Exception as exc:
@@ -476,37 +437,33 @@ def update_me(
         current_user.gender = req.gender
     if req.designation is not None:
         current_user.designation = req.designation
-    
+
     if req.professional_domain is not None and req.professional_domain != current_user.professional_domain:
         old_domain = current_user.professional_domain
         new_domain = req.professional_domain
-        
-        # If the user switches to a domain that requires RCI (Clinical Psychologist)
+
         if new_domain == "Clinical Psychologist" and old_domain != "Clinical Psychologist":
-            # Reset verification status so they must upload RCI documents
+
             current_user.verification_status = "not_submitted"
             current_user.can_assess = False
-            
+
         current_user.professional_domain = new_domain
 
     db.commit()
     db.refresh(current_user)
     return _user_to_out(current_user)
 
-
-# ── Forgot password ───────────────────────────────────────────────────────────
-
 @router.post("/forgot-password")
 @limiter.limit("3/minute")
 def forgot_password(req: ForgotPasswordRequest, request: Request, db: Session = Depends(get_db)):
     """
-    Creates a password reset request. The actual email sending is handled by 
-    an automated background script (process_password_resets.py) to prevent 
+    Creates a password reset request. The actual email sending is handled by
+    an automated background script (process_password_resets.py) to prevent
     blocking the API and to simulate a queue.
     """
     user = db.query(User).filter(User.email == req.email).first()
     if user:
-        # Create a new pending request
+
         reset_req = DBPasswordResetRequest(
             user_id=user.id,
             email=user.email,
@@ -515,11 +472,7 @@ def forgot_password(req: ForgotPasswordRequest, request: Request, db: Session = 
         db.add(reset_req)
         db.commit()
 
-    # Always return success to prevent email enumeration attacks
     return {"message": "If this email is registered, a reset link will be sent shortly."}
-
-
-# ── Reset Password (from link) ────────────────────────────────────────────────
 
 from datetime import datetime, timezone
 
@@ -527,13 +480,12 @@ from datetime import datetime, timezone
 @limiter.limit("5/minute")
 def reset_password(req: ResetPasswordRequest, request: Request, db: Session = Depends(get_db)):
     """
-    Validates the token, verifies the email matches, checks expiration, 
+    Validates the token, verifies the email matches, checks expiration,
     and updates the user's password.
     """
     if req.new_password != req.confirm_password:
         raise HTTPException(status_code=400, detail="Passwords do not match.")
 
-    # Find the request
     reset_req = db.query(DBPasswordResetRequest).filter(
         DBPasswordResetRequest.token == req.token,
         DBPasswordResetRequest.status == ResetRequestStatus.sent
@@ -545,27 +497,20 @@ def reset_password(req: ResetPasswordRequest, request: Request, db: Session = De
     if reset_req.email.lower() != req.email.lower():
         raise HTTPException(status_code=400, detail="Email does not match the reset request.")
 
-    # Check expiration (if expires_at is set, and if current time > expires_at)
     if reset_req.expires_at and datetime.now(timezone.utc) > reset_req.expires_at:
         raise HTTPException(status_code=400, detail="Reset token has expired. Please request a new one.")
 
-    # Find the user
     user = db.query(User).filter(User.id == reset_req.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
 
-    # Update the password
     user.hashed_password = hash_password(req.new_password)
-    
-    # Mark request as completed
+
     reset_req.status = ResetRequestStatus.completed
-    reset_req.token = None # Invalidate the token
+    reset_req.token = None
 
     db.commit()
     return {"message": "Password successfully reset. You may now log in."}
-
-
-# ── Change Password ───────────────────────────────────────────────────────────
 
 from pydantic import BaseModel as _BaseModel
 
@@ -581,7 +526,7 @@ def change_password(
     db: Session = Depends(get_db),
 ):
     """Authenticated user changes their own password."""
-    # Verify current password
+
     if not current_user.hashed_password or not verify_password(req.current_password, current_user.hashed_password):
         raise HTTPException(status_code=401, detail="Current password is incorrect.")
 
@@ -595,8 +540,6 @@ def change_password(
     db_user.hashed_password = hash_password(req.new_password)
     db.commit()
     return {"message": "Password updated successfully."}
-
-
 
 @router.post("/avatar")
 async def upload_avatar(
@@ -614,20 +557,17 @@ async def upload_avatar(
 
     AVATARS_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Determine extension from content type
     ext_map = {"image/jpeg": ".jpg", "image/jpg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
     ext = ext_map.get(file.content_type, ".jpg")
     filename = f"{current_user.id}{ext}"
     dest = AVATARS_DIR / filename
 
-    # Remove old avatar if exists with different extension
     for old in AVATARS_DIR.glob(f"{current_user.id}.*"):
         old.unlink(missing_ok=True)
 
     with dest.open("wb") as f:
         shutil.copyfileobj(file.file, f)
 
-    # Update DB
     db_user = db.query(User).filter(User.id == current_user.id).first()
     db_user.avatar_path = f"uploads/avatars/{filename}"
     db.commit()
@@ -637,11 +577,10 @@ async def upload_avatar(
         "avatar_url": f"/api/auth/avatar/{current_user.id}",
     }
 
-
 @router.get("/avatar/{user_id}")
 async def serve_avatar(user_id: str):
     """Serve a user's avatar image. Returns 404 if no avatar uploaded."""
-    # Sanitize user_id to prevent path traversal
+
     from pathlib import PurePosixPath
     safe_id = PurePosixPath(user_id).name
     if not safe_id or safe_id != user_id:
@@ -652,10 +591,6 @@ async def serve_avatar(user_id: str):
             media_types = {".jpg": "image/jpeg", ".png": "image/png", ".webp": "image/webp"}
             return FileResponse(path, media_type=media_types[ext])
     raise HTTPException(status_code=404, detail="Avatar not found")
-
-
-# ── Document Upload (Legacy — redirects to /api/verification/upload) ──────────
-# Kept for backwards compatibility; new clients should use /api/verification/upload.
 
 @router.post("/documents")
 async def upload_documents_legacy(
@@ -669,18 +604,12 @@ async def upload_documents_legacy(
         detail="This endpoint has been replaced. Use POST /api/verification/upload with document_type and category fields.",
     )
 
-
-# ── Verification Status ───────────────────────────────────────────────────────
-
 @router.get("/verification-status")
 def get_verification_status(current_user: User = Depends(get_current_user)):
     return {
         "status": current_user.verification_status.value if isinstance(current_user.verification_status, VerificationStatus) else current_user.verification_status,
         "notes": current_user.verification_notes,
     }
-
-
-# ── Admin: Serve Verification Documents ──────────────────────────────────────
 
 @router.get("/admin/documents/{user_id}")
 def list_user_documents(
@@ -709,7 +638,6 @@ def list_user_documents(
         ]
     }
 
-
 @router.get("/admin/documents/{user_id}/{filename}")
 async def serve_user_document(
     user_id: str,
@@ -717,7 +645,7 @@ async def serve_user_document(
     _: User = Depends(require_super_admin),
 ):
     """Super Admin: stream a single uploaded verification document for inline viewing."""
-    # Sanitise — prevent path traversal
+
     safe_name = Path(filename).name
     doc_path = DOCUMENTS_DIR / user_id / safe_name
 
@@ -739,9 +667,6 @@ async def serve_user_document(
         headers={"Content-Disposition": f'inline; filename="{safe_name}"'},
     )
 
-
-# ── Super Admin: Verification Queue ──────────────────────────────────────────
-
 @router.get("/verification-queue", response_model=List[UserOut])
 def verification_queue(
     _: User = Depends(require_super_admin),
@@ -750,7 +675,6 @@ def verification_queue(
     """List all users with pending verification."""
     users = db.query(User).filter(User.verification_status == VerificationStatus.pending).all()
     return [_user_to_out(u) for u in users]
-
 
 @router.patch("/verify/{user_id}")
 def verify_user(
@@ -774,9 +698,6 @@ def verify_user(
     db.commit()
     status_val = user.verification_status.value if isinstance(user.verification_status, VerificationStatus) else user.verification_status
     return {"status": status_val, "user_id": user_id}
-
-
-# ── Clinic/Org Admin: Manage Staff ────────────────────────────────────────────────
 
 @router.post("/staff", response_model=UserOut, status_code=201)
 def add_staff(
@@ -808,7 +729,7 @@ def add_staff(
         clinic_id=actual_clinic_id,
         clinic_name=current_user.clinic_name,
         address=current_user.address,
-        verification_status=VerificationStatus.approved,  # Vouched for by admin
+        verification_status=VerificationStatus.approved,
         can_assess=(req.role_type == "psychology_assessment"),
         rci_number=req.rci_number if req.role_type == "psychology_assessment" else None,
         module_permissions={
@@ -825,7 +746,6 @@ def add_staff(
     db.commit()
     db.refresh(staff)
 
-    # ── Send confirmation email to new staff member ───────────────────────────
     staff_name = f"{req.first_name} {req.last_name or ''}".strip()
     role_label = "Psychology Assessment Staff" if req.role_type == "psychology_assessment" else "Staff Member"
     email_service.send_staff_added_email(
@@ -833,9 +753,8 @@ def add_staff(
         staff_name=staff_name,
         clinic_name=current_user.clinic_name or "Your Organization",
         role=role_label,
-        temp_password=req.password,  # Notify them of their initial password
+        temp_password=req.password,
     )
-    # ─────────────────────────────────────────────────────────────────────────
 
     audit_service.log_activity(
         db=db,
@@ -848,7 +767,6 @@ def add_staff(
 
     return _user_to_out(staff)
 
-
 @router.get("/staff", response_model=List[UserOut])
 def list_staff(
     current_user: User = Depends(require_admin_or_above),
@@ -858,9 +776,9 @@ def list_staff(
     actual_clinic_id = current_user.clinic_id or current_user.id
     if not actual_clinic_id:
         raise HTTPException(status_code=400, detail="No organization associated with this account")
-    
+
     target_role = UserRole.org_staff if current_user.role == UserRole.org_admin else UserRole.clinic_staff
-    
+
     staff = (
         db.query(User)
         .filter(
@@ -890,8 +808,7 @@ def update_staff_permissions(
         raise HTTPException(status_code=404, detail="Staff member not found")
 
     staff.module_permissions = req.module_permissions
-    
-    # Also sync can_assess with module_permissions.assessments for backward compatibility if needed
+
     if "assessments" in req.module_permissions:
         staff.can_assess = req.module_permissions["assessments"]
 
@@ -900,7 +817,7 @@ def update_staff_permissions(
 
     db.commit()
     db.refresh(staff)
-    
+
     audit_service.log_activity(
         db=db,
         user_id=current_user.id,
@@ -909,10 +826,8 @@ def update_staff_permissions(
         action="UPDATE_STAFF_PERMISSIONS",
         details={"permissions": req.module_permissions}
     )
-    
-    return _user_to_out(staff)
 
-# ── Register OAuth Router ─────────────────────────────────────────────────────
+    return _user_to_out(staff)
 
 @router.get("/staff/{staff_id}", response_model=UserOut)
 def get_staff_detail(
@@ -928,10 +843,10 @@ def get_staff_detail(
         User.clinic_id == actual_clinic_id,
         User.role.in_(target_roles)
     ).first()
-    
+
     if not staff:
         raise HTTPException(status_code=404, detail="Staff member not found")
-        
+
     return _user_to_out(staff)
 
 @router.patch("/staff/{staff_id}", response_model=UserOut)
@@ -949,19 +864,18 @@ def update_staff(
         User.clinic_id == actual_clinic_id,
         User.role.in_(target_roles)
     ).first()
-    
+
     if not staff:
         raise HTTPException(status_code=404, detail="Staff member not found")
-        
+
     updates = req.model_dump(exclude_unset=True)
-    
-    # Process role if it was sent
+
     if "role" in updates and updates["role"]:
         try:
             updates["role"] = UserRole(updates["role"])
         except ValueError:
             raise HTTPException(status_code=400, detail=f"Invalid role: {updates['role']}")
-            
+
     for field, value in updates.items():
         if field == "can_assess":
             staff.can_assess = value
@@ -972,11 +886,10 @@ def update_staff(
             flag_modified(staff, "module_permissions")
         else:
             setattr(staff, field, value)
-            
+
     db.commit()
     db.refresh(staff)
-    
-    # Log the staff update activity
+
     safe_updates = {}
     for k, v in updates.items():
         if hasattr(v, "value"):
@@ -992,7 +905,7 @@ def update_staff(
         action="UPDATE_STAFF_DETAILS",
         details=safe_updates
     )
-    
+
     return _user_to_out(staff)
 
 from app.auth.oauth import router as oauth_router

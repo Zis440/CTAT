@@ -16,22 +16,15 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/otp", tags=["otp"])
 
-
-# ── Request / Response Schemas ────────────────────────────────────────────────
-
 class VerifyPhoneRequest(BaseModel):
     """Frontend sends the Firebase ID token after successful phone OTP verification."""
     firebase_id_token: str
-    phone_number: Optional[str] = None  # For cross-check
-
+    phone_number: Optional[str] = None
 
 class VerifyPhoneResponse(BaseModel):
     verified: bool
     phone_number: Optional[str] = None
     message: Optional[str] = None
-
-
-# ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.post("/verify-phone", response_model=VerifyPhoneResponse)
 def verify_phone_otp(req: VerifyPhoneRequest):
@@ -55,9 +48,8 @@ def verify_phone_otp(req: VerifyPhoneRequest):
             detail=result.error or "Phone verification failed.",
         )
 
-    # Cross-check phone number if provided
     if req.phone_number and result.phone_number:
-        # Normalize both for comparison (strip spaces, add country code)
+
         req_phone = req.phone_number.replace(" ", "").replace("-", "")
         result_phone = result.phone_number.replace(" ", "").replace("-", "")
 
@@ -76,7 +68,6 @@ def verify_phone_otp(req: VerifyPhoneRequest):
         message="Phone number verified successfully.",
     )
 
-
 @router.get("/firebase-config")
 def get_firebase_config():
     """
@@ -92,7 +83,6 @@ def get_firebase_config():
         "appId": os.getenv("FIREBASE_APP_ID", ""),
     }
 
-    # Only return if configured
     if not config["apiKey"]:
         return {
             "configured": False,

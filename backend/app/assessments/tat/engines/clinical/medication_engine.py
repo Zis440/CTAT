@@ -14,20 +14,12 @@ from typing import List, Dict, Optional
 import csv
 from dataclasses import dataclass, field
 from collections import defaultdict
-import difflib  # for fuzzy matching (fix #9)
+import difflib
 
+CLINICAL_CONFIDENCE_THRESHOLD = 45.0
 
-# ============================================================================
-# CLINICAL CALIBRATION CONSTANTS
-# ============================================================================
+MIN_SYMPTOM_DENSITY = 3
 
-# Minimum confidence (0-100) before a condition is surfaced with medication
-CLINICAL_CONFIDENCE_THRESHOLD = 45.0  # Fix 5: raised from 35 → stricter gating
-
-# Minimum matched keywords before a condition is considered
-MIN_SYMPTOM_DENSITY = 3  # Fix 5: raised from 2 → needs 3+ keyword matches
-
-# Severity band thresholds (confidence score => severity)
 SEVERITY_BANDS = {
     (0, 20): "Subclinical",
     (20, 40): "Mild",
@@ -35,7 +27,6 @@ SEVERITY_BANDS = {
     (65, 100): "Severe",
 }
 
-# Minimum pathological indicators required for "Severe" classification
 MIN_SEVERE_INDICATORS = 5
 
 HYPOTHESIS_DISCLAIMER = (
@@ -44,9 +35,6 @@ HYPOTHESIS_DISCLAIMER = (
     "from narrative material and require independent clinical evaluation."
 )
 
-# Fix 5: Conditions requiring behavioral observation data — cannot be reliably
-# inferred from narrative material alone. Excluded unless presenting_issue
-# explicitly matches.
 BEHAVIORAL_DATA_REQUIRED = {
     "kleptomania", "pyromania", "adhd", "attention deficit",
     "dementia", "alzheimer", "tourette", "tic disorder",
@@ -55,11 +43,6 @@ BEHAVIORAL_DATA_REQUIRED = {
     "stuttering", "selective mutism", "factitious disorder",
     "malingering", "gaming disorder",
 }
-
-
-# ============================================================================
-# DATA MODEL
-# ============================================================================
 
 @dataclass
 class MedicationRecommendation:
@@ -72,10 +55,10 @@ class MedicationRecommendation:
     gita_remedies: List[str]
     match_score: float = 0.0
     matched_keywords: List[str] = field(default_factory=list)
-    # --- Gita parsing ---
+
     gita_verse: str = ""
     gita_insight: str = ""
-    # --- Recalibration v3.0 fields ---
+
     symptom_density_score: int = 0
     severity_likelihood: str = "Subclinical"
     clinical_confidence: float = 0.0
@@ -112,11 +95,6 @@ class MedicationRecommendation:
             "disclaimer": HYPOTHESIS_DISCLAIMER,
         }
 
-
-# ============================================================================
-# ENGINE
-# ============================================================================
-
 class MedicationEngine:
     """Engine for matching symptoms/themes to medication and remedies"""
 
@@ -130,10 +108,6 @@ class MedicationEngine:
             self._load_database()
         else:
             print(f"⚠️ Medication database not found: {medication_csv_path}")
-
-    # ------------------------------------------------------------------------
-    # DATABASE LOADING
-    # ------------------------------------------------------------------------
 
     def _load_database(self):
         """Load MEDICATION.csv into memory"""
@@ -203,10 +177,6 @@ class MedicationEngine:
         except Exception as e:
             print(f"⚠️ Error loading medication database: {e}")
 
-    # ------------------------------------------------------------------------
-    # MATCHING LOGIC (UPGRADED with fuzzy matching)
-    # ------------------------------------------------------------------------
-
     def match_conditions(
         self,
         themes: List[str],
@@ -224,7 +194,6 @@ class MedicationEngine:
         if not self.medications_db:
             return []
 
-        # Prepare input sets
         themes_lower = {t.lower() for t in (themes or [])}
         symptoms_lower = {s.lower() for s in (symptoms or [])}
         emotions_lower = {e.lower() for e in (emotions or [])}
@@ -232,34 +201,26 @@ class MedicationEngine:
         all_keywords = themes_lower | symptoms_lower | emotions_lower
         scored_matches = []
 
-        # High clinical risk emotion weighting
         high_risk_emotions = {"anxiety", "fear", "loneliness", "hopelessness"}
 
         for entry in self.medications_db:
             score = 0.0
             matched_keywords = []
 
-            # ------------------------------------------------------------
-            # Condition Match (High Weight) with fuzzy matching
-            # ------------------------------------------------------------
             condition_words = set(entry["condition"].lower().split())
-            # Exact matches
+
             exact_matches = all_keywords & condition_words
             score += len(exact_matches) * 3.0
             matched_keywords.extend(exact_matches)
 
-            # Fuzzy matches for condition (if few exact)
             if len(exact_matches) == 0 and all_keywords:
-                # Use difflib to find close matches
+
                 for kw in all_keywords:
                     if difflib.get_close_matches(kw, condition_words, cutoff=0.8):
                         score += 1.5
                         matched_keywords.append(f"fuzzy:{kw}")
-                        break  # one fuzzy per entry to avoid overcounting
+                        break
 
-            # ------------------------------------------------------------
-            # Symptom Match (Medium Weight) with fuzzy
-            # ------------------------------------------------------------
             for symptom in entry["symptoms"]:
                 symptom_words = set(symptom.lower().split())
                 exact = all_keywords & symptom_words
@@ -267,16 +228,13 @@ class MedicationEngine:
                     score += len(exact) * 2.0
                     matched_keywords.extend(exact)
                 else:
-                    # fuzzy match on full symptom phrase
+
                     for kw in all_keywords:
                         if difflib.get_close_matches(kw, [symptom.lower()], cutoff=0.7):
                             score += 1.0
                             matched_keywords.append(f"fuzzy:{kw}")
                             break
 
-            # ------------------------------------------------------------
-            # Treatment Match (Low Weight)
-            # ------------------------------------------------------------
             for treatment in entry["treatments"]:
                 treatment_words = set(treatment.lower().split())
                 exact = all_keywords & treatment_words
@@ -284,9 +242,6 @@ class MedicationEngine:
                     score += len(exact) * 0.5
                     matched_keywords.extend(exact)
 
-            # ------------------------------------------------------------
-            # Presenting Issue Boost (Very High Weight)
-            # ------------------------------------------------------------
             if presenting_issue:
                 pi_lower = presenting_issue.lower()
                 if pi_lower in entry["condition"].lower():
@@ -296,46 +251,36 @@ class MedicationEngine:
                     score += 3.0
                     matched_keywords.append(f"fuzzy_presenting:{presenting_issue}")
 
-            # ------------------------------------------------------------
-            # Emotional Severity & Threshold Boost (Fix #9)
-            # ------------------------------------------------------------
             if emotions_lower & high_risk_emotions:
                 score += 2.5
-                
-            # Clinical threshold triggers: Guarantee > 0 confidence for relevant categories
+
             cat_lower = entry["condition"].lower()
             if anxiety_level > 70.0 and any(x in cat_lower for x in ['anxiety', 'panic', 'stress']):
                 score += 4.0
                 matched_keywords.append("clinical_threshold:severe_anxiety")
-            
+
             if emotional_stability < 35.0 and any(x in cat_lower for x in ['mood', 'bipolar', 'depression', 'dysregulation']):
                 score += 4.0
                 matched_keywords.append("clinical_threshold:affect_dysregulation")
 
-            # ------------------------------------------------------------
-            # Finalize Recommendation
-            # ------------------------------------------------------------
             if score > 0:
-                # --- Fix 5: Behavioral-data exclusion gate ---
+
                 condition_lower = entry["condition"].lower()
                 is_behavioral = any(bdr in condition_lower for bdr in BEHAVIORAL_DATA_REQUIRED)
                 if is_behavioral:
-                    # Allow only if presenting_issue explicitly matches
-                    if not (presenting_issue and presenting_issue.lower() in condition_lower):
-                        continue  # skip this condition entirely
 
-                # --- Recalibration: symptom density = unique matched keywords ---
+                    if not (presenting_issue and presenting_issue.lower() in condition_lower):
+                        continue
+
                 unique_kw = list(set(matched_keywords))
                 symptom_density = len(unique_kw)
 
-                # --- Recalibration: narrative evidence justification ---
                 evidence_parts = [kw for kw in unique_kw if not kw.startswith('fuzzy:') and not kw.startswith('clinical_threshold:')]
                 evidence_str = f"Matched narrative indicators: {', '.join(evidence_parts[:6])}" if evidence_parts else "Indirect/fuzzy match only"
 
-                # --- Recalibration: medication class inference ---
                 med_class = ""
                 if entry["medications"]:
-                    # Infer class from first medication name heuristically
+
                     first_med = entry["medications"][0].lower()
                     if any(x in first_med for x in ['ssri', 'sertraline', 'fluoxetine', 'escitalopram', 'paroxetine', 'citalopram']):
                         med_class = "SSRI (Selective Serotonin Reuptake Inhibitor)"
@@ -368,17 +313,12 @@ class MedicationEngine:
 
                 scored_matches.append(recommendation)
 
-        # ------------------------------------------------------------
-        # Normalize Score by Symptom Complexity (Bias Reduction)
-        # ------------------------------------------------------------
         for rec in scored_matches:
             complexity = len(rec.symptoms) if rec.symptoms else 1
             rec.match_score = round(rec.match_score / complexity, 2)
 
-        # Sort by score
         scored_matches.sort(key=lambda x: x.match_score, reverse=True)
 
-        # --- PRODUCTION CORRECTION: §2 Softmax Confidence Normalization ---
         if scored_matches:
             import math
             raw_scores = [min(rec.match_score, 50) for rec in scored_matches]
@@ -390,39 +330,28 @@ class MedicationEngine:
             for rec in scored_matches:
                 rec.match_score = max(0.0, min(100.0, rec.match_score))
 
-        # ------------------------------------------------------------
-        # Recalibration v3.0: Clinical Confidence & Severity Gating
-        # ------------------------------------------------------------
         for rec in scored_matches:
             rec.clinical_confidence = rec.match_score
 
-            # Severity band assignment
             severity = "Subclinical"
             for (lo, hi), label in SEVERITY_BANDS.items():
                 if lo <= rec.clinical_confidence < hi:
                     severity = label
                     break
-            # Gate: "Severe" requires minimum pathological indicators
+
             if severity == "Severe" and rec.symptom_density_score < MIN_SEVERE_INDICATORS:
                 severity = "Moderate"
             rec.severity_likelihood = severity
 
-            # Gate: suppress conditions below minimum symptom density
             if rec.symptom_density_score < MIN_SYMPTOM_DENSITY:
                 rec.severity_likelihood = "Subclinical"
 
-        # ------------------------------------------------------------
-        # Fix 5: Filter to top 10 results, suppress Subclinical
-        # ------------------------------------------------------------
         scored_matches = [
             rec for rec in scored_matches
             if rec.severity_likelihood != "Subclinical"
         ]
-        scored_matches = scored_matches[:10]  # hard limit
+        scored_matches = scored_matches[:10]
 
-        # ------------------------------------------------------------
-        # Threshold enforcement (Fix 7)
-        # ------------------------------------------------------------
         if not scored_matches:
              return [MedicationRecommendation(
                     mental_condition="No current pharmacological indication based on screening thresholds",
@@ -439,10 +368,6 @@ class MedicationEngine:
                 )]
 
         return scored_matches
-
-    # ------------------------------------------------------------------------
-    # DIRECT LOOKUP
-    # ------------------------------------------------------------------------
 
     def get_recommendations(self, condition: str) -> Optional[MedicationRecommendation]:
         """Get recommendations for a specific mental condition"""
@@ -468,7 +393,6 @@ class MedicationEngine:
                 matched_keywords=[condition],
             )
 
-        # Fuzzy lookup if not exact
         for cond in self.condition_index.keys():
             if difflib.get_close_matches(condition_lower, [cond], cutoff=0.7):
                 entry = self.condition_index[cond][0]
@@ -487,10 +411,6 @@ class MedicationEngine:
 
         return None
 
-    # ------------------------------------------------------------------------
-    # GITA REMEDIES
-    # ------------------------------------------------------------------------
-
     def get_gita_remedies(
         self, condition: str = None, keywords: List[str] = None
     ) -> List[str]:
@@ -508,7 +428,6 @@ class MedicationEngine:
             for rec in recommendations[:3]:
                 remedies.extend(rec.gita_remedies)
 
-        # Remove duplicates (preserve order)
         seen = set()
         unique = []
 
@@ -519,25 +438,13 @@ class MedicationEngine:
 
         return unique
 
-    # ------------------------------------------------------------------------
-    # SYMPTOM SEARCH
-    # ------------------------------------------------------------------------
-
     def search_by_symptoms(
         self, symptoms: List[str]
     ) -> List[MedicationRecommendation]:
         return self.match_conditions(themes=[], symptoms=symptoms)
 
-    # ------------------------------------------------------------------------
-    # UTILITIES
-    # ------------------------------------------------------------------------
-
     def get_all_conditions(self) -> List[str]:
         return list(self.condition_index.keys())
-
-    # ------------------------------------------------------------------------
-    # HYPOTHESIS REPORT (Recalibration v3.0)
-    # ------------------------------------------------------------------------
 
     def generate_hypothesis_report(self, matches: List[MedicationRecommendation]) -> Dict:
         """

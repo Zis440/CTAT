@@ -13,7 +13,7 @@ from typing import Dict, Any, List
 
 class ContextAdjustmentEngine:
     def __init__(self):
-        # Expected themes by age group for Age Congruence
+
         self.expected_themes = {
             "child": ["dependency", "family", "school", "play", "parent"],
             "adolescent": ["identity", "peer", "achievement", "rebellion", "friend"],
@@ -24,7 +24,7 @@ class ContextAdjustmentEngine:
 
     def _get_age_group(self, age: int) -> str:
         if age is None:
-            return "adult"  # default
+            return "adult"
         if age <= 12:
             return "child"
         elif age <= 17:
@@ -34,7 +34,7 @@ class ContextAdjustmentEngine:
         elif age <= 45:
             return "adult"
         elif age <= 60:
-            return "middle_aged" # We map this to adult themes plus some senior
+            return "middle_aged"
         else:
             return "senior"
 
@@ -44,18 +44,15 @@ class ContextAdjustmentEngine:
         Normalized 0-100
         """
         if not observed_themes:
-            return 50.0  # neutral
+            return 50.0
 
         age_group = self._get_age_group(age)
-        
-        # Map middle_aged to adult themes for the sake of expected theme sets, 
-        # or combine adult and senior.
+
         if age_group == "middle_aged":
             expected = self.expected_themes["adult"] + ["health", "reflection"]
         else:
             expected = self.expected_themes.get(age_group, self.expected_themes["adult"])
 
-        # Simple overlap for ObservedThemeSimilarity
         observed_lower = []
         for t in observed_themes:
             if isinstance(t, dict):
@@ -67,8 +64,7 @@ class ContextAdjustmentEngine:
         for obs in observed_lower:
             if any(exp in obs for exp in expected):
                 matches += 1
-                
-        # Normalize: 0 matches -> ~30 (low congruence), 1 match -> ~60, 2+ matches -> ~90+
+
         if matches == 0:
             return 30.0
         elif matches == 1:
@@ -85,7 +81,7 @@ class ContextAdjustmentEngine:
         Normalized 0-100
         """
         score = 0.0
-        
+
         lc = str(living_condition).lower()
         if "homeless" in lc or "temporary" in lc:
             score += 35.0
@@ -93,7 +89,7 @@ class ContextAdjustmentEngine:
             score += 25.0
         elif "hostel" in lc or "dormitory" in lc or "shared" in lc:
             score += 15.0
-        else: # with family, parents, married
+        else:
             score += 5.0
 
         fs = str(family_structure).lower()
@@ -121,31 +117,31 @@ class ContextAdjustmentEngine:
         EPS = AcademicPressure + FinancialPressure + SocialPressure + FamilyPressure
         """
         score = 0.0
-        
+
         env = str(environment_type).lower()
         if "academically pressured" in env or "high achievement" in env:
             score += 30.0
-        
+
         se = str(socioeconomic_status).lower()
         if "low" in se:
             score += 30.0
         elif "lower middle" in se:
             score += 20.0
-            
+
         if "isolated" in env or "conflict" in env:
             score += 20.0
-            
+
         occ = str(occupation).lower()
         if "unemployed" in occ or "student" in occ:
             score += 20.0
 
         if score == 0.0:
-            score = 25.0 # baseline low pressure
-            
+            score = 25.0
+
         return min(100.0, score)
-        
+
     def compute_family_support_score(self, family_structure: str, environment_type: str) -> float:
-        score = 50.0 # baseline
+        score = 50.0
         env = str(environment_type).lower()
         if "highly supportive" in env:
             score = 90.0
@@ -153,11 +149,11 @@ class ContextAdjustmentEngine:
             score = 70.0
         elif "conflict" in env or "isolated" in env or "trauma" in env:
             score = 20.0
-            
+
         fs = str(family_structure).lower()
         if "no family" in fs:
             score = max(10.0, score - 30.0)
-            
+
         return score
 
     def compute_socioeconomic_adjustment(self, socioeconomic_status: str) -> float:
@@ -174,9 +170,9 @@ class ContextAdjustmentEngine:
             return 10.0
         return 50.0
 
-    def compute_pcs(self, 
-                    stress_context_score: float, 
-                    environmental_pressure_score: float, 
+    def compute_pcs(self,
+                    stress_context_score: float,
+                    environmental_pressure_score: float,
                     age_congruence_score: float,
                     family_support_score: float,
                     socioeconomic_adjustment: float) -> float:
@@ -201,12 +197,12 @@ class ContextAdjustmentEngine:
 
     def compute_gender_target_alignment(self, participant_gender: str, card_tags: List[str]) -> Dict[str, Any]:
         """
-        Calculates the Primary Character Identification Probability (PCIP) based on the matching 
+        Calculates the Primary Character Identification Probability (PCIP) based on the matching
         of participant gender to card gender targets.
-        
+
         participant_gender: 'M', 'F', 'B', 'G'
         card_tags: List of tags from card_metadata (e.g. ['BM', 'GF'])
-        
+
         Returns:
             Dict containing:
             - pcip_level: 'High', 'Moderate', 'Low', 'Standard' (for WHITE)
@@ -219,17 +215,17 @@ class ContextAdjustmentEngine:
                 "confidence_modifier": 0.0,
                 "amplified_themes": []
             }
-            
+
         g = participant_gender.upper()
-        # Normalization if full words passed
+
         if g in ['MALE', 'MAN']: g = 'M'
         elif g in ['FEMALE', 'WOMAN']: g = 'F'
         elif g in ['BOY']: g = 'B'
         elif g in ['GIRL']: g = 'G'
-            
+
         high_matches = []
         low_matches = []
-        
+
         if g == 'M':
             high_matches = ['M', 'BM', 'MF']
             low_matches = ['F', 'GF', 'G']
@@ -245,24 +241,19 @@ class ContextAdjustmentEngine:
         else:
             return {"pcip_level": "Standard", "confidence_modifier": 0.0, "amplified_themes": []}
 
-        # Determine level based on overlap
         is_high = any(t in high_matches for t in card_tags)
         is_low = any(t in low_matches for t in card_tags)
 
-        # Logic: If it has a high match, prioritize High.
-        # If it has only a low match, it's Low.
-        # Otherwise, Moderate.
         if is_high:
             pcip_level = "High"
-            modifier = 0.20 # +20%
+            modifier = 0.20
         elif is_low:
             pcip_level = "Low"
-            modifier = -0.10 # -10%
+            modifier = -0.10
         else:
             pcip_level = "Moderate"
             modifier = 0.0
 
-        # Amplified themes based on Card Target Identity rules
         amplified = []
         if is_high:
             if 'M' in card_tags:
@@ -294,7 +285,7 @@ class ContextAdjustmentEngine:
         """
         if observed_themes is None:
             observed_themes = []
-            
+
         age = patient_data.get("age", 30)
         gender = patient_data.get("gender", "Unknown")
         living_condition = patient_data.get("living_condition", "Unknown")
@@ -305,21 +296,19 @@ class ContextAdjustmentEngine:
         occupation = patient_data.get("occupation", "Unknown")
         socioeconomic_status = patient_data.get("socioeconomic_status", "Unknown")
 
-        # Create Context Vector
         context_vector = [
-            age, 
-            self._get_age_group(age), 
-            gender, 
-            living_condition, 
-            family_structure, 
-            residence_type, 
-            environment_type, 
-            education_level, 
-            occupation, 
+            age,
+            self._get_age_group(age),
+            gender,
+            living_condition,
+            family_structure,
+            residence_type,
+            environment_type,
+            education_level,
+            occupation,
             socioeconomic_status
         ]
 
-        # Compute Scores
         age_congruence = self.compute_age_congruence_score(age, observed_themes)
         stress_context = self.compute_stress_context_score(living_condition, family_structure, environment_type)
         environmental_pressure = self.compute_environmental_pressure_score(environment_type, occupation, socioeconomic_status)

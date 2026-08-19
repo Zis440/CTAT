@@ -49,7 +49,7 @@ export function OnboardingPage() {
 
     setIsLoading(true);
     try {
-      // YYYY-MM-DD format
+
       const dateStr = dateOfBirth.toISOString().split("T")[0];
       await apiClient.patch("/api/auth/me", {
         date_of_birth: dateStr,
@@ -75,7 +75,7 @@ export function OnboardingPage() {
       <LandingNavbar />
 
       <main className="flex-1 flex items-center justify-center px-4 py-16 relative overflow-hidden">
-        {/* Background */}
+
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute top-1/3 -left-24 w-80 h-80 bg-primary/10 rounded-full blur-3xl animate-pulse" />
           <div className="absolute bottom-1/3 -right-24 w-72 h-72 bg-accent/10 rounded-full blur-3xl animate-pulse [animation-delay:1s]" />
@@ -109,7 +109,7 @@ export function OnboardingPage() {
 
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Date of Birth */}
+
                 <div className="space-y-2.5">
                   <Label className="text-text/80 font-bold text-xs uppercase tracking-wider">
                     Date of Birth
@@ -144,7 +144,6 @@ export function OnboardingPage() {
                   </Popover>
                 </div>
 
-                {/* Gender */}
                 <div className="space-y-2.5">
                   <Label className="text-text/80 font-bold text-xs uppercase tracking-wider">
                     Gender
@@ -165,7 +164,6 @@ export function OnboardingPage() {
                   </Select>
                 </div>
 
-                {/* Why we ask */}
                 <div className="rounded-xl bg-primary/5 border border-primary/10 p-4">
                   <p className="text-xs text-text/50 leading-relaxed">
                     <span className="font-bold text-primary/70">Why do we ask?</span>{" "}
@@ -175,7 +173,6 @@ export function OnboardingPage() {
                   </p>
                 </div>
 
-                {/* Submit */}
                 <Button
                   type="submit"
                   disabled={isLoading || !isFormValid}
@@ -191,7 +188,6 @@ export function OnboardingPage() {
                   )}
                 </Button>
 
-                {/* Skip link */}
                 <p className="text-center">
                   <button
                     type="button"

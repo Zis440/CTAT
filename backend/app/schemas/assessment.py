@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
 
-
 class AssessmentUpdate(BaseModel):
     name: Optional[str] = None
     category: Optional[str] = None
@@ -9,7 +8,6 @@ class AssessmentUpdate(BaseModel):
     clinicPrice: Optional[float] = None
     psychologistPrice: Optional[float] = None
     orgPrice: Optional[float] = None
-
 
 class AssessmentResponse(BaseModel):
     id: str

@@ -17,7 +17,6 @@ export function AddStaffDialog({ children, onSuccess }: { children: React.ReactN
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  // Form State
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -28,17 +27,15 @@ export function AddStaffDialog({ children, onSuccess }: { children: React.ReactN
   const [noRci, setNoRci] = useState(false);
   const [rciVerifying, setRciVerifying] = useState(false);
   const [rciVerified, setRciVerified] = useState<{ verified: boolean; practitioner_name?: string | null; message?: string } | null>(null);
-  
-  // Clinic Selection State
+
   const [clinicSearchQuery, setClinicSearchQuery] = useState("");
   const [selectedClinic, setSelectedClinic] = useState<{ id: string; name: string } | null>(null);
   const [isClinicDropdownOpen, setIsClinicDropdownOpen] = useState(false);
   const clinicDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Fetch clinics for the combobox
   const { data: clinicsData, isFetching: isFetchingClinics } = useQuery({
     queryKey: ["admin-clinics", "all"],
-    queryFn: () => fetchAdminClinics({ page: 1, page_size: 100 }), // Get up to 100
+    queryFn: () => fetchAdminClinics({ page: 1, page_size: 100 }),
     enabled: isOpen,
   });
 
@@ -71,7 +68,7 @@ export function AddStaffDialog({ children, onSuccess }: { children: React.ReactN
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
       if (onSuccess) onSuccess();
       setIsOpen(false);
-      // Reset form
+
       setFirstName("");
       setLastName("");
       setEmail("");
@@ -279,7 +276,7 @@ export function AddStaffDialog({ children, onSuccess }: { children: React.ReactN
                 autoComplete="off"
                 required
               />
-              
+
               {isClinicDropdownOpen && (
                 <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-popover shadow-xl animate-in fade-in slide-in-from-top-1 duration-150">
                   <ScrollArea className="max-h-[220px] overflow-y-auto">

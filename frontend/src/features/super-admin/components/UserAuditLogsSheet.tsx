@@ -48,7 +48,7 @@ function FormattedValue({ value }: { value: any }) {
         return <FormattedValue value={parsed} />;
       }
     } catch (e) {
-      // Ignore
+
     }
   }
 

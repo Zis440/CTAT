@@ -1,19 +1,11 @@
-/**
- * Signup Verification Service
- * ============================
- * Frontend API client for the multi-step verification endpoints.
- * Used during signup to verify RCI details and Bank accounts.
- */
 
 import { apiClient } from "./apiClient";
-
-// ── Types ────────────────────────────────────────────────────────────────────
 
 export interface RCIDetailsResponse {
   found: boolean;
   practitioner_name?: string;
-  phone?: string;   // Masked
-  email?: string;    // Masked
+  phone?: string;
+  email?: string;
   address?: string;
   state?: string;
   qualification?: string;
@@ -25,11 +17,9 @@ export interface RCICrossCheckResponse {
   phone_match: boolean;
   email_match: boolean;
   address_match: boolean;
-  rci_phone?: string;  // Masked
+  rci_phone?: string;
   message?: string;
 }
-
-
 
 export interface BankVerifyResponse {
   verified: boolean;
@@ -43,12 +33,6 @@ export interface PANVerifyResponse {
   message?: string;
 }
 
-// ── API Calls ────────────────────────────────────────────────────────────────
-
-/**
- * Fetch detailed RCI practitioner information from Neurofy.
- * Returns masked phone/email/address for cross-referencing.
- */
 export async function fetchRCIDetails(rciNumber: string): Promise<RCIDetailsResponse> {
   const { data } = await apiClient.post<RCIDetailsResponse>("/signup-verify/rci-details", {
     rci_number: rciNumber,
@@ -56,10 +40,6 @@ export async function fetchRCIDetails(rciNumber: string): Promise<RCIDetailsResp
   return data;
 }
 
-/**
- * Cross-check user-entered details against the RCI record.
- * If matches_found is false, manual verification is required.
- */
 export async function crossCheckRCI(payload: {
   rci_number: string;
   user_phone: string;
@@ -70,11 +50,6 @@ export async function crossCheckRCI(payload: {
   return data;
 }
 
-
-
-/**
- * Verify a clinic bank account via Razorpay (penny drop).
- */
 export async function verifyBankAccount(payload: {
   account_number: string;
   ifsc_code: string;
@@ -84,9 +59,6 @@ export async function verifyBankAccount(payload: {
   return data;
 }
 
-/**
- * Verify PAN number and match expected name (fallback if Bank Verification fails).
- */
 export async function verifyPAN(payload: {
   pan_number: string;
   expected_name: string;

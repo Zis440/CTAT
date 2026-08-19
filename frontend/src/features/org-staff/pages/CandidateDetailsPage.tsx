@@ -7,10 +7,10 @@ export function CandidateDetailsPage() {
   if (!patientId) return null;
 
   return (
-    <SharedPatientDetails 
-      patientId={patientId} 
-      apiBasePath="/patients" 
-      backUrl="/org-staff/candidates" 
+    <SharedPatientDetails
+      patientId={patientId}
+      apiBasePath="/patients"
+      backUrl="/org-staff/candidates"
     />
   );
 }

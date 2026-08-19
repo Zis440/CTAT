@@ -12,7 +12,6 @@ import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { useAuthStore } from "@/store/useAuthStore";
 import { apiClient } from "@/services/apiClient";
 
-// Setup pdf.js worker using Vite's URL import
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorker;
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -153,7 +152,7 @@ export function AdminVerificationRequestDetailsPage() {
   const handleOpenPdf = async () => {
     if (!pdfApiUrl) return;
     try {
-      // apiClient already has a base URL (like /api), so we should remove the /api prefix from pdfApiUrl if it exists
+
       const endpoint = pdfApiUrl.startsWith('/api/') ? pdfApiUrl.substring(4) : pdfApiUrl;
       const { data } = await apiClient.get(endpoint, { responseType: 'blob' });
       const fileUrl = URL.createObjectURL(data);
@@ -191,7 +190,7 @@ export function AdminVerificationRequestDetailsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          
+
           <Card className="border-primary/10 shadow-sm">
             <CardHeader className="bg-muted/30 border-b border-border/50 p-4">
               <CardTitle className="text-lg flex items-center gap-2">
@@ -224,7 +223,7 @@ export function AdminVerificationRequestDetailsPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="flex gap-3">
                   <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center shrink-0">
@@ -264,7 +263,7 @@ export function AdminVerificationRequestDetailsPage() {
             <CardContent className="p-0 bg-muted/10 flex justify-center h-[700px] overflow-auto">
               {pdfApiUrl ? (
                 <div className="flex flex-col items-center w-full">
-                  <Document 
+                  <Document
                     file={{ url: pdfApiUrl, httpHeaders: { Authorization: `Bearer ${token}` } } as any}
                     onLoadSuccess={({ numPages }) => setNumPages(numPages)}
                     loading={<div className="p-10 flex flex-col items-center"><RefreshCw className="h-6 w-6 animate-spin text-primary mb-2" /><p>Loading PDF...</p></div>}
@@ -273,11 +272,11 @@ export function AdminVerificationRequestDetailsPage() {
                   >
                     {numPages && Array.from(new Array(numPages), (_, index) => (
                       <div key={`page_${index + 1}`} className="shadow-xl border border-border">
-                        <Page 
-                          pageNumber={index + 1} 
-                          renderTextLayer={false} 
-                          renderAnnotationLayer={false} 
-                          width={800} 
+                        <Page
+                          pageNumber={index + 1}
+                          renderTextLayer={false}
+                          renderAnnotationLayer={false}
+                          width={800}
                         />
                       </div>
                     ))}
@@ -297,7 +296,6 @@ export function AdminVerificationRequestDetailsPage() {
           </Card>
         </div>
 
-        {/* Right Column: Monitoring & Actions */}
         <div className="space-y-6">
           {!isCompleted && (
             <Card className="border-destructive/20 border-2 p-0 overflow-hidden">

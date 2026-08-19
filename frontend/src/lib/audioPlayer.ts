@@ -2,18 +2,16 @@ class GlobalAudioPlayer {
   private currentAudio: HTMLAudioElement | null = null;
 
   play(src: string) {
-    // Stop any ongoing speech synthesis
+
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
 
-    // Stop currently playing audio
     if (this.currentAudio) {
       this.currentAudio.pause();
       this.currentAudio.currentTime = 0;
     }
-    
-    // Play new audio
+
     this.currentAudio = new Audio(src);
     this.currentAudio.play().catch(err => {
       console.debug("Audio playback prevented by browser policy:", err);
@@ -21,7 +19,7 @@ class GlobalAudioPlayer {
   }
 
   stop() {
-    // Stop any ongoing speech synthesis
+
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
@@ -34,5 +32,4 @@ class GlobalAudioPlayer {
   }
 }
 
-// Export a singleton instance
 export const globalAudioPlayer = new GlobalAudioPlayer();

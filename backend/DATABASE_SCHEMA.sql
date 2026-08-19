@@ -1,22 +1,3 @@
--- Note: Narrative Intelligence = TAT
--- ============================================================================
--- Psyichub - Complete PostgreSQL Schema
--- Generated on 2026-05-19
---
--- Usage:
---   1. Create a fresh PostgreSQL database
---   2. Paste this entire file into pgAdmin Query Tool and execute (F5)
---   3. All tables, enums, indexes, and constraints will be created
---
--- NOTE: Run the optional seed data section at the bottom to populate
---       verification document requirements.
--- ============================================================================
-
-
--- +==========================================================================+
--- |  1. ENUM TYPES                                                         |
--- +==========================================================================+
-
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'userrole') THEN
         CREATE TYPE userrole AS ENUM (
@@ -91,7 +72,6 @@ DO $$ BEGIN
     END IF;
 END $$;
 
-
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'resetrequeststatus') THEN
         CREATE TYPE resetrequeststatus AS ENUM (
@@ -102,19 +82,11 @@ DO $$ BEGIN
     END IF;
 END $$;
 
-
--- +==========================================================================+
--- |  2. TABLES                                                             |
--- +==========================================================================+
-
--- ── 2.1  users ──────────────────────────────────────────────────────────────
--- Root table - all other tables reference this.
 CREATE TABLE IF NOT EXISTS users (
     id                  VARCHAR     NOT NULL PRIMARY KEY,
     email               VARCHAR     NOT NULL,
     hashed_password     VARCHAR,
 
-    -- Profile
     title               VARCHAR,
     first_name          VARCHAR     NOT NULL,
     last_name           VARCHAR,
@@ -123,23 +95,18 @@ CREATE TABLE IF NOT EXISTS users (
     date_of_birth       DATE,
     gender              VARCHAR,
 
-    -- Avatar
     avatar_path         VARCHAR,
 
-    -- OAuth
     oauth_provider      VARCHAR,
     oauth_provider_id   VARCHAR,
     oauth_avatar_url    VARCHAR,
 
-    -- Role & Account
     role                userrole            NOT NULL,
     account_type        accounttype         NOT NULL,
 
-    -- Verification
     verification_status verificationstatus  NOT NULL,
     verification_notes  VARCHAR,
 
-    -- Clinic-specific
     clinic_id           VARCHAR,
     clinic_name         VARCHAR,
     clinic_type         VARCHAR,
@@ -153,33 +120,26 @@ CREATE TABLE IF NOT EXISTS users (
     cv_path             VARCHAR,
     cv_original_filename VARCHAR,
 
-    -- Psychologist Metrics
     rating              FLOAT,
     experience_years    INTEGER,
     total_verifications_done INTEGER NOT NULL DEFAULT 0,
 
-    -- Flags
     is_active           BOOLEAN     NOT NULL,
     can_assess          BOOLEAN     NOT NULL DEFAULT FALSE,
     module_permissions  JSONB       DEFAULT '{}'::jsonb,
 
-    -- Compliance / Consent
     terms_accepted_at   TIMESTAMPTZ,
     terms_accepted_ip   VARCHAR,
     ai_disclaimer_accepted BOOLEAN NOT NULL DEFAULT FALSE,
     refund_policy_accepted BOOLEAN NOT NULL DEFAULT FALSE,
     professional_responsibility_accepted BOOLEAN NOT NULL DEFAULT FALSE,
 
-    -- Signatures
     e_signature_path    VARCHAR,
 
-    -- Timestamps
     created_at          TIMESTAMPTZ DEFAULT now(),
     updated_at          TIMESTAMPTZ
 );
 
-
--- ── 2.2  wallets ────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS wallets (
     id              VARCHAR     NOT NULL PRIMARY KEY,
     user_id         VARCHAR     NOT NULL REFERENCES users(id),
@@ -189,8 +149,6 @@ CREATE TABLE IF NOT EXISTS wallets (
     updated_at      TIMESTAMPTZ
 );
 
-
--- ── 2.3  wallet_transactions ────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS wallet_transactions (
     id                  VARCHAR         NOT NULL PRIMARY KEY,
     wallet_id           VARCHAR         NOT NULL REFERENCES wallets(id),
@@ -204,8 +162,6 @@ CREATE TABLE IF NOT EXISTS wallet_transactions (
     created_at          TIMESTAMPTZ     DEFAULT now()
 );
 
-
--- ── 2.4  test_pricing ──────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS test_pricing (
     id                      VARCHAR     NOT NULL PRIMARY KEY,
     test_type               VARCHAR     NOT NULL,
@@ -216,8 +172,6 @@ CREATE TABLE IF NOT EXISTS test_pricing (
     updated_at              TIMESTAMPTZ
 );
 
-
--- ── 2.5  clinic_profiles ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS clinic_profiles (
     clinic_id           VARCHAR     NOT NULL PRIMARY KEY,
     clinic_name         VARCHAR,
@@ -228,20 +182,16 @@ CREATE TABLE IF NOT EXISTS clinic_profiles (
     cover_path          VARCHAR
 );
 
-
--- ── 2.5b org_profiles ──────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS org_profiles (
-    org_id              VARCHAR     NOT NULL PRIMARY KEY, 
-    org_name            VARCHAR, 
-    tagline             VARCHAR, 
-    contact_email       VARCHAR, 
-    support_phone       VARCHAR, 
-    logo_path           VARCHAR, 
+    org_id              VARCHAR     NOT NULL PRIMARY KEY,
+    org_name            VARCHAR,
+    tagline             VARCHAR,
+    contact_email       VARCHAR,
+    support_phone       VARCHAR,
+    logo_path           VARCHAR,
     cover_path          VARCHAR
 );
 
-
--- ── 2.6  patients ──────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS patients (
     id                  VARCHAR     NOT NULL PRIMARY KEY,
     user_id             VARCHAR     NOT NULL REFERENCES users(id),
@@ -273,8 +223,6 @@ CREATE TABLE IF NOT EXISTS patients (
     updated_at          TIMESTAMPTZ
 );
 
-
--- ── 2.6  sessions ──────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS sessions (
     id                  VARCHAR     NOT NULL PRIMARY KEY,
     user_id             VARCHAR     NOT NULL REFERENCES users(id),
@@ -291,8 +239,6 @@ CREATE TABLE IF NOT EXISTS sessions (
     created_at          TIMESTAMPTZ DEFAULT now()
 );
 
-
--- ── 2.7  support_tickets ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS support_tickets (
     id          VARCHAR         NOT NULL PRIMARY KEY,
     user_id     VARCHAR         NOT NULL REFERENCES users(id),
@@ -303,17 +249,13 @@ CREATE TABLE IF NOT EXISTS support_tickets (
     updated_at  TIMESTAMPTZ
 );
 
-
--- ── 2.8  appointments ──────────────────────────────────────────────────────
--- Tracks scheduled appointments between a psychologist (user) and a patient.
--- Linked to: users (psychologist), patients, and optionally a clinic.
 CREATE TABLE IF NOT EXISTS appointments (
     id                  VARCHAR             NOT NULL PRIMARY KEY,
     psychologist_id     VARCHAR             NOT NULL REFERENCES users(id),
     patient_id          VARCHAR             NOT NULL REFERENCES patients(id),
     clinic_id           VARCHAR,
     appointment_date    DATE                NOT NULL,
-    start_time          VARCHAR             NOT NULL,   -- HH:MM 24h format
+    start_time          VARCHAR             NOT NULL,
     duration_minutes    INTEGER             NOT NULL DEFAULT 60,
     status              appointmentstatus   NOT NULL DEFAULT 'scheduled',
     purpose             VARCHAR,
@@ -322,8 +264,6 @@ CREATE TABLE IF NOT EXISTS appointments (
     updated_at          TIMESTAMPTZ
 );
 
-
--- ── 2.9  user_verification_documents ────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS user_verification_documents (
     id                  VARCHAR             NOT NULL PRIMARY KEY,
     user_id             VARCHAR             NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -336,7 +276,6 @@ CREATE TABLE IF NOT EXISTS user_verification_documents (
     is_required         BOOLEAN             NOT NULL DEFAULT true,
     uploaded_at         TIMESTAMPTZ         DEFAULT now(),
 
-    -- OCR and Validation Fields
     detected_document_type VARCHAR(100),
     ocr_fields          JSON,
     ocr_confidence      FLOAT,
@@ -346,8 +285,6 @@ CREATE TABLE IF NOT EXISTS user_verification_documents (
     CONSTRAINT uq_user_document_type UNIQUE (user_id, document_type)
 );
 
-
--- ── 2.9  verification_document_requirements ─────────────────────────────────
 CREATE TABLE IF NOT EXISTS verification_document_requirements (
     id                  SERIAL              PRIMARY KEY,
     account_type        VARCHAR(20)         NOT NULL,
@@ -359,8 +296,6 @@ CREATE TABLE IF NOT EXISTS verification_document_requirements (
     description         TEXT
 );
 
-
--- ── 2.10 assessments ────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS assessments (
     id VARCHAR NOT NULL PRIMARY KEY,
     slug VARCHAR(100) UNIQUE,
@@ -373,8 +308,6 @@ CREATE TABLE IF NOT EXISTS assessments (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-
--- ── 2.11 password_resets ────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS password_resets (
     id                  VARCHAR             NOT NULL PRIMARY KEY,
     user_id             VARCHAR             NOT NULL REFERENCES users(id),
@@ -385,70 +318,42 @@ CREATE TABLE IF NOT EXISTS password_resets (
     expires_at          TIMESTAMPTZ
 );
 
-
--- +==========================================================================+
--- |  3. UNIQUE CONSTRAINTS                                                 |
--- +==========================================================================+
-
 ALTER TABLE test_pricing
     ADD CONSTRAINT test_pricing_test_type_key UNIQUE (test_type);
 
-
--- +==========================================================================+
--- |  4. INDEXES                                                            |
--- +==========================================================================+
-
--- users
 CREATE UNIQUE INDEX IF NOT EXISTS ix_users_email       ON users (email);
 CREATE INDEX IF NOT EXISTS        ix_users_clinic_id   ON users (clinic_id);
 
--- wallets
 CREATE UNIQUE INDEX IF NOT EXISTS ix_wallets_user_id   ON wallets (user_id);
 
--- wallet_transactions
 CREATE INDEX IF NOT EXISTS ix_wallet_transactions_wallet_id ON wallet_transactions (wallet_id);
 CREATE INDEX IF NOT EXISTS ix_wallet_transactions_created_by_id ON wallet_transactions (created_by_id);
 
--- patients
 CREATE INDEX IF NOT EXISTS ix_patients_user_id    ON patients (user_id);
 CREATE INDEX IF NOT EXISTS ix_patients_clinic_id  ON patients (clinic_id);
 
--- sessions
 CREATE INDEX IF NOT EXISTS ix_sessions_user_id    ON sessions (user_id);
 CREATE INDEX IF NOT EXISTS ix_sessions_patient_id ON sessions (patient_id);
 
--- support_tickets
 CREATE INDEX IF NOT EXISTS ix_support_tickets_user_id ON support_tickets (user_id);
 
--- appointments
 CREATE INDEX IF NOT EXISTS ix_appointments_psychologist_id  ON appointments (psychologist_id);
 CREATE INDEX IF NOT EXISTS ix_appointments_patient_id       ON appointments (patient_id);
 CREATE INDEX IF NOT EXISTS ix_appointments_clinic_id        ON appointments (clinic_id);
 CREATE INDEX IF NOT EXISTS ix_appointments_date             ON appointments (appointment_date);
 
--- user_verification_documents
 CREATE INDEX IF NOT EXISTS idx_uvd_user_id        ON user_verification_documents (user_id);
 CREATE INDEX IF NOT EXISTS idx_uvd_document_type  ON user_verification_documents (document_type);
 
--- verification_document_requirements
 CREATE INDEX IF NOT EXISTS idx_vdr_account_type   ON verification_document_requirements (account_type);
 CREATE INDEX IF NOT EXISTS idx_vdr_clinic_subtype ON verification_document_requirements (clinic_subtype);
 
--- password_resets
 CREATE INDEX IF NOT EXISTS ix_password_resets_email   ON password_resets (email);
 CREATE INDEX IF NOT EXISTS ix_password_resets_token   ON password_resets (token);
 CREATE INDEX IF NOT EXISTS ix_password_resets_user_id ON password_resets (user_id);
 
-
--- +==========================================================================+
--- |  5. SEED DATA - Verification Document Requirements                     |
--- |     (Optional - run this section to populate the requirements config)   |
--- +==========================================================================+
-
--- Clear existing seed data (safe for re-runs)
 TRUNCATE verification_document_requirements RESTART IDENTITY;
 
--- ── INDIVIDUAL ──────────────────────────────────────────────────────────────
 INSERT INTO verification_document_requirements
     (account_type, clinic_subtype, document_type, document_category, is_required, label, description)
 VALUES
@@ -457,7 +362,6 @@ VALUES
     ('individual', NULL, 'pan_card',                  'identity',     false, 'PAN Card (Optional)', 'PAN card for identity and tax verification.'),
     ('individual', NULL, 'qualification_certificate',  'professional', false, 'Qualification Certificate / Letterhead / Business Card', 'M.Phil/Ph.D/M.A. Psychology degree, your professional letterhead, or business card (optional but speeds up verification).');
 
--- ── CLINIC - sole_proprietorship ────────────────────────────────────────────
 INSERT INTO verification_document_requirements
     (account_type, clinic_subtype, document_type, document_category, is_required, label, description)
 VALUES
@@ -468,7 +372,6 @@ VALUES
     ('clinic', 'sole_proprietorship', 'gst_certificate',            'compliance',   false, 'GST Certificate',                           'GST registration certificate.'),
     ('clinic', 'sole_proprietorship', 'address_proof',              'compliance',   false, 'Address Proof',                             'Utility bill, rent agreement, or property tax receipt for clinic address.');
 
--- ── CLINIC - partnership ────────────────────────────────────────────────────
 INSERT INTO verification_document_requirements
     (account_type, clinic_subtype, document_type, document_category, is_required, label, description)
 VALUES
@@ -479,7 +382,6 @@ VALUES
     ('clinic', 'partnership', 'firm_pan',                  'compliance',   true,  'PAN of Firm',                               'PAN card of the partnership firm.'),
     ('clinic', 'partnership', 'gst_certificate',           'compliance',   true,  'GST Certificate',                           'GST registration certificate.');
 
--- ── CLINIC - llp ────────────────────────────────────────────────────────────
 INSERT INTO verification_document_requirements
     (account_type, clinic_subtype, document_type, document_category, is_required, label, description)
 VALUES
@@ -491,7 +393,6 @@ VALUES
     ('clinic', 'llp', 'company_pan',                       'compliance',   true,  'Company PAN',                                          'PAN card of the LLP entity.'),
     ('clinic', 'llp', 'gst_certificate',                   'compliance',   true,  'GST Certificate',                                      'GST registration certificate.');
 
--- ── CLINIC - private_limited ────────────────────────────────────────────────
 INSERT INTO verification_document_requirements
     (account_type, clinic_subtype, document_type, document_category, is_required, label, description)
 VALUES
@@ -503,7 +404,6 @@ VALUES
     ('clinic', 'private_limited', 'gst_certificate',              'compliance',   true,  'GST Certificate',                           'GST registration certificate.'),
     ('clinic', 'private_limited', 'board_authorization_letter',   'compliance',   false, 'Board Authorization Letter',                'Board resolution authorizing the representative to act on behalf of the company.');
 
--- ── CLINIC - opc ────────────────────────────────────────────────────────────
 INSERT INTO verification_document_requirements
     (account_type, clinic_subtype, document_type, document_category, is_required, label, description)
 VALUES
@@ -513,7 +413,6 @@ VALUES
     ('clinic', 'opc', 'owner_government_id',          'identity',     true,  'Government ID of Owner',                    'Aadhaar, passport, or driving license of the owner.'),
     ('clinic', 'opc', 'company_pan',                  'compliance',   true,  'Company PAN',                               'PAN card of the OPC.');
 
--- ── CLINIC - public_limited ─────────────────────────────────────────────────
 INSERT INTO verification_document_requirements
     (account_type, clinic_subtype, document_type, document_category, is_required, label, description)
 VALUES
@@ -524,7 +423,6 @@ VALUES
     ('clinic', 'public_limited', 'company_pan',                  'compliance',   true,  'Company PAN',                               'PAN card of the Public Limited company.'),
     ('clinic', 'public_limited', 'gst_certificate',              'compliance',   true,  'GST Certificate',                           'GST registration certificate.');
 
--- ── CLINIC - trust ──────────────────────────────────────────────────────────
 INSERT INTO verification_document_requirements
     (account_type, clinic_subtype, document_type, document_category, is_required, label, description)
 VALUES
@@ -534,7 +432,6 @@ VALUES
     ('clinic', 'trust', 'representative_id',      'identity',     true,  'ID of Authorized Representative',           'Government-issued photo ID of the authorized representative.'),
     ('clinic', 'trust', 'trust_pan',              'compliance',   true,  'Trust PAN',                                 'PAN card of the Trust entity.');
 
--- ── CLINIC - society ────────────────────────────────────────────────────────
 INSERT INTO verification_document_requirements
     (account_type, clinic_subtype, document_type, document_category, is_required, label, description)
 VALUES
@@ -544,7 +441,6 @@ VALUES
     ('clinic', 'society', 'representative_id',        'identity',     true,  'ID of Authorized Representative',           'Government-issued photo ID of the authorized representative.'),
     ('clinic', 'society', 'society_pan',              'compliance',   true,  'Society PAN',                               'PAN card of the Society entity.');
 
--- ── CLINIC - section_8 ──────────────────────────────────────────────────────
 INSERT INTO verification_document_requirements
     (account_type, clinic_subtype, document_type, document_category, is_required, label, description)
 VALUES
@@ -554,7 +450,6 @@ VALUES
     ('clinic', 'section_8', 'representative_id',            'identity',     true,  'ID of Authorized Representative',           'Government-issued photo ID of the authorized representative.'),
     ('clinic', 'section_8', 'company_pan',                  'compliance',   true,  'Company PAN',                               'PAN card of the Section 8 company.');
 
--- ── CLINIC - cooperative ────────────────────────────────────────────────────
 INSERT INTO verification_document_requirements
     (account_type, clinic_subtype, document_type, document_category, is_required, label, description)
 VALUES
@@ -564,7 +459,6 @@ VALUES
     ('clinic', 'cooperative', 'representative_id',        'identity',     true,  'ID of Authorized Representative',           'Government-issued photo ID of the authorized representative.'),
     ('clinic', 'cooperative', 'cooperative_pan',          'compliance',   true,  'Co-operative PAN',                          'PAN card of the Co-operative society.');
 
--- ── CLINIC - ngo ────────────────────────────────────────────────────────────
 INSERT INTO verification_document_requirements
     (account_type, clinic_subtype, document_type, document_category, is_required, label, description)
 VALUES
@@ -575,7 +469,6 @@ VALUES
     ('clinic', 'ngo', 'tax_exemption_docs',     'compliance',   false, '80G / 12A Registration Documents',          'Tax exemption certificates under Section 80G or 12A.'),
     ('clinic', 'ngo', 'ngo_pan',                'compliance',   true,  'NGO PAN',                                   'PAN card of the NGO / Trust entity.');
 
--- ── CLINIC - government ─────────────────────────────────────────────────────
 INSERT INTO verification_document_requirements
     (account_type, clinic_subtype, document_type, document_category, is_required, label, description)
 VALUES
@@ -584,7 +477,6 @@ VALUES
     ('clinic', 'government', 'practitioner_license',       'professional', true, 'Professional License of Practitioner', 'RCI or state license of the practicing psychologist.'),
     ('clinic', 'government', 'representative_official_id', 'identity',     true, 'Official ID of Representative',        'Government-issued official identity card of the authorized representative.');
 
--- ── CLINIC - other ──────────────────────────────────────────────────────────
 INSERT INTO verification_document_requirements
     (account_type, clinic_subtype, document_type, document_category, is_required, label, description)
 VALUES
@@ -592,9 +484,7 @@ VALUES
     ('clinic', 'other', 'professional_license',  'professional', true,  'Professional License',         'RCI or state license of the lead practitioner.'),
     ('clinic', 'other', 'authorized_person_id',  'identity',     true,  'Authorized Person ID',         'Government-issued photo ID of the authorized person.');
 
-
--- ── ASSESSMENTS ─────────────────────────────────────────────────────────────
-INSERT INTO assessments (id, slug, name, category, clinic_price, psychologist_price, is_coming_soon) VALUES 
+INSERT INTO assessments (id, slug, name, category, clinic_price, psychologist_price, is_coming_soon) VALUES
 ('ASM_1', 'tat', 'Narrative Intelligence', 'Projective', 20.00, 30.00, FALSE),
 ('ASM_2', 'm-paci', 'Pre Adolescent Personality Assessment Intelligence', 'Self-Report Inventory', NULL, NULL, TRUE),
 ('ASM_3', 'conners', 'Attention Deficit And Hyperactivity Intelligence', 'Behavioral Rating', NULL, NULL, TRUE),
@@ -605,11 +495,6 @@ INSERT INTO assessments (id, slug, name, category, clinic_price, psychologist_pr
 ('ASM_8', 'maci', 'Adolescent Personality Intelligence', 'Self-Report Inventory', NULL, NULL, TRUE),
 ('ASM_9', 'mcmi', 'Adult Personality Intelligence', 'Self-Report Inventory', NULL, NULL, TRUE),
 ('ASM_10', 'freud-dream', 'Dream Insite Intelligence', 'Psychoanalytic', NULL, NULL, TRUE);
-
-
--- +==========================================================================+
--- |  6. ADDITIONAL TABLES (Audit, Anonymous Links, Org Requests)           |
--- +==========================================================================+
 
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'orgrequeststatus') THEN
@@ -635,7 +520,6 @@ DO $$ BEGIN
     END IF;
 END $$;
 
--- ── 2.12 audit_logs ─────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS audit_logs (
     id                  VARCHAR     NOT NULL PRIMARY KEY,
     user_id             VARCHAR     NOT NULL REFERENCES users(id),
@@ -651,7 +535,6 @@ CREATE INDEX IF NOT EXISTS ix_audit_logs_target_user_id ON audit_logs (target_us
 CREATE INDEX IF NOT EXISTS ix_audit_logs_org_id ON audit_logs (org_id);
 CREATE INDEX IF NOT EXISTS ix_audit_logs_action ON audit_logs (action);
 
--- ── 2.13 anonymous_links ────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS anonymous_links (
     token                   VARCHAR     NOT NULL PRIMARY KEY,
     org_id                  VARCHAR     NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -670,7 +553,6 @@ CREATE TABLE IF NOT EXISTS anonymous_links (
 );
 CREATE INDEX IF NOT EXISTS ix_anonymous_links_org_id ON anonymous_links (org_id);
 
--- ── 2.14 org_assessment_requests ────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS org_assessment_requests (
     id                          VARCHAR             NOT NULL PRIMARY KEY,
     org_id                      VARCHAR             NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -687,7 +569,6 @@ CREATE INDEX IF NOT EXISTS ix_org_assessment_requests_org_id ON org_assessment_r
 CREATE INDEX IF NOT EXISTS ix_org_assessment_requests_patient_id ON org_assessment_requests (patient_id);
 CREATE INDEX IF NOT EXISTS ix_org_assessment_requests_assigned_psychologist_id ON org_assessment_requests (assigned_psychologist_id);
 
--- ── 2.15 verification_requests ────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS verification_requests (
     id                          VARCHAR                     NOT NULL PRIMARY KEY,
     session_id                  VARCHAR                     NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
@@ -702,22 +583,6 @@ CREATE TABLE IF NOT EXISTS verification_requests (
 CREATE INDEX IF NOT EXISTS ix_verification_requests_session_id ON verification_requests (session_id);
 CREATE INDEX IF NOT EXISTS ix_verification_requests_assigned_psychologist_id ON verification_requests (assigned_psychologist_id);
 CREATE INDEX IF NOT EXISTS ix_verification_requests_status ON verification_requests (status);
-
-
--- ============================================================================
--- ✅  Schema setup complete.
--- ============================================================================
-
-
-/* 
-   THE ENTIRE "NEW ADDITIONS (APPENDED)" SECTION HAS BEEN INTEGRATED 
-   DIRECTLY INTO THE CORE TABLES AND ENUMS ABOVE.
-   THIS PREVENTS CONFLICTS FROM REDUNDANT MIGRATION SNarrative IntelligenceEMENTS.
-*/
-
--- -----------------------------------------------------------------------------
--- Employee Mental Well-being (Screening Level 1) Tables
--- -----------------------------------------------------------------------------
 
 CREATE TABLE screening_users (
     id VARCHAR(36) PRIMARY KEY,

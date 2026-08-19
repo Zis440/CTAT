@@ -25,8 +25,6 @@ ChartJS.register(
   LinearScale
 );
 
-
-
 interface ReportData {
   status?: string;
   verified_by_name?: string;
@@ -88,7 +86,7 @@ export const ScreeningReportUI: React.FC<{ report: ReportData, questions?: any, 
       rightHeaderActions={rightHeaderActions}
     >
       <div className="bg-background p-6 md:p-10 mx-auto max-w-5xl my-6 print:shadow-none print:border-none print:m-0 print:max-w-full">
-        {/* EXECUTIVE OVERVIEW */}
+
         <SectionHeader title="1. Executive Overview" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 border-l-4 border-primary pl-6">
           <div>
@@ -105,15 +103,12 @@ export const ScreeningReportUI: React.FC<{ report: ReportData, questions?: any, 
           </div>
         </div>
 
-        {/* 2. CLINICAL INSIGHT */}
         <SectionHeader title="2. CLINICAL INSIGHT" />
         <FormattedText text={ai_clinical_insight} />
 
-        {/* 3. CROSS-ASSESSMENT INTEGRATION */}
         <SectionHeader title="3. CROSS-ASSESSMENT INTEGRATION" />
         <FormattedText text={cross_assessment_integration} />
 
-        {/* 4. DETAILED FINDINGS & PERFORMANCE */}
         <SectionHeader title="4. DETAILED FINDINGS & PERFORMANCE" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mt-6">
           <div>
@@ -160,7 +155,6 @@ export const ScreeningReportUI: React.FC<{ report: ReportData, questions?: any, 
           </div>
         </div>
 
-        {/* 5. RISK ANALYSIS */}
         <div style={{ pageBreakInside: 'avoid' }}>
           <SectionHeader title="5. RISK ANALYSIS" />
           <div className="mt-4 bg-card p-6 border border-border shadow-sm rounded-lg grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
@@ -172,7 +166,6 @@ export const ScreeningReportUI: React.FC<{ report: ReportData, questions?: any, 
           </div>
         </div>
 
-        {/* 6. STRENGTHS & DEVELOPMENT AREAS */}
         <div className="mt-12 mb-8" style={{ pageBreakInside: 'avoid' }}>
           <SectionHeader title="6. STRENGTHS & DEVELOPMENT AREAS" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
@@ -217,7 +210,6 @@ export const ScreeningReportUI: React.FC<{ report: ReportData, questions?: any, 
           </div>
         </div>
 
-        {/* 7. WORKPLACE INTERPRETATION */}
         <div className="mt-12 mb-8" style={{ pageBreakInside: 'avoid' }}>
           <SectionHeader title="7. WORKPLACE INTERPRETATION" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
@@ -248,7 +240,6 @@ export const ScreeningReportUI: React.FC<{ report: ReportData, questions?: any, 
           </div>
         </div>
 
-        {/* 8. STRATEGIC RECOMMENDATIONS */}
         <div style={{ pageBreakInside: 'avoid' }}>
           <SectionHeader title="8. STRATEGIC RECOMMENDATIONS" />
           <div className="grid grid-cols-1 gap-4 mt-6">
@@ -267,14 +258,13 @@ export const ScreeningReportUI: React.FC<{ report: ReportData, questions?: any, 
           </div>
         </div>
 
-        {/* 9. CANDIDATE ANSWER SHEET */}
         <div className="mt-16" style={{ pageBreakBefore: 'always' }}>
           <SectionHeader title="9. CANDIDATE ANSWER SHEET" />
 
           <h3 className="text-sm font-bold text-foreground mb-4 mt-6">Story Assessments</h3>
           <div className="grid grid-cols-1 gap-6">
             {report.raw_answers?.stories?.map((story: any, idx: number) => {
-              // Map generic internal IDs to the specific TAT cards used in Employee Mental Health & Wellbeing
+
               const cardMapping: Record<string, string> = {
                 'card_1': 'Card 3',
                 'card_2': 'Card 6',
@@ -290,7 +280,7 @@ export const ScreeningReportUI: React.FC<{ report: ReportData, questions?: any, 
               let cardName = cardMapping[rawId] || cardMapping[`card_${rawId.replace('card_', '')}`];
 
               if (!cardName) {
-                // Fallback parsing just in case it's not 1-4
+
                 cardName = story.card_id || '1';
                 if (cardName.toUpperCase().startsWith('CARD_')) {
                   cardName = cardName.replace(/CARD_/i, 'Card ');
@@ -311,7 +301,7 @@ export const ScreeningReportUI: React.FC<{ report: ReportData, questions?: any, 
                       alt={cardName}
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        // Fallback to placeholder if not found
+
                         e.currentTarget.src = `https://placehold.co/150x150/e2e8f0/475569?text=${encodeURIComponent(cardName)}`;
                       }}
                     />
@@ -329,7 +319,7 @@ export const ScreeningReportUI: React.FC<{ report: ReportData, questions?: any, 
           <div className="space-y-8">
             {questions && !Array.isArray(questions) ? (
               Object.entries(questions).map(([sectionKey, sectionData]: [string, any]) => {
-                // Find all items for this section
+
                 let sectionItems: any[] = [];
                 if (sectionData.items) {
                   sectionItems = sectionItems.concat(sectionData.items);
@@ -343,7 +333,6 @@ export const ScreeningReportUI: React.FC<{ report: ReportData, questions?: any, 
                   sectionItems.push(sectionData.overall_indicator);
                 }
 
-                // Filter items that actually have a response
                 const answeredItems = sectionItems.filter(item =>
                   report.raw_answers?.questionnaire?.[item.id] !== undefined
                 );
@@ -412,7 +401,6 @@ export const ScreeningReportUI: React.FC<{ report: ReportData, questions?: any, 
           </div>
         </div>
 
-        {/* FOOTER */}
         <div className="mt-16 pt-8 border-t border-border flex flex-col gap-2 text-[10px] text-muted-foreground text-center print:text-left print:flex-row print:justify-between">
           <p className="font-medium text-amber-700 max-w-4xl mx-auto print:mx-0 print:max-w-[70%]">
             Disclaimer: This report is generated for informational and educational purposes only and is not a substitute for professional clinical diagnosis or treatment.
@@ -517,7 +505,7 @@ const Report: React.FC = () => {
     } catch (error: any) {
       console.error(error);
       if (newWindow) newWindow.close();
-      
+
       let errorMessage = "Failed to open PDF";
       if (error.response?.data instanceof Blob) {
         try {
@@ -708,7 +696,7 @@ const Report: React.FC = () => {
         rightHeaderActions={null}
         rightFooterActions={
           <>
-            {/* If the user is a fully verified clinical psychologist, they don't need to pay to verify. They can just review/verify it themselves via a different flow or it's implicitly verified. Hide the button. */}
+
             {!((user?.rci_number || user?.roc_number) && user?.verification_status === "approved") && (
               <>
                 {report?.status === "AI Generated" || report?.status === "Generated" ? (

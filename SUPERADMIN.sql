@@ -1,19 +1,5 @@
--- ============================================================================
--- PsyicHub — Super Admin Bootstrap
--- Run this in pgAdmin's Query Tool after the schema is applied.
---
---  Creates:
---    1 Super Admin user
---
---  Credentials:
---    Email    : [EMAIL_ADDRESS]    - write your email address in the SQL query
---    Password : [PASSWORD]         - write your password in the SQL query
---
--- ============================================================================
-
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- Super Admin user
 INSERT INTO users (
     id, email, hashed_password,
     first_name, last_name, phone, date_of_birth, gender, designation,
@@ -33,4 +19,3 @@ INSERT INTO users (
  '{"all": true}'::jsonb,
  '2026-01-01 00:00:00+05:30', '2026-01-01 00:00:00+05:30')
 ON CONFLICT DO NOTHING;
-

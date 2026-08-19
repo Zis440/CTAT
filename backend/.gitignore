@@ -1,34 +1,45 @@
 # Python virtual environments
 venv/
+.venv/
 .env/
+env/
 
-# Python cache
+# Python cache & build
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
 *.pyd
 *.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
 
-# Env files
+# Env & Secrets
 .env
+.env.*
+!.env.example
+*.pem
+*.key
 
 # Logs
 *.log
+logs/
+ollama_humanizer.log
 
-# IDE files
+# IDE & OS files
 .vscode/
+!.vscode/extensions.json
 .idea/
 .DS_Store
-
-# OS files
 Thumbs.db
 
-# ── Runtime / generated data ──────────────────────────────────────────────────
-# Everything mutable lives under data_store/
+# Runtime / Generated Data Stores
 data_store/
-
-# Legacy paths (kept in case old files linger before migration)
 auth.db
+*.db
+*.sqlite
+*.sqlite3
 outputs/
 sessions/
 uploads/
@@ -38,10 +49,23 @@ patient_database.csv
 data/audio_temp/
 emoji_hits.txt
 audit_logs/
+test_audit_logs/
 scripts - temp/
 
-# ML model downloads
+# ML model weights
 *.bin
 *.safetensors
+*.gguf
+*.pt
+*.pth
+*.onnx
 
+# Temporary / one-off migration and test scripts
 alter_db.py
+scripts/add_columns.py
+scripts/add_ocr_columns.py
+scripts/audit_schema.py
+scripts/debug_verify.py
+scripts/fix_stuck_verification.py
+scripts/test_sbert_solo.py
+scripts/update_rci_requirement.py

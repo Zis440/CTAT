@@ -22,8 +22,6 @@ export function AdminSettingsPage() {
     name: [user?.first_name, user?.last_name].filter(Boolean).join(" ") || "Super Admin",
   });
 
-
-
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -59,15 +57,11 @@ export function AdminSettingsPage() {
       </motion.div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        {/* <TabsList className="bg-background/50 border border-border/50 gap-2">
-          <TabsTrigger value="profile" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary"><User className="mr-2 h-4 w-4" /> Profile</TabsTrigger>
-        </TabsList> */}
 
-        {/* Profile Tab */}
         <TabsContent value="profile" className="space-y-6">
           <Card className="border-0 shadow-xl overflow-hidden bg-background/60 backdrop-blur-md rounded-2xl relative pt-0 gap-0">
             <div className="w-full flex justify-center pt-10 pb-6 bg-gradient-to-br from-primary/10 via-background to-primary/5">
-              {/* Profile Logo Avatar */}
+
               <div className="relative group/logo">
                 <div className="h-32 w-32 rounded-full border-4 border-background bg-card shadow-xl overflow-hidden flex items-center justify-center">
                   {user?.avatar_url ? (
@@ -77,7 +71,6 @@ export function AdminSettingsPage() {
                   )}
                 </div>
 
-                {/* Logo Overlay & Upload Button */}
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/logo:opacity-100 transition-opacity duration-300 rounded-full flex flex-col items-center justify-center cursor-pointer">
                   <Camera className="h-8 w-8 text-white drop-shadow-md" />
                 </div>
@@ -147,116 +140,6 @@ export function AdminSettingsPage() {
           </Card>
         </TabsContent>
 
-        {/* Notifications Tab
-        <TabsContent value="notifications" className="space-y-6">
-          <Card className="border-primary/10 bg-background/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle>Notification Toggles</CardTitle>
-              <CardDescription>Manage how you receive updates and alerts.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between space-x-4 p-4 border border-border/50 rounded-xl bg-background/50">
-                <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                    <Bell className="h-5 w-5 text-blue-500" />
-                  </div>
-                  <div>
-                    <Label className="text-base font-bold">Email Notification</Label>
-                    <p className="text-sm text-muted-foreground">Receive daily summaries and alerts via Email.</p>
-                  </div>
-                </div>
-                <Switch
-                  checked={notifications.email}
-                  onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, email: checked }))}
-                />
-              </div>
-            </CardContent>
-            <CardFooter className="border-t border-border/50 pt-6">
-              <Button onClick={handleSave} disabled={isSaving} className="text-white dark:text-black">
-                {isSaving ? "Saving..." : "Save Notification Preferences"}
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-        */}
-
-        {/* WhatsApp Configuration Tab
-        <TabsContent value="whatsapp" className="space-y-6">
-          <Card className="border-primary/10 bg-background/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle>WhatsApp SMS Configuration</CardTitle>
-              <CardDescription>Choose your preferred method for sending automated WhatsApp messages.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div
-                className={`flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0 md:space-x-4 p-4 border-2 rounded-xl transition-colors cursor-pointer ${whatsappConfig === 'cloud_api' ? 'border-primary bg-primary/5' : 'border-border/50 bg-background/50 hover:border-primary/50'}`}
-                onClick={() => setWhatsappConfig("cloud_api")}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="h-10 w-10 shrink-0 rounded-full bg-blue-500/10 flex items-center justify-center mt-1">
-                    <UploadCloud className="h-5 w-5 text-blue-500" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <Label className="text-base font-bold cursor-pointer">Business Cloud API WhatsApp</Label>
-                      {whatsappConfig === 'cloud_api' && <CheckCircle2 className="h-4 w-4 text-primary" />}
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">Use the official Meta Business Cloud API for high reliability and scale.</p>
-                    <div className="mt-3 inline-flex items-center px-2.5 py-1 rounded-md bg-secondary text-xs text-white dark:text-black font-semibold">
-                      Price: ₹0.80 / message
-                    </div>
-                  </div>
-                </div>
-                <div className="shrink-0 flex items-center">
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${whatsappConfig === 'cloud_api' ? 'border-primary' : 'border-muted-foreground'}`}>
-                    {whatsappConfig === 'cloud_api' && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
-                  </div>
-                </div>
-              </div>
-
-              <div
-                className={`flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0 md:space-x-4 p-4 border-2 rounded-xl transition-colors cursor-pointer ${whatsappConfig === 'node_qr' ? 'border-primary bg-primary/5' : 'border-border/50 bg-background/50 hover:border-primary/50'}`}
-                onClick={() => setWhatsappConfig("node_qr")}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="h-10 w-10 shrink-0 rounded-full bg-green-500/10 flex items-center justify-center mt-1">
-                    <Smartphone className="h-5 w-5 text-green-500" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <Label className="text-base font-bold cursor-pointer">Node QR Code WhatsApp</Label>
-                      {whatsappConfig === 'node_qr' && <CheckCircle2 className="h-4 w-4 text-primary" />}
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">Link your own WhatsApp account via QR code (using Node.js Baileys or similar).</p>
-                    <div className="mt-3 inline-flex items-center px-2.5 py-1 rounded-md bg-secondary text-xs text-white dark:text-black font-semibold">
-                      Price: Free (Uses your device)
-                    </div>
-
-                    {whatsappConfig === 'node_qr' && (
-                      <div className="mt-4 p-4 bg-background rounded-lg border border-border flex flex-col items-center justify-center">
-                        <div className="w-48 h-48 bg-muted/50 rounded-lg border-2 border-dashed border-border flex items-center justify-center mb-3">
-                          <span className="text-sm text-muted-foreground">QR Code Display</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground text-center">Scan this code with your WhatsApp app to link your device.</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="shrink-0 flex items-center">
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${whatsappConfig === 'node_qr' ? 'border-primary' : 'border-muted-foreground'}`}>
-                    {whatsappConfig === 'node_qr' && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="border-t border-border/50 pt-6">
-              <Button onClick={handleSave} disabled={isSaving} className="text-white dark:text-black">
-                {isSaving ? "Saving..." : "Save WhatsApp Configuration"}
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-        */}
       </Tabs>
     </div>
   );

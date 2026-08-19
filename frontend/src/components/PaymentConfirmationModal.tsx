@@ -26,35 +26,28 @@ export interface PaymentConfirmationModalProps {
   onOpenChange: (open: boolean) => void;
   title: React.ReactNode;
   description: React.ReactNode;
-  
-  // Cost breakdown
+
   breakdownItems?: PaymentBreakdownItem[];
-  
-  // Validation
+
   showValidationCheck?: boolean;
   isValidationRequested?: boolean;
   onValidationChange?: (checked: boolean) => void;
   validationPrice?: string;
   validationDescription?: React.ReactNode;
-  
-  // Warning
+
   warningMessage?: React.ReactNode;
-  
-  // Actions
+
   onConfirm: () => void;
   confirmText?: React.ReactNode;
   isConfirming?: boolean;
   onCancel?: () => void;
   cancelText?: React.ReactNode;
-  
-  // Error state / Balance logic
+
   hasInsufficientBalance?: boolean;
   onRechargeClick?: () => void;
 
-  // Custom Confirm Button override (useful for injecting different components like <Button>)
   customConfirmButton?: React.ReactNode;
-  
-  // Secondary action (e.g. Share Link button on the far left)
+
   secondaryAction?: React.ReactNode;
 }
 
@@ -80,7 +73,7 @@ export function PaymentConfirmationModal({
   customConfirmButton,
   secondaryAction,
 }: PaymentConfirmationModalProps) {
-  
+
   const handleCancel = () => {
     if (onCancel) onCancel();
     else onOpenChange(false);

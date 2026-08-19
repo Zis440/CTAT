@@ -1,4 +1,4 @@
-// src/components/auth/ProtectedRoute.tsx
+
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore, useAuthHydrated } from '@/store/useAuthStore';
 import type { UserRole } from '@/types/auth';
@@ -8,18 +8,12 @@ import { useNavigate } from 'react-router-dom';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  /** If provided, user must have one of these roles */
+
   allowedRoles?: UserRole[];
-  /**
-   * If true, this route requires the user to be verified.
-   * Unverified individual psychologists will see a blocking screen.
-   */
+
   requireVerified?: boolean;
 }
 
-// ── Routes that require verification to access ────────────────────────────────
-// Individual psychologists / clinic users must be approved before they can
-// start, run, or view active assessment sessions.
 const VERIFICATION_REQUIRED_PATHS = [
   "session/new",
   "session/new/intake",
@@ -27,10 +21,8 @@ const VERIFICATION_REQUIRED_PATHS = [
   "session/active",
 ];
 
-// Roles that are exempt from the verification gate (admins can always proceed)
 const EXEMPT_ROLES = new Set(["super_admin", "clinic_admin"]);
 
-// ── Blocked screen ────────────────────────────────────────────────────────────
 function VerificationRequiredScreen() {
   const navigate = useNavigate();
   return (
@@ -81,15 +73,11 @@ function VerificationRequiredScreen() {
   );
 }
 
-// ── Main guard ────────────────────────────────────────────────────────────────
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   const { isAuthenticated, user } = useAuthStore();
   const hydrated = useAuthHydrated();
   const location = useLocation();
 
-  // ── Wait for Zustand to finish hydrating from localStorage ──────────────
-  // Without this gate, opening a new tab redirects to /login before the
-  // persisted token/user are loaded — making it look like the session is lost.
   if (!hydrated) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
@@ -99,7 +87,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   if (!isAuthenticated || !user) {
-    // Preserve the intended destination for post-login redirect
+
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
@@ -111,15 +99,12 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
       else if (user.role === "clinic_staff") fallback = "/clinic-staff/dashboard";
       else if (user.role === "org_admin") fallback = "/org/dashboard";
       else if (user.role === "org_staff") fallback = "/org-staff/dashboard";
-      
+
       return <Navigate to={fallback} replace />;
     }
   }
 
-  // ── Verification gate ───────────────────────────────────────────────────
-  // Individual psychologists and clinic_staff cannot run assessments unless
-  // their account has been approved. Admins are exempt.
-  const currentPath = location.pathname.replace(/^\//, ""); // strip leading /
+  const currentPath = location.pathname.replace(/^\//, "");
   const needsVerification = VERIFICATION_REQUIRED_PATHS.some((p) =>
     currentPath === p || currentPath.startsWith(p + "/")
   );

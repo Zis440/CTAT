@@ -5,7 +5,6 @@ Uses existing PDF parser from utils
 import sys
 from pathlib import Path
 
-# Add backend root to path
 PROJECT_ROOT = Path(__file__).parent.parent.resolve()
 sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -18,21 +17,19 @@ def analyze_manual(pdf_path: Path, manual_name: str):
     print(f"ANALYZING: {manual_name}")
     print(f"File: {pdf_path.name}")
     print(f"{'='*70}\n")
-    
+
     parser = PDFParser(pdf_path)
-    
-    # Extract all content
+
     print("📄 Extracting pages...")
     all_pages = parser.extract_all_pages()
-    
+
     print(f"✅ Extracted {len(all_pages)} pages\n")
-    
-    # Preview first 3 pages
+
     for i, page_data in enumerate(all_pages[:3]):
         print(f"\n--- Page {i+1} Preview (first 600 chars) ---")
         text = page_data.get('text', '')
         print(text[:600] if text else "[Empty page]")
-    
+
     return {
         'manual_name': manual_name,
         'file_name': pdf_path.name,
@@ -41,7 +38,6 @@ def analyze_manual(pdf_path: Path, manual_name: str):
         'full_text': '\n\n'.join([p.get('text', '') for p in all_pages])
     }
 
-# Define manuals
 manuals = [
     (PROJECT_ROOT / "data" / "tat_scoring_manual" / "Scoring Guide for Psychological Assessment.pdf",
      "Scoring Guide"),
@@ -51,7 +47,6 @@ manuals = [
      "TAT Manual")
 ]
 
-# Extract all manuals
 extracted = {}
 for pdf_path, name in manuals:
     try:
@@ -61,7 +56,6 @@ for pdf_path, name in manuals:
         print(f"❌ Error processing {name}: {e}")
         extracted[name] = {'error': str(e)}
 
-# Save extracted content
 output_path = PROJECT_ROOT / "outputs" / "extracted_manuals.json"
 output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -74,7 +68,6 @@ with open(output_path, 'w', encoding='utf-8') as f:
 
 print(f"✅ Saved to: {output_path}\n")
 
-# Print summary
 print("📊 EXTRACTION SUMMARY")
 print("="*70)
 for name, data in extracted.items():

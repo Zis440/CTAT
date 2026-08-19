@@ -3,45 +3,19 @@ import { useId } from "react"
 import { cn } from "@/lib/utils"
 
 interface HexagonPatternProps extends React.SVGProps<SVGSVGElement> {
-  /**
-   * The radius of each hexagon (center to vertex).
-   * @default 40
-   */
+
   radius?: number
-  /**
-   * Spacing in pixels between adjacent hexagons.
-   * The tile grows by this amount while the visual radius stays fixed,
-   * so the gap is evenly distributed on all sides of each hexagon.
-   * @default 0
-   */
+
   gap?: number
-  /**
-   * Offset applied to the pattern origin on the x-axis.
-   * @default -1
-   */
+
   x?: number
-  /**
-   * Offset applied to the pattern origin on the y-axis.
-   * @default -1
-   */
+
   y?: number
-  /**
-   * Controls the orientation of the hexagons.
-   * - `"horizontal"` — flat-top hexagons tiled in a horizontal honeycomb grid.
-   * - `"vertical"` — pointy-top hexagons tiled in a vertical honeycomb grid.
-   * @default "horizontal"
-   */
+
   direction?: "horizontal" | "vertical"
-  /**
-   * SVG stroke-dasharray applied to each hexagon outline.
-   * @default "0"
-   */
+
   strokeDasharray?: string
-  /**
-   * Array of [col, row] coordinates for hexagons that should be highlighted
-   * (filled) on top of the repeating pattern — mirrors the `squares` prop of
-   * GridPattern.
-   */
+
   hexagons?: Array<[col: number, row: number]>
   className?: string
   [key: string]: unknown
@@ -118,8 +92,6 @@ function getHexSpacing(
 } {
   const sqrt3 = Math.sqrt(3)
 
-  // `gap` should match the visible edge-to-edge spacing, so we add it along
-  // the shared-edge normal instead of directly on the raw x/y axes.
   if (direction === "horizontal") {
     const colStep = (3 * r) / 2 + (sqrt3 * gap) / 2
     const rowStep = sqrt3 * r + gap

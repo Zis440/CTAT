@@ -3,8 +3,7 @@ from typing import Tuple
 
 class DocumentClassifier:
     """Classifies OCR text into document types based on heuristics."""
-    
-    # Keywords mapped to document types
+
     KEYWORDS = {
         "pan_card": [
             r"INCOME\s*TAX\s*DEPARTMENT",
@@ -32,7 +31,7 @@ class DocumentClassifier:
             r"AUTHORIZATION\s*TO\s*DRIVE",
         ]
     }
-    
+
     def classify(self, text: str) -> Tuple[str, float]:
         """
         Classifies the text and returns (document_type, confidence_score).
@@ -40,7 +39,7 @@ class DocumentClassifier:
         """
         if not text:
             return "invalid", 0.0
-            
+
         scores = {}
         for doc_type, patterns in self.KEYWORDS.items():
             matches = 0
@@ -48,13 +47,13 @@ class DocumentClassifier:
                 if re.search(pattern, text, re.IGNORECASE):
                     matches += 1
             scores[doc_type] = matches / len(patterns) if patterns else 0.0
-            
+
         best_match = max(scores.items(), key=lambda x: x[1])
         doc_type, confidence = best_match
-        
+
         if confidence == 0.0:
             return "unknown", 0.0
-            
+
         return doc_type, confidence
 
 classifier = DocumentClassifier()

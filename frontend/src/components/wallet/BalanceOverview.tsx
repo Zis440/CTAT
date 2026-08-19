@@ -1,5 +1,3 @@
-// ─── BalanceOverview ────────────────────────────────────────────────────────
-// Displays the current wallet balance card and a list of recent transactions.
 
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +26,7 @@ export default function BalanceOverview({
 }: BalanceOverviewProps) {
   return (
     <div className="space-y-6">
-      {/* Balance Card */}
+
       <Card className="border-primary/10 bg-primary/5">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
@@ -58,7 +56,6 @@ export default function BalanceOverview({
         </CardContent>
       </Card>
 
-      {/* Transactions */}
       <Card className="border-border/30">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-base font-bold mt-1.5">Recent Transactions</CardTitle>

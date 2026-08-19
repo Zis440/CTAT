@@ -1,5 +1,3 @@
-// ─── Auth Service ───────────────────────────────────────────────────────────
-// All authentication-related API calls.
 
 import { apiClient } from "./apiClient";
 import type {
@@ -12,13 +10,11 @@ import type {
   VerificationUser,
 } from "@/types/auth";
 
-// ── Login ───────────────────────────────────────────────────────────────────
-
 export async function login(payload: LoginPayload): Promise<AuthResponse> {
   console.log("[authService] Calling POST /auth/login", payload);
   try {
     const { data } = await apiClient.post<AuthResponse>("/auth/login", payload, {
-      timeout: 15000, // 15-second timeout for login instead of 10 minutes
+      timeout: 15000,
     });
     console.log("[authService] Login successful", data);
     return data;
@@ -32,8 +28,6 @@ export async function login(payload: LoginPayload): Promise<AuthResponse> {
     throw error;
   }
 }
-
-// ── Registration ────────────────────────────────────────────────────────────
 
 export async function registerIndividual(
   payload: RegisterIndividualPayload
@@ -65,8 +59,6 @@ export async function registerOrganization(
   return data;
 }
 
-// ── Password reset ──────────────────────────────────────────────────────────
-
 export async function forgotPassword(email: string): Promise<void> {
   await apiClient.post("/auth/forgot-password", { email });
 }
@@ -74,8 +66,6 @@ export async function forgotPassword(email: string): Promise<void> {
 export async function resetPassword(payload: { token: string; email: string; new_password: string; confirm_password: string }): Promise<void> {
   await apiClient.post("/auth/reset-password", payload);
 }
-
-// ── Profile ─────────────────────────────────────────────────────────────────
 
 export async function getMe(): Promise<AuthUser> {
   const { data } = await apiClient.get<AuthUser>("/auth/me");
@@ -118,13 +108,6 @@ export async function removeSignature(): Promise<{ status: string; message: stri
   return data;
 }
 
-// ── Document verification ───────────────────────────────────────────────────
-// MOVED: Document upload is now in verificationService.ts
-// Use: uploadVerificationDocument(documentType, category, file)
-
-
-// ── Change password ──────────────────────────────────────────────────────────
-
 export async function changePassword(payload: {
   current_password: string;
   new_password: string;
@@ -132,8 +115,6 @@ export async function changePassword(payload: {
 }): Promise<void> {
   await apiClient.post("/auth/change-password", payload);
 }
-
-
 
 export async function getVerificationQueue(): Promise<VerificationUser[]> {
   const { data } = await apiClient.get<VerificationUser[]>(
@@ -175,7 +156,6 @@ export async function updateStaffPermissions(
   return data;
 }
 
-// Re-export the type so consumers can `import { type VerificationUser } from ...`
 export type { VerificationUser };
 export const deleteAccount = async () => {
   const response = await apiClient.delete('/auth/me');

@@ -21,24 +21,21 @@ import os
 from datetime import datetime
 import uuid
 
-# ── Path setup ────────────────────────────────────────────────────
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from dotenv import load_dotenv
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
 
-# ── Imports ───────────────────────────────────────────────────────
 from app.database import SessionLocal
 from app.models.user import User, UserRole, AccountType, VerificationStatus
 from app.auth.jwt_utils import hash_password
 
-
 def create_test_accounts():
     """Create test accounts with consistent bcrypt hashing."""
     db = SessionLocal()
-    
+
     try:
-        # Test accounts with plaintext passwords (will be hashed)
+
         test_accounts = [
             {
                 'email': 'superadmin@psyichub.com',
@@ -84,31 +81,28 @@ def create_test_accounts():
                 'description': 'Clinic Staff Member',
             },
         ]
-        
+
         print("=" * 70)
         print("Creating Psyichub Test Accounts")
         print("=" * 70)
         print()
-        
+
         created_count = 0
         skipped_count = 0
-        
+
         for account in test_accounts:
             description = account.pop('description')
             password = account.pop('password')
-            
-            # Check if account already exists
+
             existing = db.query(User).filter(User.email == account['email']).first()
             if existing:
                 print(f"⚠️  {description}")
                 print(f"   {account['email']} already exists — skipping\n")
                 skipped_count += 1
                 continue
-            
-            # Hash password using the same bcrypt logic as auth system
+
             hashed_password = hash_password(password)
-            
-            # Create user object
+
             user = User(
                 id=str(uuid.uuid4()),
                 email=account['email'],
@@ -118,15 +112,14 @@ def create_test_accounts():
                 updated_at=datetime.utcnow(),
                 **{k: v for k, v in account.items() if v is not None and k != 'email'}
             )
-            
+
             db.add(user)
             print(f"✅ {description}")
             print(f"   Email: {account['email']}")
             print(f"   Password: {password}")
             print(f"   Role: {account['role'].value}\n")
             created_count += 1
-        
-        # Commit all changes
+
         db.commit()
         print("=" * 70)
         print(f"✅ SUCCESS: Created {created_count} account(s), Skipped {skipped_count} existing")
@@ -137,9 +130,9 @@ def create_test_accounts():
         print("   2. Try logging in with one of the accounts above")
         print("   3. Use Incognito mode or clear browser cache if login fails")
         print()
-        
+
         return True
-        
+
     except Exception as e:
         db.rollback()
         print("=" * 70)
@@ -150,7 +143,6 @@ def create_test_accounts():
         return False
     finally:
         db.close()
-
 
 if __name__ == '__main__':
     success = create_test_accounts()

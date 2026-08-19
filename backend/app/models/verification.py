@@ -16,13 +16,11 @@ from sqlalchemy.sql import func
 from app.database import Base
 from app.utils.id_generator import generate_id
 
-
 class DocumentCategory(str, enum.Enum):
     professional = "professional"
     business     = "business"
     identity     = "identity"
     compliance   = "compliance"
-
 
 class UserVerificationDocument(Base):
     """A single verification document uploaded by a user."""
@@ -37,8 +35,7 @@ class UserVerificationDocument(Base):
     status            = Column(String(20), default="pending", nullable=False)
     is_required       = Column(Boolean, default=True, nullable=False)
     uploaded_at       = Column(DateTime(timezone=True), server_default=func.now())
-    
-    # ── Local OCR & Verification Fields ──────────────────────────────────────
+
     detected_document_type = Column(String(100), nullable=True)
     ocr_fields             = Column(JSON, nullable=True)
     ocr_confidence         = Column(Float, nullable=True)
@@ -53,7 +50,6 @@ class UserVerificationDocument(Base):
 
     def __repr__(self) -> str:
         return f"<VerificationDoc {self.document_type} for user={self.user_id} [{self.status}]>"
-
 
 class VerificationDocumentRequirement(Base):
     """Configuration row defining which documents are required for each account/clinic type."""

@@ -1,6 +1,3 @@
-# ============================================================================
-# TRAJECTORY COMPARISON FUNCTION
-# ============================================================================
 
 from datetime import datetime
 import matplotlib.pyplot as plt

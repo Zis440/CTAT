@@ -93,7 +93,7 @@ export function OrgAssessmentRequests() {
           <CardTitle>Requested Assessments (SLA Tracker)</CardTitle>
           <CardDescription>Track the assignment and completion of candidate assessments.</CardDescription>
         </div>
-        
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm" className="gap-2 bg-emerald-500 hover:bg-emerald-600 text-white shadow-none">

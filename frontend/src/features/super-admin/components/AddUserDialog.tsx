@@ -15,7 +15,6 @@ export function AddUserDialog({ children, onSuccess, defaultAccountType = "indiv
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  // Form State
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -23,8 +22,7 @@ export function AddUserDialog({ children, onSuccess, defaultAccountType = "indiv
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("clinic_admin");
   const [accountType, setAccountType] = useState<"individual" | "clinic" | "organization">(defaultAccountType);
-  
-  // Clinic Selection State
+
   const [clinicSearchQuery, setClinicSearchQuery] = useState("");
   const [selectedClinic, setSelectedClinic] = useState<{ id: string; name: string } | null>(null);
   const [isClinicDropdownOpen, setIsClinicDropdownOpen] = useState(false);
@@ -32,7 +30,6 @@ export function AddUserDialog({ children, onSuccess, defaultAccountType = "indiv
 
   const isClinicRole = accountType === "clinic" || accountType === "organization";
 
-  // Fetch clinics for the combobox
   const { data: clinicsData, isFetching: isFetchingClinics } = useQuery({
     queryKey: ["admin-clinics", "all"],
     queryFn: () => fetchAdminClinics({ page: 1, page_size: 100 }),
@@ -68,7 +65,7 @@ export function AddUserDialog({ children, onSuccess, defaultAccountType = "indiv
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
       if (onSuccess) onSuccess();
       setIsOpen(false);
-      // Reset form
+
       setFirstName("");
       setLastName("");
       setEmail("");
@@ -102,14 +99,14 @@ export function AddUserDialog({ children, onSuccess, defaultAccountType = "indiv
       return;
     }
 
-    const submitRole = accountType === "individual" 
-      ? "individual_psychologist" 
+    const submitRole = accountType === "individual"
+      ? "individual_psychologist"
       : accountType === "organization"
         ? (role === "clinic_admin" ? "org_admin" : "org_staff")
         : (role === "clinic_admin" ? "clinic_admin" : "clinic_staff");
-    
-    const submitRoleType = (accountType === "clinic" || accountType === "organization") && role !== "clinic_admin" 
-      ? role 
+
+    const submitRoleType = (accountType === "clinic" || accountType === "organization") && role !== "clinic_admin"
+      ? role
       : undefined;
 
     createUserMutation.mutate({
@@ -223,7 +220,7 @@ export function AddUserDialog({ children, onSuccess, defaultAccountType = "indiv
                   autoComplete="off"
                   required
                 />
-                
+
                 {isClinicDropdownOpen && (
                   <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-popover shadow-xl animate-in fade-in slide-in-from-top-1 duration-150">
                     <ScrollArea className="max-h-[220px] overflow-y-auto">

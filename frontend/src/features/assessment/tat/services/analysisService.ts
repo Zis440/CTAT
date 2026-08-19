@@ -1,9 +1,5 @@
-// ─── Analysis Service ───────────────────────────────────────────────────────
-// API calls for TAT sessions, card analysis, and PDF reports.
 
 import { apiClient } from "@/services/apiClient";
-
-// ─── Types ──────────────────────────────────────────────────────────────────
 
 export interface PastSession {
   id: string;
@@ -28,26 +24,26 @@ export interface PastSession {
 export interface SessionDetails extends PastSession {
   cards: CardResult[];
   summary?: string;
-  /** Report summary blob from the backend */
+
   report_summary?: any;
-  /** Patient info block returned by the API */
+
   patient_info?: {
     patient_id?: string;
     name?: string;
     age?: number;
     gender?: string;
   };
-  /** DB metadata block (Mongo/Postgres _id etc.) */
+
   _db_metadata?: {
     id?: string;
     [key: string]: any;
   };
-  /** Core metadata block */
+
   _metadata?: {
     test_type?: string;
     [key: string]: any;
   };
-  /** PDF filename path if report was generated */
+
   pdf_filename?: string;
 }
 
@@ -66,8 +62,6 @@ export interface AggregatedResults {
   average_scores: Record<string, number>;
   summary: string;
 }
-
-// ─── Session list ───────────────────────────────────────────────────────────
 
 export async function fetchPastSessions(filters?: {
   status?: string;
@@ -92,14 +86,14 @@ export async function fetchSessionDetails(
   const { data } = await apiClient.get<SessionDetails>(
     `/sessions/${sessionId}`
   );
-  
+
   if (data && data._db_metadata) {
     data.validation_status = data._db_metadata.validation_status;
     if (data.report_summary) {
       data.report_summary._db_metadata = data._db_metadata;
     }
   }
-  
+
   return data;
 }
 
@@ -111,8 +105,6 @@ export async function requestSessionValidation(sessionId: string): Promise<{stat
   const { data } = await apiClient.post(`/sessions/${sessionId}/request-validation`);
   return data;
 }
-
-// ─── Card analysis ──────────────────────────────────────────────────────────
 
 export async function submitCardStory(
   cardId: string,
@@ -128,8 +120,6 @@ export async function submitCardStory(
   return data;
 }
 
-// ─── Results aggregation ────────────────────────────────────────────────────
-
 const inFlightAggregations = new Map<string, Promise<any>>();
 
 export async function aggregateCardResults(
@@ -139,7 +129,7 @@ export async function aggregateCardResults(
   requestPsychologistValidation: boolean = false
 ): Promise<any> {
   const cacheKey = `${patientId}-${Object.keys(cardResults).sort().join(',')}`;
-  
+
   if (inFlightAggregations.has(cacheKey)) {
     return inFlightAggregations.get(cacheKey);
   }
@@ -154,8 +144,6 @@ export async function aggregateCardResults(
   inFlightAggregations.set(cacheKey, promise);
   return promise;
 }
-
-// ─── PDF Reports ────────────────────────────────────────────────────────────
 
 export async function generatePdfReport(
   patientId: string,

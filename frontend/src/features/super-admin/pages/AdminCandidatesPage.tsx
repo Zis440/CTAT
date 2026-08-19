@@ -39,10 +39,8 @@ export function AdminCandidatesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filters
   const [search, setSearch] = useState("");
 
-  // Add Candidate form state
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -90,7 +88,6 @@ export function AdminCandidatesPage() {
       setIsAddOpen(false);
       loadCandidates();
 
-      // Reset form
       setName("");
       setLastName("");
       setPhone("");

@@ -19,7 +19,6 @@ import {
 import { useUIStore } from "@/store/useUIStore";
 import { globalAudioPlayer } from "@/lib/audioPlayer";
 
-// Phase mapping
 type Phase = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 interface PhaseConfig {
@@ -160,7 +159,6 @@ export const AnonymousEMHWAssessment = ({
   const [isCompleted, setIsCompleted] = useState(false);
   const initialized = useRef(false);
 
-  // Removed useSessionStore
   const setTopbarBackOverride = useUIStore(state => state.setTopbarBackOverride);
 
   useEffect(() => {
@@ -175,7 +173,6 @@ export const AnonymousEMHWAssessment = ({
     return () => setTopbarBackOverride(null);
   }, [qIndex, phase, setTopbarBackOverride]);
 
-  // Auto-submit countdown when time expires on timed modules
   useEffect(() => {
     if (!isTimeUp || !isConfirmingSubmit) return;
     if (autoSubmitCountdown <= 0) {
@@ -199,7 +196,6 @@ export const AnonymousEMHWAssessment = ({
     }
   };
 
-  // Stop any playing audio when the component unmounts
   useEffect(() => {
     return () => {
       globalAudioPlayer.stop();
@@ -244,7 +240,7 @@ export const AnonymousEMHWAssessment = ({
         speakText(`phase_${phase}`);
       }
     } else {
-      // Nothing needed here since audio instances complete naturally
+
     }
   }, [showInstructions, phase, isIntermission]);
 
@@ -262,7 +258,7 @@ export const AnonymousEMHWAssessment = ({
   const startIntermission = () => {
     setIsIntermission(true);
     setCountdown(10);
-    // Removed random phrase read aloud per user request
+
   };
 
   const getQuestionList = (): Question[] => {
@@ -305,7 +301,7 @@ export const AnonymousEMHWAssessment = ({
     setSelectedScore(score);
     setTimeout(() => {
       const q = currentQList[qIndex];
-      // Update responses: replace if exists, otherwise append
+
       setResponses(prev => {
         const existingIndex = prev.findIndex(r => r.question_id === q.id);
         if (existingIndex >= 0) {
@@ -320,7 +316,7 @@ export const AnonymousEMHWAssessment = ({
       if (qIndex < currentQList.length - 1) {
         setQIndex(qIndex + 1);
       } else {
-        // Show confirmation dialog before going to intermission
+
         setPendingSubmitAction(() => () => {
           setQIndex(0);
           startIntermission();
@@ -330,10 +326,9 @@ export const AnonymousEMHWAssessment = ({
     }, 400);
   };
 
-
   const handleGameComplete = async (metrics: GameMetrics) => {
     const timeUp = !!metrics.timeExpired;
-    // Show confirmation dialog before completing game
+
     setPendingSubmitAction(() => async () => {
       if (metrics.story_assessments) {
         setStoryAssessments(metrics.story_assessments);
@@ -393,7 +388,6 @@ export const AnonymousEMHWAssessment = ({
     const progress = (qIndex / totalQuestions) * 100;
     const isOverallIndicator = !!q.note;
 
-    // Find if already answered
     const existingResponse = responses.find(r => r.question_id === q.id);
     const activeScore = selectedScore !== null ? selectedScore : existingResponse?.score;
 
@@ -524,7 +518,7 @@ export const AnonymousEMHWAssessment = ({
         </div>
         <div className="mt-10 flex gap-4">
           <button onClick={() => setShowInstructions(false)}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-full font-bold text-lg 
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-full font-bold text-lg
             flex items-center gap-2 shadow-lg shadow-primary/30 transition-all hover:scale-105 active:scale-95">
             Start Module <ArrowRight size={20} />
           </button>
@@ -535,7 +529,7 @@ export const AnonymousEMHWAssessment = ({
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground font-['Inter',sans-serif] p-4 md:p-8 animate-in fade-in duration-500 overflow-y-auto overflow-x-hidden">
-      {/* Header */}
+
       <div className="mb-6 flex items-center gap-3">
         <img src="/psyichub-logo-v2.png" alt="PsyicHub" className="h-10 w-auto object-contain dark:filter-none" style={{ filter: "brightness(0) saturate(100%) invert(33%) sepia(43%) saturate(935%) hue-rotate(70deg) brightness(100%) contrast(83%)" }} />
       </div>
@@ -582,7 +576,6 @@ export const AnonymousEMHWAssessment = ({
         </div>
       )}
 
-      {/* Confirmation Dialog */}
       <AlertDialog open={isConfirmingSubmit} onOpenChange={(open) => {
         if (!open && isTimeUp) return;
         setIsConfirmingSubmit(open);
@@ -621,5 +614,3 @@ export const AnonymousEMHWAssessment = ({
     </div>
   );
 };
-
-// Replaced default export with named export

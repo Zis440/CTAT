@@ -1,5 +1,3 @@
-// Placeholder SkewedLines decorative component
-// Used as a visual background pattern in several pages
 
 import { cn } from "@/lib/utils";
 

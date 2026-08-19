@@ -1,6 +1,3 @@
-# ============================================================================
-# SYSTEM STATUS DISPLAY
-# ============================================================================
 
 from pathlib import Path
 
@@ -12,9 +9,6 @@ def display_system_status(learning_stats, saved_paths, aggregated, knowledge_gra
     print("SYSTEM STATUS")
     print("="*80 + "\n")
 
-    # -------------------------------------------------
-    # LEARNING
-    # -------------------------------------------------
     print("📚 LEARNING SYSTEM")
     print("  Total Concepts:", learning_stats.get("concepts_after", 0))
     print("  Learned This Session:", learning_stats.get("concepts_learned_this_session", 0))
@@ -29,9 +23,6 @@ def display_system_status(learning_stats, saved_paths, aggregated, knowledge_gra
             for construct, score in graph_insights["core_constructs"][:3]:
                 print(f"    • {construct} (centrality: {score:.3f})")
 
-    # -------------------------------------------------
-    # SESSION OUTPUT
-    # -------------------------------------------------
     print("\n📁 SESSION OUTPUT")
     if isinstance(saved_paths, dict):
         report_path = saved_paths.get("report_path")
@@ -53,9 +44,6 @@ def display_system_status(learning_stats, saved_paths, aggregated, knowledge_gra
     print("✅ SYSTEM STATUS: OPERATIONAL")
     print("="*80 + "\n")
 
-    # -------------------------------------------------
-    # GRAPH CENTRALITY
-    # -------------------------------------------------
     print("\n🧠 GRAPH CENTRALITY")
     try:
         centrality = knowledge_graph.compute_centrality_metrics()
@@ -64,9 +52,6 @@ def display_system_status(learning_stats, saved_paths, aggregated, knowledge_gra
     except Exception as e:
         print("  ⚠ Centrality unavailable:", e)
 
-    # -------------------------------------------------
-    # ANOMALIES
-    # -------------------------------------------------
     print("\n⚠ Graph Anomalies")
     try:
         anomalies = knowledge_graph.detect_graph_anomalies()

@@ -5,7 +5,6 @@ export function parseTransactionDescription(description: string): { purpose: str
     return { purpose: "Recharge", candidate: "-", performedBy: "-" };
   }
 
-  // Handle various dash formats (em-dash or regular dash)
   const separator = description.includes(" — ") ? " — " : (description.includes(" - ") ? " - " : null);
 
   if (separator) {
@@ -21,27 +20,22 @@ export function parseTransactionDescription(description: string): { purpose: str
       candidate = parts.slice(1).join(separator).trim();
     }
 
-    // Smart detection: if purpose is a UUID/patient ID, it means the order was swapped (e.g., patient_id - Assessment Name)
-    // A UUID is exactly 36 chars. Or if it's longer than 20 chars with no spaces.
     const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/i;
 
     if (uuidRegex.test(purpose) || (purpose.length > 20 && !purpose.includes(" "))) {
-      // Swap them so the assessment name (purpose) and patient ID/name (candidate) are correctly assigned
+
       const temp = purpose;
       purpose = candidate.replace(" Session", "").trim();
       candidate = temp;
     }
 
-    // Clean up Candidate/Patient prefixes
     if (candidate.startsWith("Patient ")) candidate = candidate.substring(8);
 
-    // If the swapped purpose is also empty or weird, fallback
     if (!purpose) purpose = "-";
     if (!candidate) candidate = "-";
 
     let testName: string | undefined = undefined;
 
-    // Normalize purpose names
     if (purpose === "Screening Assessment" || purpose === "Screening Assessment (Anonymous)" || purpose === "screening_level1" || purpose === "Employee Mental Health & Wellbeing") {
       purpose = "Employee Mental Health & Wellbeing";
     } else if (purpose === "Narrative Intelligence" || purpose === "TAT" || purpose === "Narrative Assessment") {
@@ -58,7 +52,6 @@ export function parseTransactionDescription(description: string): { purpose: str
     return { purpose, candidate, performedBy, testName };
   }
 
-  // Fallback if no separator is found
   let fallbackPurpose = description.replace(" Session", "").replace(" Fee", "").trim();
   if (fallbackPurpose === "Screening Assessment" || fallbackPurpose === "Screening Assessment (Anonymous)" || fallbackPurpose === "screening_level1") {
     fallbackPurpose = "Employee Mental Health & Wellbeing";

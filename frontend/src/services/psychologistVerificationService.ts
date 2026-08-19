@@ -8,12 +8,10 @@ export interface VerificationRequestItem {
   assigned_at: string;
   status: string;
   report_pdf_path?: string;
-  
-  // Requesting user info
+
   requesting_user_name?: string;
   requesting_user_domain?: string;
-  
-  // Admin fields
+
   completed_at?: string;
   assignment_attempts?: number;
   psychologist_name?: string;

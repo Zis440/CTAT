@@ -37,7 +37,6 @@ import { useState } from "react";
 import type { NavItem } from "@/components/layout/sidebarConfig";
 import { getWalletRoute } from "@/lib/routeUtils";
 
-
 import { usePendingCounts } from "@/hooks/usePendingCounts";
 
 export function IndividualPsychologistSidebar() {
@@ -200,7 +199,7 @@ export function IndividualPsychologistSidebar() {
           </div>
         )}
         {INDIVIDUAL_NAV.map((group, idx) => {
-          // Render all items for individual psychologist
+
           const visibleItems = group.items.filter(item => {
             if (item.verificationRequired && user?.verification_status !== "approved") return false;
             if (item.hideIfVerified && user?.verification_status === "approved") return false;
@@ -210,7 +209,7 @@ export function IndividualPsychologistSidebar() {
             return true;
           });
           if (visibleItems.length === 0) return null;
-          
+
           return (
             <div key={idx}>
               <SidebarGroup>

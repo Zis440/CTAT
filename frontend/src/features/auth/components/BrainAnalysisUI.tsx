@@ -11,7 +11,7 @@ export function BrainAnalysisUI() {
   const [data, setData] = useState(METRICS.map(m => ({ ...m, current: 0 })));
 
   useEffect(() => {
-    // Randomly fluctuate data
+
     const interval = setInterval(() => {
       setData(prev => prev.map(m => ({
         ...m,
@@ -24,7 +24,6 @@ export function BrainAnalysisUI() {
   return (
     <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-visible z-30">
 
-      {/* Sleek Orbit Rings */}
       <motion.div
         className="absolute w-[400px] h-[400px] rounded-full border-[0.5px] border-primary/20 border-dashed"
         style={{ top: 'calc(50% - 200px)' }}
@@ -38,7 +37,6 @@ export function BrainAnalysisUI() {
         transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
       />
 
-      {/* Target Reticle / Center Marker */}
       <div className="absolute w-[60px] h-[60px] rounded-full border-[0.5px] border-primary/30" style={{ top: 'calc(50% - 30px)' }}>
         <div className="absolute top-1/2 -left-2 w-4 h-[1px] bg-primary/50" />
         <div className="absolute top-1/2 -right-2 w-4 h-[1px] bg-primary/50" />
@@ -46,17 +44,14 @@ export function BrainAnalysisUI() {
         <div className="absolute -bottom-2 left-1/2 w-[1px] h-4 bg-primary/50" />
       </div>
 
-      {/* Vertical Scanning Laser */}
       <motion.div
         className="absolute w-[300px] h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent blur-[1px] opacity-60"
         animate={{ y: [-250, -20, -250] }}
         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* HUD Data Overlay (Right side) */}
       <div className="absolute -right-[15%] top-[0%] w-[240px] space-y-6 font-mono">
 
-        {/* Status Header */}
         <div className="flex flex-col">
           <div className="text-[10px] text-primary/60 tracking-[0.2em] mb-1">SYS.STATUS</div>
           <div className="flex items-center space-x-2">
@@ -70,7 +65,6 @@ export function BrainAnalysisUI() {
           <div className="w-full h-[1px] bg-gradient-to-r from-primary/50 to-transparent mt-2" />
         </div>
 
-        {/* Dynamic Metrics */}
         <div className="space-y-4">
           {data.map((m, i) => (
             <motion.div
@@ -88,7 +82,6 @@ export function BrainAnalysisUI() {
           ))}
         </div>
 
-        {/* Minimalist chart/graph representation */}
         <div className="mt-8 flex items-end space-x-1 h-12">
           {[...Array(24)].map((_, i) => (
             <motion.div

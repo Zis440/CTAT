@@ -1,6 +1,3 @@
-// src/features/docs/DocsSections.tsx
-// All documentation sub‑components merged into a single file.
-// Original filenames preserved as export names.
 
 import { useState } from "react";
 import {
@@ -55,9 +52,6 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 
-// ────────────────────────────────────────────────────────────────────
-// 1. CodeBlock (used by DocsDataModel, DocsQuickstart, and others)
-// ────────────────────────────────────────────────────────────────────
 interface CodeBlockProps {
   children: string;
   className?: string;
@@ -119,9 +113,6 @@ export function CodeBlock({ children, className = "" }: CodeBlockProps) {
   );
 }
 
-// ────────────────────────────────────────────────────────────────────
-// 2. DocsNavigation (shared navigation footer)
-// ────────────────────────────────────────────────────────────────────
 export const DOCS_SECTIONS = [
   { id: "intro", label: "Introduction" },
   { id: "quickstart", label: "Quickstart" },
@@ -156,7 +147,7 @@ export function DocsNavigation({ currentSection, onNavigate }: DocsNavigationPro
   return (
     <div className="mt-16 pt-8 border-t border-primary/15">
       <div className="flex items-center justify-between gap-4">
-        {/* PREVIOUS */}
+
         {prev ? (
           <button
             onClick={() => onNavigate(prev.id)}
@@ -176,7 +167,6 @@ export function DocsNavigation({ currentSection, onNavigate }: DocsNavigationPro
           <div className="flex-1" />
         )}
 
-        {/* NEXT */}
         {next ? (
           <button
             onClick={() => onNavigate(next.id)}
@@ -200,9 +190,6 @@ export function DocsNavigation({ currentSection, onNavigate }: DocsNavigationPro
   );
 }
 
-// ────────────────────────────────────────────────────────────────────
-// 3. DocsIntroduction
-// ────────────────────────────────────────────────────────────────────
 interface DocsIntroductionProps {
   onNavigate: (sectionId: string) => void;
 }
@@ -233,7 +220,7 @@ export function DocsIntroduction({ onNavigate }: DocsIntroductionProps) {
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* HEADER */}
+
       <div className="space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider">
           <BookOpen className="w-3 h-3" /> What is Psyichub?
@@ -248,7 +235,6 @@ export function DocsIntroduction({ onNavigate }: DocsIntroductionProps) {
         </p>
       </div>
 
-      {/* WHAT IT IS */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text">Available Assessments</h2>
         <div className="p-6 rounded-2xl bg-secondary/30 border border-primary/10 space-y-4">
@@ -269,7 +255,6 @@ export function DocsIntroduction({ onNavigate }: DocsIntroductionProps) {
         </div>
       </section>
 
-      {/* HIGHLIGHTS */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text">What Makes It Special?</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -290,7 +275,6 @@ export function DocsIntroduction({ onNavigate }: DocsIntroductionProps) {
         </div>
       </section>
 
-      {/* NEXT STEP CTA */}
       <div className="p-6 rounded-2xl bg-primary/5 border border-primary/20 flex flex-col sm:flex-row items-center gap-4">
         <div className="flex-1 space-y-1">
           <h3 className="font-bold text-primary text-lg">Ready to learn how to use it?</h3>
@@ -306,7 +290,6 @@ export function DocsIntroduction({ onNavigate }: DocsIntroductionProps) {
         </button>
       </div>
 
-      {/* DISCLAIMER */}
       <div className="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/20 flex gap-4 items-start">
         <Shield className="w-6 h-6 text-amber-500 shrink-0 mt-1" />
         <div className="space-y-2">
@@ -326,9 +309,6 @@ export function DocsIntroduction({ onNavigate }: DocsIntroductionProps) {
   );
 }
 
-// ────────────────────────────────────────────────────────────────────
-// 4. HowToUseGuide
-// ────────────────────────────────────────────────────────────────────
 interface HowToUseGuideProps {
   onNavigate: (sectionId: string) => void;
 }
@@ -393,7 +373,7 @@ export function HowToUseGuide({ onNavigate }: HowToUseGuideProps) {
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* HEADER */}
+
       <div className="space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider">
           <BookOpen className="w-3 h-3" /> Step-by-Step Guide
@@ -407,19 +387,17 @@ export function HowToUseGuide({ onNavigate }: HowToUseGuideProps) {
         </p>
       </div>
 
-      {/* STEPS */}
       <section className="space-y-6">
         {steps.map((s, index) => (
           <div
             key={s.step}
             className="relative flex gap-5 p-6 rounded-2xl border border-primary/10 bg-secondary/20 hover:border-primary/30 transition-all duration-300 group"
           >
-            {/* Step Number */}
+
             <div className="w-12 h-12 shrink-0 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-extrabold text-lg group-hover:bg-primary group-hover:text-background transition-colors duration-300">
               {s.step}
             </div>
 
-            {/* Content */}
             <div className="flex-1 space-y-3">
               <div className="flex items-center gap-3">
                 <s.icon className="w-5 h-5 text-primary" />
@@ -431,7 +409,6 @@ export function HowToUseGuide({ onNavigate }: HowToUseGuideProps) {
               </div>
             </div>
 
-            {/* Connector arrow */}
             {index < steps.length - 1 && (
               <div className="absolute -bottom-4 left-[1.85rem] z-10">
                 <ArrowRight className="w-4 h-4 text-primary/40 rotate-90" />
@@ -441,7 +418,6 @@ export function HowToUseGuide({ onNavigate }: HowToUseGuideProps) {
         ))}
       </section>
 
-      {/* BACK TO WHAT IS */}
       <div className="p-6 rounded-2xl bg-primary/5 border border-primary/20 flex flex-col sm:flex-row items-center gap-4">
         <div className="flex-1 space-y-1">
           <h3 className="font-bold text-primary text-lg">Want to learn more about the platform?</h3>
@@ -460,13 +436,10 @@ export function HowToUseGuide({ onNavigate }: HowToUseGuideProps) {
   );
 }
 
-// ────────────────────────────────────────────────────────────────────
-// 5. DocsMethodology
-// ────────────────────────────────────────────────────────────────────
 export function DocsMethodology() {
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* HEADER */}
+
       <div className="space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider">
           <Target className="w-3 h-3" /> The Methodology
@@ -481,7 +454,6 @@ export function DocsMethodology() {
         </p>
       </div>
 
-      {/* IMAGE CARD SYSTEM */}
       <section id="assessment-system" className="scroll-mt-32 space-y-6">
         <h2 className="text-2xl font-bold text-text flex items-center gap-3">
           <Target className="text-primary w-6 h-6" /> The Assessment System
@@ -506,7 +478,6 @@ export function DocsMethodology() {
         </div>
       </section>
 
-      {/* MURRAY'S THEORY */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text flex items-center gap-3">
           <FileText className="text-primary w-6 h-6" /> Murray’s Need-Press Theory
@@ -547,7 +518,6 @@ export function DocsMethodology() {
         </div>
       </section>
 
-      {/* INFO CALLOUT */}
       <div className="p-6 rounded-2xl bg-primary/5 border border-primary/20 flex gap-4 items-start">
         <Info className="w-6 h-6 text-primary shrink-0 mt-1" />
         <div className="space-y-2">
@@ -562,9 +532,6 @@ export function DocsMethodology() {
   );
 }
 
-// ────────────────────────────────────────────────────────────────────
-// 6. DocsArchitecture (was: DocsArchitecture.tsx – no imports from within)
-// ────────────────────────────────────────────────────────────────────
 export function DocsArchitecture() {
   const steps = [
     { icon: Cpu, label: "Narrative Input", desc: "User submits story text via secure portal", color: "from-blue-500 to-cyan-400" },
@@ -575,7 +542,7 @@ export function DocsArchitecture() {
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* HEADER */}
+
       <div className="space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider">
           <GitBranch className="w-3 h-3" /> System Architecture
@@ -589,7 +556,6 @@ export function DocsArchitecture() {
         </p>
       </div>
 
-      {/* FLOW DIAGRAM (CSS BASED) */}
       <section className="space-y-8">
         <h2 className="text-2xl font-bold text-text">Analysis Lifecycle</h2>
 
@@ -602,7 +568,6 @@ export function DocsArchitecture() {
               <h3 className="text-sm font-bold text-text mb-1">{step.label}</h3>
               <p className="text-xs text-text/50 text-center px-4 leading-tight">{step.desc}</p>
 
-              {/* CONNECTING ARROW (Desktop only) */}
               {index < steps.length - 1 && (
                 <div className="hidden md:block absolute top-8 left-[calc(50%+2.5rem)] w-[calc(100%-5rem)] h-[2px] bg-primary/20 -z-0">
                   <ArrowRight className="absolute -right-2 -top-[7px] w-4 h-4 text-primary/30" />
@@ -616,9 +581,6 @@ export function DocsArchitecture() {
   );
 }
 
-// ────────────────────────────────────────────────────────────────────
-// 7. DocsConfiguration (uses DocsNavigation, but no CodeBlock import due to redacted sections)
-// ────────────────────────────────────────────────────────────────────
 interface DocsConfigurationProps {
   onNavigate: (sectionId: string) => void;
 }
@@ -626,7 +588,7 @@ interface DocsConfigurationProps {
 export function DocsConfiguration({ onNavigate }: DocsConfigurationProps) {
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* HEADER */}
+
       <div className="space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider">
           <Settings className="w-3 h-3" /> Configuration
@@ -640,8 +602,6 @@ export function DocsConfiguration({ onNavigate }: DocsConfigurationProps) {
         </p>
       </div>
 
-      {/* ENVIRONMENT VARIABLES — REDACTED */}
-      {/* DATA STORAGE MODES */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text flex items-center gap-3">
           <FolderOpen className="text-primary w-6 h-6" /> Data Storage Modes
@@ -687,7 +647,6 @@ export function DocsConfiguration({ onNavigate }: DocsConfigurationProps) {
         </div>
       </section>
 
-      {/* IMPORTANT NOTES */}
       <div className="p-6 rounded-2xl bg-primary/5 border border-primary/20 flex gap-4 items-start">
         <Info className="w-6 h-6 text-primary shrink-0 mt-1" />
         <div className="space-y-2">
@@ -708,9 +667,6 @@ export function DocsConfiguration({ onNavigate }: DocsConfigurationProps) {
   );
 }
 
-// ────────────────────────────────────────────────────────────────────
-// 8. DocsTATSystem (uses DocsNavigation)
-// ────────────────────────────────────────────────────────────────────
 interface DocsTATSystemProps {
   onNavigate: (sectionId: string) => void;
 }
@@ -718,7 +674,7 @@ interface DocsTATSystemProps {
 export function DocsTATSystem({ onNavigate }: DocsTATSystemProps) {
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* HEADER */}
+
       <div className="space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider">
           <Target className="w-3 h-3" /> The Methodology
@@ -733,7 +689,6 @@ export function DocsTATSystem({ onNavigate }: DocsTATSystemProps) {
         </p>
       </div>
 
-      {/* PROJECTION PRINCIPLE */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text flex items-center gap-3">
           <Eye className="text-primary w-6 h-6" /> The Principle of Projection
@@ -760,7 +715,6 @@ export function DocsTATSystem({ onNavigate }: DocsTATSystemProps) {
         </div>
       </section>
 
-      {/* HOW PSYICHUB PROCESSES CARDS */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text flex items-center gap-3">
           <Layers className="text-primary w-6 h-6" /> HOW PSYICHUB PROCESSES CARDS Cards
@@ -803,7 +757,6 @@ export function DocsTATSystem({ onNavigate }: DocsTATSystemProps) {
         </div>
       </section>
 
-      {/* CARD CATALOG */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text flex items-center gap-3">
           <BookOpen className="text-primary w-6 h-6" /> Card Catalog & Themes
@@ -844,7 +797,6 @@ export function DocsTATSystem({ onNavigate }: DocsTATSystemProps) {
         Card images are served securely via localized static image routes.
       </section>
 
-      {/* CLINICAL NOTE */}
       <div className="p-6 rounded-2xl bg-primary/5 border border-primary/20 flex gap-4 items-start">
         <Info className="w-6 h-6 text-primary shrink-0 mt-1" />
         <div className="space-y-2">
@@ -864,9 +816,6 @@ export function DocsTATSystem({ onNavigate }: DocsTATSystemProps) {
   );
 }
 
-// ────────────────────────────────────────────────────────────────────
-// 9. DocsMurrayTheory (uses DocsNavigation)
-// ────────────────────────────────────────────────────────────────────
 interface DocsMurrayTheoryProps {
   onNavigate: (sectionId: string) => void;
 }
@@ -907,7 +856,7 @@ export function DocsMurrayTheory({ onNavigate }: DocsMurrayTheoryProps) {
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* HEADER */}
+
       <div className="space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider">
           <FileText className="w-3 h-3" /> The Methodology
@@ -922,7 +871,6 @@ export function DocsMurrayTheory({ onNavigate }: DocsMurrayTheoryProps) {
         </p>
       </div>
 
-      {/* HOW IT WORKS */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text flex items-center gap-3">
           <Zap className="text-primary w-6 h-6" /> How Psyichub Infers Needs & Presses
@@ -963,7 +911,6 @@ export function DocsMurrayTheory({ onNavigate }: DocsMurrayTheoryProps) {
         </div>
       </section>
 
-      {/* NEEDS TABLE */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text">Psychogenic Needs <span className="text-text/40 text-lg">(20 total, top 10 shown)</span></h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -976,7 +923,6 @@ export function DocsMurrayTheory({ onNavigate }: DocsMurrayTheoryProps) {
         </div>
       </section>
 
-      {/* PRESSES TABLE */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text">Environmental Presses <span className="text-text/40 text-lg">(10 total)</span></h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -989,7 +935,6 @@ export function DocsMurrayTheory({ onNavigate }: DocsMurrayTheoryProps) {
         </div>
       </section>
 
-      {/* CONFLICT DETECTION */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text flex items-center gap-3">
           <ArrowRightLeft className="text-primary w-6 h-6" /> Conflict Detection
@@ -1022,7 +967,6 @@ export function DocsMurrayTheory({ onNavigate }: DocsMurrayTheoryProps) {
         </div>
       </section>
 
-      {/* THEMA CALLOUT */}
       <div className="p-6 rounded-2xl bg-primary/5 border border-primary/20 flex gap-4 items-start">
         <Info className="w-6 h-6 text-primary shrink-0 mt-1" />
         <div className="space-y-2">
@@ -1041,9 +985,6 @@ export function DocsMurrayTheory({ onNavigate }: DocsMurrayTheoryProps) {
   );
 }
 
-// ────────────────────────────────────────────────────────────────────
-// 10. DocsScoringLogic (uses DocsNavigation)
-// ────────────────────────────────────────────────────────────────────
 interface DocsScoringLogicProps {
   onNavigate: (sectionId: string) => void;
 }
@@ -1112,7 +1053,7 @@ export function DocsScoringLogic({ onNavigate }: DocsScoringLogicProps) {
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* HEADER */}
+
       <div className="space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider">
           <Calculator className="w-3 h-3" /> The Methodology
@@ -1127,7 +1068,6 @@ export function DocsScoringLogic({ onNavigate }: DocsScoringLogicProps) {
         </p>
       </div>
 
-      {/* 8 DIMENSION SCORES */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text flex items-center gap-3">
           <BarChart3 className="text-primary w-6 h-6" /> Eight Dimension Scores
@@ -1159,7 +1099,6 @@ export function DocsScoringLogic({ onNavigate }: DocsScoringLogicProps) {
         </div>
       </section>
 
-      {/* RECALIBRATION */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text">Recalibration v3.0</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1189,7 +1128,6 @@ export function DocsScoringLogic({ onNavigate }: DocsScoringLogicProps) {
         </div>
       </section>
 
-      {/* DEFENSE MECHANISMS */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text flex items-center gap-3">
           <Shield className="text-primary w-6 h-6" /> Defense Mechanism Inference
@@ -1230,7 +1168,6 @@ export function DocsScoringLogic({ onNavigate }: DocsScoringLogicProps) {
         </div>
       </section>
 
-      {/* PSYCHOSIS RISK */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text flex items-center gap-3">
           <Brain className="text-primary w-6 h-6" /> Psychosis Risk Assessment
@@ -1271,7 +1208,6 @@ export function DocsScoringLogic({ onNavigate }: DocsScoringLogicProps) {
         </div>
       </section>
 
-      {/* CULTURAL CONTEXT */}
       <div className="p-6 rounded-2xl bg-primary/5 border border-primary/20 flex gap-4 items-start">
         <Info className="w-6 h-6 text-primary shrink-0 mt-1" />
         <div className="space-y-2">
@@ -1290,9 +1226,6 @@ export function DocsScoringLogic({ onNavigate }: DocsScoringLogicProps) {
   );
 }
 
-// ────────────────────────────────────────────────────────────────────
-// 11. DocsSystemFlow (uses DocsNavigation)
-// ────────────────────────────────────────────────────────────────────
 interface DocsSystemFlowProps {
   onNavigate: (sectionId: string) => void;
 }
@@ -1380,7 +1313,7 @@ export function DocsSystemFlow({ onNavigate }: DocsSystemFlowProps) {
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* HEADER */}
+
       <div className="space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider">
           <Workflow className="w-3 h-3" /> Architecture
@@ -1396,7 +1329,6 @@ export function DocsSystemFlow({ onNavigate }: DocsSystemFlowProps) {
         </p>
       </div>
 
-      {/* PIPELINE */}
       <section className="space-y-4">
         <h2 className="text-2xl font-bold text-text flex items-center gap-3">
           <Layers className="text-primary w-6 h-6" /> Per-Card Analysis Pipeline
@@ -1430,7 +1362,6 @@ export function DocsSystemFlow({ onNavigate }: DocsSystemFlowProps) {
         </div>
       </section>
 
-      {/* MULTI-CARD AGGREGATION */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text flex items-center gap-3">
           <Repeat className="text-primary w-6 h-6" /> Multi-Card Aggregation
@@ -1471,7 +1402,6 @@ export function DocsSystemFlow({ onNavigate }: DocsSystemFlowProps) {
         </div>
       </section>
 
-      {/* RAG NOTE */}
       <div className="p-6 rounded-2xl bg-primary/5 border border-primary/20 flex gap-4 items-start">
         <Info className="w-6 h-6 text-primary shrink-0 mt-1" />
         <div className="space-y-2">
@@ -1491,9 +1421,6 @@ export function DocsSystemFlow({ onNavigate }: DocsSystemFlowProps) {
   );
 }
 
-// ────────────────────────────────────────────────────────────────────
-// 12. DocsDataModel (uses CodeBlock and DocsNavigation)
-// ────────────────────────────────────────────────────────────────────
 interface DocsDataModelProps {
   onNavigate: (sectionId: string) => void;
 }
@@ -1501,7 +1428,7 @@ interface DocsDataModelProps {
 export function DocsDataModel({ onNavigate }: DocsDataModelProps) {
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* HEADER */}
+
       <div className="space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider">
           <Database className="w-3 h-3" /> Architecture
@@ -1516,7 +1443,6 @@ export function DocsDataModel({ onNavigate }: DocsDataModelProps) {
         </p>
       </div>
 
-      {/* NARRATIVE EVENT */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text flex items-center gap-3">
           <FileJson className="text-primary w-6 h-6" /> NarrativeEvent
@@ -1529,7 +1455,7 @@ export function DocsDataModel({ onNavigate }: DocsDataModelProps) {
         <CodeBlock className="rounded-2xl border-primary/10 bg-secondary/10">{`@dataclass
 class NarrativeEvent:
     text: str                         # Raw sentence text
-    event_type: str                   # intention | obstacle | emotion | 
+    event_type: str                   # intention | obstacle | emotion |
                                       # action | outcome | defense | resolution
     agent: Optional[str]              # Subject (extracted via dep parsing)
     target: Optional[str]             # Object (dobj/pobj/attr)
@@ -1544,7 +1470,6 @@ class NarrativeEvent:
     resolution_success: Optional[float]  # 0–1 (resolution events only)`}</CodeBlock>
       </section>
 
-      {/* KNOWLEDGE GRAPH */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text flex items-center gap-3">
           <Network className="text-primary w-6 h-6" /> Knowledge Graph
@@ -1596,7 +1521,6 @@ class NarrativeEvent:
         </div>
       </section>
 
-      {/* RELATIONAL GRAPH */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text flex items-center gap-3">
           <GitBranch className="text-primary w-6 h-6" /> Relational Character Graph
@@ -1633,7 +1557,6 @@ class NarrativeEvent:
         </div>
       </section>
 
-      {/* THEME OBJECT */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text flex items-center gap-3">
           <FolderTree className="text-primary w-6 h-6" /> Theme Data Object
@@ -1673,7 +1596,6 @@ class NarrativeEvent:
         </div>
       </section>
 
-      {/* STORAGE */}
       <div className="p-6 rounded-2xl bg-primary/5 border border-primary/20 flex gap-4 items-start">
         <Info className="w-6 h-6 text-primary shrink-0 mt-1" />
         <div className="space-y-2">
@@ -1693,9 +1615,6 @@ class NarrativeEvent:
   );
 }
 
-// ────────────────────────────────────────────────────────────────────
-// 13. DocsQuickstart (uses CodeBlock and DocsNavigation)
-// ────────────────────────────────────────────────────────────────────
 interface DocsQuickstartProps {
   onNavigate: (sectionId: string) => void;
 }
@@ -1703,7 +1622,7 @@ interface DocsQuickstartProps {
 export function DocsQuickstart({ onNavigate }: DocsQuickstartProps) {
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* HEADER */}
+
       <div className="space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider">
           <Zap className="w-3 h-3" /> Getting Started
@@ -1717,7 +1636,6 @@ export function DocsQuickstart({ onNavigate }: DocsQuickstartProps) {
         </p>
       </div>
 
-      {/* PREREQUISITES */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text flex items-center gap-3">
           <Package className="text-primary w-6 h-6" /> Prerequisites
@@ -1746,7 +1664,6 @@ export function DocsQuickstart({ onNavigate }: DocsQuickstartProps) {
         </p>
       </section>
 
-      {/* STEP 1: BACKEND SETUP */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text flex items-center gap-3">
           <Terminal className="text-primary w-6 h-6" /> Step 1 — Local Installation
@@ -1767,7 +1684,6 @@ cd my-app`}</CodeBlock>
         </div>
       </section>
 
-      {/* VERIFICATION */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text flex items-center gap-3">
           <CheckCircle className="text-primary w-6 h-6" /> Verify Installation
@@ -1779,7 +1695,6 @@ cd my-app`}</CodeBlock>
         </p>
       </section>
 
-      {/* TROUBLESHOOTING */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text flex items-center gap-3">
           <AlertTriangle className="text-primary w-6 h-6" /> Troubleshooting
@@ -1823,9 +1738,6 @@ cd my-app`}</CodeBlock>
   );
 }
 
-// ────────────────────────────────────────────────────────────────────
-// 14. DocsSidebar (external imports only)
-// ────────────────────────────────────────────────────────────────────
 interface DocsSidebarProps {
   activeItem?: string;
   onSelect?: (item: string) => void;
@@ -1880,4 +1792,3 @@ export function DocsSidebar({ activeItem = "what-is", onSelect }: DocsSidebarPro
     </Sidebar>
   );
 }
-

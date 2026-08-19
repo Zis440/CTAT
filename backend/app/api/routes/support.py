@@ -81,7 +81,7 @@ def get_clinic_staff_tickets(
     """Retrieve all support tickets from staff within the current clinic admin's clinic."""
     if not current_user.clinic_id:
         return []
-        
+
     results = (
         db.query(SupportTicket, User)
         .join(User, SupportTicket.user_id == User.id)
@@ -133,16 +133,14 @@ def get_ticket_messages(
     ticket = db.query(SupportTicket).filter(SupportTicket.id == ticket_id).first()
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket not found")
-        
-    # Owner and super admin can view
+
     can_view = (ticket.user_id == current_user.id or current_user.role == UserRole.super_admin)
-    
-    # Clinic admin can view their staff's tickets
+
     if not can_view and current_user.role == UserRole.clinic_admin:
         ticket_owner = db.query(User).filter(User.id == ticket.user_id).first()
         if ticket_owner and ticket_owner.clinic_id == current_user.clinic_id:
             can_view = True
-            
+
     if not can_view:
         raise HTTPException(status_code=403, detail="Not authorized to view these messages")
 
@@ -153,7 +151,7 @@ def get_ticket_messages(
         .order_by(SupportMessage.created_at.asc())
         .all()
     )
-    
+
     messages = []
     for msg, user in results:
         m = SupportMessageOut(
@@ -169,7 +167,6 @@ def get_ticket_messages(
         messages.append(m)
     return messages
 
-
 @router.post("/{ticket_id}/messages", response_model=SupportMessageOut, status_code=201)
 def reply_to_ticket(
     ticket_id: str,
@@ -182,11 +179,9 @@ def reply_to_ticket(
     ticket = db.query(SupportTicket).filter(SupportTicket.id == ticket_id).first()
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket not found")
-        
-    # Owner and super admin can reply
+
     can_reply = (ticket.user_id == current_user.id or current_user.role == UserRole.super_admin)
-    
-    # Clinic admin can reply to their staff's tickets
+
     if not can_reply and current_user.role == UserRole.clinic_admin:
         ticket_owner = db.query(User).filter(User.id == ticket.user_id).first()
         if ticket_owner and ticket_owner.clinic_id == current_user.clinic_id:
@@ -198,17 +193,15 @@ def reply_to_ticket(
     if ticket.status == TicketStatus.closed:
         raise HTTPException(status_code=400, detail="Cannot reply to a closed ticket")
 
-    # Handle optional file upload
     attachment_path = None
     if file:
         allowed_types = {"image/jpeg", "image/png", "image/jpg", "application/pdf"}
         if file.content_type not in allowed_types:
             raise HTTPException(status_code=415, detail=f"File type '{file.content_type}' not allowed.")
-            
-        # UPLOADS_DIR import removed; SUPPORT_DIR used directly
+
         support_uploads_dir = SUPPORT_DIR / ticket_id
         support_uploads_dir.mkdir(parents=True, exist_ok=True)
-        
+
         safe_name = Path(file.filename).name
         dest = support_uploads_dir / safe_name
 
@@ -227,13 +220,12 @@ def reply_to_ticket(
         attachment_path=attachment_path,
     )
     db.add(support_message)
-    
-    # Update ticket updated_at
+
     ticket.updated_at = func.now()
-    
+
     db.commit()
     db.refresh(support_message)
-    
+
     return SupportMessageOut(
         id=support_message.id,
         ticket_id=support_message.ticket_id,

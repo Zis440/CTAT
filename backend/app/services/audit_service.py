@@ -24,11 +24,10 @@ class AuditService:
         details_json = details if details else {}
         if org_id:
             details_json["org_id"] = org_id
-            
-        # Simple tamper-evident hash (can be enhanced with a secret key)
+
         hash_payload = f"{user_id}:{action}:{target_user_id or ''}:{json.dumps(details_json, sort_keys=True)}"
         signature_hash = hashlib.sha256(hash_payload.encode('utf-8')).hexdigest()
-        
+
         audit_log = AuditLog(
             user_id=user_id,
             target_user_id=target_user_id,
@@ -36,7 +35,7 @@ class AuditService:
             details=details_json,
             signature_hash=signature_hash,
         )
-        
+
         try:
             db.add(audit_log)
             db.commit()

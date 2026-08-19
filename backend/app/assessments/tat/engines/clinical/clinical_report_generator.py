@@ -28,10 +28,6 @@ from reportlab.platypus import (
 )
 from reportlab.platypus.flowables import HRFlowable
 
-# ============================================================================
-# HELPERS
-# ============================================================================
-
 def _scale(val, max_expected=10):
     """If val > max_expected*1.5, assume 0-100 scale and divide by 10.
        Always clamp output to [0, max_expected]."""
@@ -39,7 +35,7 @@ def _scale(val, max_expected=10):
         fval = float(val)
         if fval > max_expected * 1.5:
             fval = fval / 10.0
-        # Hard-cap: never exceed max_expected
+
         return max(0, min(max_expected, fval))
     except (TypeError, ValueError):
         return val
@@ -61,22 +57,17 @@ def _pct(val, default="N/A"):
 def _strip_np(val: str) -> str:
     """Strips internal 'n' or 'p' prefixes from Murray labels at display-level."""
     if isinstance(val, str):
-        # Handle recent underscore-based naming conventions like "n_accurate" or "p_accurate"
+
         if val.startswith('n_') and len(val) > 2:
             return val[2:].replace('_', ' ').title()
         if val.startswith('p_') and len(val) > 2:
             return val[2:].replace('_', ' ').title()
-            
-        # Handle older PascalCase like "nAchievement"
+
         if val.startswith('n') and len(val) > 1 and val[1].isupper():
             return val[1:]
         if val.startswith('p') and len(val) > 1 and val[1].isupper():
             return val[1:]
     return str(val)
-
-# ============================================================================
-# CHART GENERATORS
-# ============================================================================
 
 def generate_radar_chart(metrics: Dict[str, float], out_dir: Path, filename: str):
     metrics = _scale_dict(metrics)
@@ -94,7 +85,7 @@ def generate_radar_chart(metrics: Dict[str, float], out_dir: Path, filename: str
     ax.fill(angles, values, alpha=0.25, color='#50d3a7')
     ax.plot(angles, values, marker='o', color='#238b40')
     ax.set_xticks(angles[:-1])
-    # Wrap long labels so they don't overlap
+
     wrapped_labels = [textwrap.fill(c.replace('_', ' ').title(), width=12) for c in categories]
     ax.set_xticklabels(wrapped_labels, fontsize=6)
     ax.set_ylim(0, 10)
@@ -107,7 +98,6 @@ def generate_radar_chart(metrics: Dict[str, float], out_dir: Path, filename: str
     plt.close()
     return filepath
 
-
 def generate_phase_diagram(conflict: float, ego: float, out_dir: Path, filename: str):
     conflict = _scale(conflict)
     ego = _scale(ego)
@@ -115,7 +105,7 @@ def generate_phase_diagram(conflict: float, ego: float, out_dir: Path, filename:
     ax.scatter(conflict, ego, s=200, c='#50d3a7', marker='o', zorder=5)
     ax.axhline(y=5, color='gray', linestyle='--', alpha=0.5)
     ax.axvline(x=5, color='gray', linestyle='--', alpha=0.5)
-    # Quadrant labels
+
     ax.text(2.5, 7.5, "Low Conflict\nHigh Ego", ha='center', va='center', fontsize=6, alpha=0.4)
     ax.text(7.5, 7.5, "High Conflict\nHigh Ego", ha='center', va='center', fontsize=6, alpha=0.4)
     ax.text(2.5, 2.5, "Low Conflict\nLow Ego", ha='center', va='center', fontsize=6, alpha=0.4)
@@ -132,7 +122,6 @@ def generate_phase_diagram(conflict: float, ego: float, out_dir: Path, filename:
     plt.savefig(filepath, dpi=150, bbox_inches='tight')
     plt.close()
     return filepath
-
 
 def generate_emotion_bar_chart(emotions: List[Tuple[str, int]], out_dir: Path, filename: str):
     """Bar chart of emotional attractors."""
@@ -152,7 +141,6 @@ def generate_emotion_bar_chart(emotions: List[Tuple[str, int]], out_dir: Path, f
     plt.close()
     return filepath
 
-
 def generate_needs_bar_chart(needs: List[Tuple[str, float]], out_dir: Path, filename: str):
     """Horizontal bar chart of Murray needs with intensity."""
     if not needs:
@@ -170,7 +158,6 @@ def generate_needs_bar_chart(needs: List[Tuple[str, float]], out_dir: Path, file
     plt.savefig(filepath, dpi=150, bbox_inches='tight')
     plt.close()
     return filepath
-
 
 def generate_trajectory_plot(history: List[Dict], metrics: List[str], out_dir: Path, filename: str):
     if not history or len(history) < 2:
@@ -190,11 +177,6 @@ def generate_trajectory_plot(history: List[Dict], metrics: List[str], out_dir: P
     plt.savefig(filepath, dpi=150, bbox_inches='tight')
     plt.close()
     return filepath
-
-
-# ============================================================================
-# TABLE STYLE PRESETS
-# ============================================================================
 
 HEADER_STYLE = TableStyle([
     ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#238b40')),
@@ -218,12 +200,6 @@ SIMPLE_GRID = TableStyle([
     ('VALIGN', (0, 0), (-1, -1), 'TOP'),
 ])
 
-# ============================================================================
-# MAIN REPORT
-# ============================================================================
-
-# Grab project root from this file's location to correctly resolve the frontend logo path
-# File is at: backend/app/engines/clinical/clinical_report_generator.py (4 levels deep)
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent.resolve()
 
 def generate_report(
@@ -259,38 +235,32 @@ def generate_report(
         styles = getSampleStyleSheet()
         story = []
 
-        # ================= STYLES =================
         title_style = ParagraphStyle(
-            'ReportTitle', fontName='Helvetica-Bold', fontSize=15, 
+            'ReportTitle', fontName='Helvetica-Bold', fontSize=15,
             textColor=colors.HexColor('#111827'), alignment=1, spaceAfter=6, leading=18
         )
         subtitle_style = ParagraphStyle(
-            'Subtitle', fontName='Helvetica-Bold', fontSize=9, 
+            'Subtitle', fontName='Helvetica-Bold', fontSize=9,
             textColor=colors.HexColor('#6b7280'), alignment=1, spaceAfter=25,
         )
         h2 = ParagraphStyle(
-            'H2', fontName='Helvetica-Bold', fontSize=10, 
+            'H2', fontName='Helvetica-Bold', fontSize=10,
             textColor=colors.HexColor('#238b40'), spaceBefore=18, spaceAfter=8,
         )
         h3 = ParagraphStyle(
-            'H3', fontName='Helvetica-Bold', fontSize=8, 
+            'H3', fontName='Helvetica-Bold', fontSize=8,
             textColor=colors.HexColor('#238b40'), spaceBefore=10, spaceAfter=6,
         )
         body = ParagraphStyle(
-            'Body', fontName='Helvetica', fontSize=8.5, 
+            'Body', fontName='Helvetica', fontSize=8.5,
             textColor=colors.black, spaceAfter=6, leading=12
         )
         small = ParagraphStyle('Small', parent=body, fontSize=8, textColor=colors.grey)
 
-        # ====================================================================
-        # COVER PAGE (LETTERHEAD STYLE)
-        # ====================================================================
-        
-        # ── Resolve Logos ──
         true_root = Path(__file__).resolve().parents[6]
         psyichub_logo_path = true_root / "frontend" / "public" / "psyichub-report-logo.png"
         if not psyichub_logo_path.exists():
-            # Fallback: try relative to backend dir if structure differs
+
             psyichub_logo_path = Path(__file__).resolve().parents[5].parent / "frontend" / "public" / "psyichub-report-logo.png"
 
         clinic_logo_path = None
@@ -302,7 +272,6 @@ def generate_report(
 
         story.append(HRFlowable(width="100%", thickness=12, color=colors.HexColor('#238b40'), spaceBefore=-20, spaceAfter=20))
 
-        # ── Top Left Column (Psyichub Logo) ──
         left_content = []
         if psyichub_logo_path.exists():
             try:
@@ -317,40 +286,36 @@ def generate_report(
             c_name = clinic_info.get("clinic_name", "")
             if c_name:
                 left_content.append(Paragraph(c_name.upper(), ParagraphStyle('CName', fontName='Helvetica-Bold', fontSize=9, textColor=colors.HexColor('#238b40'), alignment=0, spaceAfter=2)))
-                
+
             c_address = clinic_info.get("address", "")
             c_phone = clinic_info.get("phone", "")
             c_email = clinic_info.get("email", "")
-            
+
             c_style = ParagraphStyle('CStyle', fontName='Helvetica', fontSize=7.5, textColor=colors.gray, alignment=0)
             if c_address: left_content.append(Paragraph(c_address, c_style))
             if c_phone: left_content.append(Paragraph(f"Ph: {c_phone}", c_style))
             if c_email: left_content.append(Paragraph(f"Email: {c_email}", c_style))
-            
-        # ── Top Right Column (Therapist Details) ──
+
         right_content = []
         if user_info and user_info.get("name"):
             right_content.append(Paragraph(user_info["name"].upper(), ParagraphStyle('TherapistName', parent=styles['Heading2'], fontName='Helvetica-Bold', fontSize=11, textColor=colors.black, alignment=2, spaceAfter=2)))
-            
+
             if user_info.get("designation"):
                 right_content.append(Paragraph(user_info["designation"], ParagraphStyle('TDesig', parent=small, fontName='Helvetica-Bold', alignment=2, spaceAfter=2)))
-                
+
             rci = user_info.get("rci_number")
             roc = user_info.get("roc_number")
             if rci: right_content.append(Paragraph(f"RCI Reg No: {rci}", ParagraphStyle('TRci', parent=small, alignment=2)))
             if roc: right_content.append(Paragraph(f"State/Pro License: {roc}", ParagraphStyle('TRoc', parent=small, alignment=2)))
-            
-            # Show therapist phone if it's different from clinic phone
+
             t_phone = user_info.get("phone")
             if t_phone and (not clinic_info or clinic_info.get("phone") != t_phone):
                 right_content.append(Paragraph(f"Contact: {t_phone}", ParagraphStyle('TPhone', parent=small, alignment=2)))
 
-        # Generated Date
         right_content.append(Spacer(1, 0.05*inch))
         right_content.append(Paragraph("GENERATED", ParagraphStyle('r1', fontName='Helvetica-Bold', fontSize=6, textColor=colors.gray, alignment=2)))
         right_content.append(Paragraph(datetime.now().strftime('%B %d, %Y'), ParagraphStyle('r2', fontName='Helvetica-Bold', fontSize=10, textColor=colors.black, alignment=2)))
 
-        # ── Layout Letterhead Table ──
         letterhead_table = Table([[left_content, right_content]], colWidths=[3.5*inch, 3.5*inch])
         letterhead_table.setStyle(TableStyle([
             ('VALIGN', (0,0), (-1,-1), 'TOP'),
@@ -359,20 +324,18 @@ def generate_report(
             ('TOPPADDING', (0,0), (-1,-1), 0),
         ]))
         story.append(letterhead_table)
-        # ── Separator Line ──
+
         story.append(Spacer(1, 0.05*inch))
         story.append(Table([['']], colWidths=[7.2*inch], style=[('LINEABOVE', (0,0), (-1,-1), 1.5, colors.HexColor('#238b40'))]))
         story.append(Spacer(1, 0.2*inch))
-        
-        # ── Report Title ──
+
         story.append(Paragraph("NARRATIVE INTELLIGENCE ASSESSMENT REPORT", title_style))
         story.append(Paragraph("CONFIDENTIAL EXECUTIVE ASSESSMENT", subtitle_style))
         story.append(Spacer(1, 0.15*inch))
 
-        # Extract validation info and test performer info
         validation_info = aggregated.get('psychologist_validation', {})
         test_performed_by = user_info.get("name") if user_info else ""
-        
+
         rci_val = user_info.get("rci_number") if user_info else None
         roc_val = user_info.get("roc_number") if user_info else None
         user_license = ""
@@ -387,7 +350,6 @@ def generate_report(
         val_license = validation_info.get('license_number', "")
         val_date = validation_info.get('validation_date') or datetime.now().strftime('%d-%m-%Y')
 
-        # Patient table
         story.append(Paragraph("■ PATIENT INFORMATION", h2))
         pid = patient_info.get('patient_id', 'N/A')
         data = [
@@ -410,16 +372,15 @@ def generate_report(
         t = Table(data, colWidths=[2*inch, 4*inch], hAlign='LEFT')
         t.setStyle(SIMPLE_GRID)
         story.append(t)
-        
+
         story.append(Spacer(1, 0.2*inch))
-        # Determine institution/clinic name for the report.
-        # Priority: clinic_info (from ClinicProfile/admin) > user_info.clinic_name > "Private Practice"
+
         clinic_name_val = ""
         if clinic_info and (clinic_info.get("clinic_name") or "").strip():
             clinic_name_val = clinic_info["clinic_name"]
         elif user_info and (user_info.get("clinic_name") or "").strip():
             clinic_name_val = user_info["clinic_name"]
-        
+
         if not clinic_name_val.strip():
             clinic_name_val = "Private Practice"
 
@@ -428,9 +389,9 @@ def generate_report(
 
         header_text = "■ ORGANIZATION INFORMATION" if is_org else "■ PSYCHOLOGIST INFORMATION"
         story.append(Paragraph(header_text, h2))
-        
+
         inst_label = "Organization Name" if is_org else "Clinic / Institution"
-            
+
         rci_val = user_info.get("rci_number") if user_info else None
         roc_val = user_info.get("roc_number") if user_info else None
         user_license = ""
@@ -446,22 +407,19 @@ def generate_report(
             ["ROC / RCI No.", user_license or 'N/A'],
             [inst_label, clinic_name_val],
         ]
-        
+
         t_psych = Table(psych_data, colWidths=[2*inch, 4*inch], hAlign='LEFT')
         t_psych.setStyle(SIMPLE_GRID)
         story.append(t_psych)
-        
+
         story.append(PageBreak())
 
-        # ====================================================================
-        # PATIENT CONTEXT ANALYSIS
-        # ====================================================================
         ctx = aggregated.get('context_adjustment')
         if ctx:
             story.append(Paragraph("■ PATIENT CONTEXT ANALYSIS", h2))
             story.append(Paragraph("This section highlights the mathematical adjustment applied to the base psychological score based on socio-cultural, developmental, and environmental context.", body))
             story.append(Spacer(1, 0.1*inch))
-            
+
             ctx_data = [
                 ["Context Metric", "Score (0-100)"],
                 ["Age Congruence", f"{ctx.get('age_congruence_score', 0)}"],
@@ -474,16 +432,13 @@ def generate_report(
             t_ctx = Table(ctx_data, colWidths=[4*inch, 2*inch], hAlign='LEFT')
             t_ctx.setStyle(HEADER_STYLE)
             story.append(t_ctx)
-            
+
             story.append(Spacer(1, 0.1*inch))
             base_score = aggregated.get('base_psychological_score', 'N/A')
             final_score = aggregated.get('overall_score', 'N/A')
             story.append(Paragraph(f"<b>Base Narrative Intelligence Score:</b> {base_score} | <b>Final Score (with PCS):</b> {final_score}", body))
             story.append(PageBreak())
 
-        # ====================================================================
-        # EXECUTIVE SUMMARY
-        # ====================================================================
         story.append(Paragraph("■ EXECUTIVE SUMMARY", h2))
 
         murray_agg = aggregated.get('murray', {})
@@ -519,12 +474,8 @@ def generate_report(
         story.append(t)
         story.append(PageBreak())
 
-        # ====================================================================
-        # AGGREGATED METRICS & VISUALIZATIONS
-        # ====================================================================
         story.append(Paragraph("■ AGGREGATED METRICS VISUALIZATION", h2))
 
-        # Radar chart
         dims = aggregated.get('dimension_scores', {})
         if dims:
             story.append(Paragraph("■■ AGGREGATED PSYCHOLOGICAL RADAR PROFILE", h3))
@@ -533,13 +484,11 @@ def generate_report(
                 story.append(Image(str(radar_file), width=4.5*inch, height=4.5*inch))
                 story.append(Spacer(1, 0.1*inch))
 
-        # Phase diagram
         conflict_val = _scale(aggregated.get('conflict_internal', 5))
         ego_val = _scale(aggregated.get('hero_ego_strength', 5))
         phase_file = generate_phase_diagram(conflict_val, ego_val, tmp, "phase.png")
         story.append(Image(str(phase_file), width=4.5*inch, height=3*inch))
 
-        # Emotional attractors chart
         emo_attractors = aggregated.get('emotional_attractors', [])
         if emo_attractors:
             emo_chart = generate_emotion_bar_chart(emo_attractors, tmp, "emotions.png")
@@ -549,17 +498,14 @@ def generate_report(
 
         story.append(PageBreak())
 
-        # ====================================================================
-        # HISTORICAL PROGRESSION (IF APPLICABLE)
-        # ====================================================================
         hist_comp = aggregated.get('historical_comparison', {})
         if hist_comp and hist_comp.get('metrics'):
             story.append(Paragraph("■ HISTORICAL PROGRESSION", h2))
             story.append(Paragraph("Comparison of core psychometrics against the patient's most recent previous session.", body))
             story.append(Spacer(1, 0.1*inch))
-            
+
             hc_data = [["Metric", "Previous", "Current", "Delta", "Clinical Trend"]]
-            
+
             for m in hist_comp['metrics']:
                 if m['is_better'] is True:
                     trend_str = "Improved"
@@ -567,11 +513,11 @@ def generate_report(
                     trend_str = "Worsened"
                 else:
                     trend_str = "Stable"
-                    
+
                 diff_str = f"{m['diff']:+.2f}"
                 if m['diff'] == 0:
                     diff_str = "0.00"
-                    
+
                 hc_data.append([
                     m['metric'],
                     f"{m['past']:.2f}",
@@ -579,18 +525,14 @@ def generate_report(
                     diff_str,
                     trend_str
                 ])
-                
+
             t = Table(hc_data, colWidths=[2*inch, 1*inch, 1*inch, 1*inch, 1.2*inch], hAlign='LEFT')
             t.setStyle(HEADER_STYLE)
             story.append(t)
             story.append(PageBreak())
 
-        # ====================================================================
-        # FULL AGGREGATED MURRAY PROFILE
-        # ====================================================================
         story.append(Paragraph("■ STRUCTURED SECTIONS ANALYSIS", h2))
 
-        # Full needs profile
         full_needs = murray_agg.get('needs_full_profile', murray_agg.get('needs', []))
         if full_needs:
             story.append(Paragraph("Section 1: Needs (Psychological)", h3))
@@ -609,7 +551,6 @@ def generate_report(
             story.append(t)
             story.append(Spacer(1, 0.15*inch))
 
-        # Presses
         all_presses = murray_agg.get('presses', [])
         if all_presses:
             story.append(Paragraph("Section 2: Presses (Environmental Pressures)", h3))
@@ -623,7 +564,6 @@ def generate_report(
             story.append(t)
             story.append(Spacer(1, 0.15*inch))
 
-        # Conflicts
         conflicts_agg = murray_agg.get('conflicts', [])
         if conflicts_agg:
             story.append(Paragraph("Section 4: Conflicts (Internal & Experiential)", h3))
@@ -637,12 +577,8 @@ def generate_report(
 
         story.append(PageBreak())
 
-        # ====================================================================
-        # STABILITY INDICES (Cross-Card Consistency)
-        # ====================================================================
         story.append(Paragraph("■ CROSS-CARD STABILITY ANALYSIS", h2))
 
-        # ── Single-card guard ──────────────────────────────────────────────────
         n_cards = aggregated.get('num_cards', aggregated.get('card_count', 1))
         if not isinstance(n_cards, int):
             try:
@@ -699,7 +635,6 @@ def generate_report(
             t.setStyle(HEADER_STYLE)
             story.append(t)
 
-        # Defenses
         defenses = aggregated.get('defenses', {})
         if defenses:
             story.append(Spacer(1, 0.15*inch))
@@ -716,7 +651,7 @@ def generate_report(
                 for d in defenses:
                     if isinstance(d, dict):
                         defense_name = d.get('defense', d.get('name', 'Unknown'))
-                        # Try to format confidence as percentage
+
                         conf = d.get('confidence', '')
                         if isinstance(conf, (int, float)):
                             conf = f"{conf:.0%}"
@@ -724,16 +659,13 @@ def generate_report(
                         dd.append([defense_name, conf, Paragraph(evidence_str, body)])
                     else:
                         dd.append([str(d), "", ""])
-                
+
                 t = Table(dd, colWidths=[1.5*inch, 1.0*inch, 3.5*inch], hAlign='LEFT')
                 t.setStyle(SIMPLE_GRID)
                 story.append(t)
 
         story.append(PageBreak())
 
-        # ====================================================================
-        # CLINICAL FORMULATION
-        # ====================================================================
         story.append(Paragraph("■ CLINICAL SUMMARY (NON-DIAGNOSTIC)", h2))
         if clinical_formulation:
             story.append(Paragraph(clinical_formulation.replace('\n', '<br/>'), body))
@@ -749,9 +681,6 @@ def generate_report(
         ))
         story.append(PageBreak())
 
-        # ====================================================================
-        # STRUCTURED 7-COMPONENT SUMMARY (v9.0)
-        # ====================================================================
         story.append(Paragraph("■ STRUCTURED PSYCHODYNAMIC COMPONENTS", h2))
         story.append(Paragraph(
             "The following table presents the seven essential psychodynamic components "
@@ -759,16 +688,15 @@ def generate_report(
         ))
         story.append(Spacer(1, 0.1*inch))
 
-        # Build 7-component data from per-card and aggregated results
         try:
-            # ── 1. HERO ──
+
             agg_hero = '—'
             for card in (card_analyses or []):
                 sc = card.get('structured_components', {})
                 if sc.get('hero', {}).get('entity') and agg_hero == '—':
                     hero_conf = sc['hero'].get('confidence', 0)
                     agg_hero = f"{sc['hero']['entity']} (confidence: {hero_conf:.0%})"
-            # Fallback: relational engine / events
+
             if agg_hero == '—':
                 for card in (card_analyses or []):
                     rel = card.get('relational', {})
@@ -784,18 +712,17 @@ def generate_report(
                         if first_agent:
                             agg_hero = f"{first_agent} (inferred from narrative events)"
                             break
-            # Fallback: System meta-reasoning
+
             if agg_hero == '—' and aggregated.get('ollama_meta_reasoning'):
                 agg_hero = 'See System Meta-Reasoning section below'
 
-            # ── 4. AUTHORITY FIGURE ──
             agg_authority = '—'
             for card in (card_analyses or []):
                 sc = card.get('structured_components', {})
                 if sc.get('authority_figure', {}).get('entity') and agg_authority == '—':
                     auth_conf = sc['authority_figure'].get('confidence', 0)
                     agg_authority = f"{sc['authority_figure']['entity']} (confidence: {auth_conf:.0%})"
-            # Fallback: relational engine
+
             if agg_authority == '—':
                 for card in (card_analyses or []):
                     rel = card.get('relational', {})
@@ -804,14 +731,13 @@ def generate_report(
                         agg_authority = str(auth_figs[0]) if isinstance(auth_figs[0], str) else str(auth_figs[0].get('entity', auth_figs[0]))
                         break
 
-            # ── 5. CONTEMPORARY FIGURE ──
             agg_contemporary = '—'
             for card in (card_analyses or []):
                 sc = card.get('structured_components', {})
                 if sc.get('contemporary_figure', {}).get('entity') and agg_contemporary == '—':
                     cont_conf = sc['contemporary_figure'].get('confidence', 0)
                     agg_contemporary = f"{sc['contemporary_figure']['entity']} (confidence: {cont_conf:.0%})"
-            # Fallback: relational engine
+
             if agg_contemporary == '—':
                 for card in (card_analyses or []):
                     rel = card.get('relational', {})
@@ -820,11 +746,10 @@ def generate_report(
                         agg_contemporary = str(contemp[0]) if isinstance(contemp[0], str) else str(contemp[0].get('entity', contemp[0]))
                         break
 
-            # ── 2. NEEDS ──
             agg_murray = aggregated.get('murray', {})
             agg_needs = agg_murray.get('needs', [])
             needs_str = ', '.join([_strip_np(n) for n, _ in agg_needs[:5]]) if agg_needs else '—'
-            # Fallback: per-card needs
+
             if needs_str == '—':
                 for card in (card_analyses or []):
                     cn = card.get('murray', {}).get('needs', [])
@@ -832,12 +757,11 @@ def generate_report(
                         needs_str = ', '.join([_strip_np(n) for n, _ in cn[:5]])
                         break
 
-            # ── 3. ENVIRONMENT / PRESS ──
             agg_presses = agg_murray.get('presses', [])
             presses_str = ', '.join([_strip_np(p) for p, _ in agg_presses[:5]]) if agg_presses else '—'
             agg_env = aggregated.get('aggregated_environment', {})
             env_str = agg_env.get('dominant_type', aggregated.get('dominant_environment', '—'))
-            # Fallback: per-card environment
+
             if env_str == '—':
                 for card in (card_analyses or []):
                     ce = card.get('environment', {})
@@ -845,7 +769,6 @@ def generate_report(
                         env_str = ce['primary_type']
                         break
 
-            # ── 6. CONFLICT ──
             agg_conflicts = aggregated.get('aggregated_conflicts', [])
             if agg_conflicts:
                 conflict_parts = []
@@ -858,7 +781,7 @@ def generate_report(
                         conflict_parts.append(ctype)
                 conflict_str = '; '.join(conflict_parts)
             else:
-                # Fallback: per-card conflict_structure
+
                 all_conflicts = []
                 for card in (card_analyses or []):
                     for c in card.get('conflict_structure', [])[:2]:
@@ -870,7 +793,6 @@ def generate_report(
                             all_conflicts.append(ctype)
                 conflict_str = '; '.join(all_conflicts[:4]) if all_conflicts else '—'
 
-            # ── 7. DEFENSE MECHANISMS ──
             agg_defenses = aggregated.get('aggregated_defenses', [])
             if agg_defenses:
                 defense_str = ', '.join([
@@ -878,7 +800,7 @@ def generate_report(
                     for d in agg_defenses[:4]
                 ])
             else:
-                # Fallback: per-card defense_mechanisms
+
                 all_defenses = []
                 for card in (card_analyses or []):
                     for d in card.get('defense_mechanisms', [])[:2]:
@@ -923,9 +845,6 @@ def generate_report(
         ))
         story.append(PageBreak())
 
-        # ====================================================================
-        # DETAILED CARD-BY-CARD ANALYSIS
-        # ====================================================================
         if card_analyses:
             story.append(Paragraph("■ DETAILED CARD-BY-CARD ANALYSIS", h2))
             story.append(Spacer(1, 0.1*inch))
@@ -933,18 +852,15 @@ def generate_report(
             for i, card in enumerate(card_analyses):
                 card_id = card.get('card_id', f'Card {i+1}')
 
-                # ---- Card header ----
                 story.append(Paragraph(f"■ {card_id.upper()}", h2))
 
-                # ---- Story text ----
                 story.append(Paragraph("<b>■■ Patient Story</b>", h3))
                 story_text_card = card.get('story_text', '')
-                # Truncate very long stories for PDF readability
+
                 if len(story_text_card) > 2000:
                     story_text_card = story_text_card[:2000] + "... [truncated]"
                 story.append(Paragraph(story_text_card, body))
 
-                # Verbatim transcription disclaimer + Language detection
                 transcription_policy = card.get('transcription_policy', 'verbatim')
                 detected_lang = card.get('detected_language', {})
                 lang_label = detected_lang.get('language_name', 'Unknown') if detected_lang else 'Unknown'
@@ -954,7 +870,6 @@ def generate_report(
                 ))
                 story.append(Spacer(1, 0.1*inch))
 
-                # ---- Scoring overview ----
                 story.append(Paragraph("<b>■■ SCORING OVERVIEW</b>", h3))
                 score_data = [
                     ["Metric", "Value"],
@@ -967,7 +882,6 @@ def generate_report(
                 story.append(t)
                 story.append(Spacer(1, 0.1*inch))
 
-                # ---- Dimension scores ----
                 dims_card = card.get('dimension_scores', {})
                 if dims_card:
                     story.append(Paragraph("<b>■■ DIMENSION BREAKDOWN</b>", h3))
@@ -975,7 +889,7 @@ def generate_report(
                     for k, v in dims_card.items():
                         try:
                             fv = float(v)
-                            # Hard-cap: affective_integration 0-10, all others 0-100 before _scale
+
                             if k == 'affective_integration':
                                 fv = max(0, min(10, fv))
                             else:
@@ -988,9 +902,6 @@ def generate_report(
                     story.append(t)
                     story.append(Spacer(1, 0.1*inch))
 
-
-
-                # ---- Murray needs & presses ----
                 murray_card = card.get('murray', {})
                 needs_card = murray_card.get('needs', [])
                 presses_card = murray_card.get('presses', [])
@@ -999,7 +910,6 @@ def generate_report(
                 if needs_card or presses_card:
                     story.append(Paragraph("<b>■■ MURRAY NEED-PRESS ANALYSIS</b>", h3))
 
-                    # Full needs with intensity
                     full_profile = murray_card.get('needs_full_profile', needs_card)
                     if full_profile:
                         np_data = [["Need", "Intensity"]]
@@ -1015,7 +925,6 @@ def generate_report(
                         story.append(t)
                         story.append(Spacer(1, 0.05*inch))
 
-                    # Presses
                     if presses_card:
                         pp_data = [["Press", "Intensity"]]
                         for p in presses_card:
@@ -1030,7 +939,6 @@ def generate_report(
                         story.append(t)
                         story.append(Spacer(1, 0.05*inch))
 
-                    # Conflicts
                     if conflicts_card:
                         cc_data = [["Need", "Press", "Intensity"]]
                         for c in conflicts_card:
@@ -1043,14 +951,13 @@ def generate_report(
 
                     story.append(Spacer(1, 0.1*inch))
 
-                # ---- Themes ----
                 themes = card.get('themes', [])
                 if themes:
                     story.append(Paragraph("<b>■■ DETECTED THEMES</b>", h3))
                     if isinstance(themes, dict):
                         themes = themes.get('themes', [])
                     if themes and isinstance(themes[0], dict):
-                        # Structured theme table — no label column (removed per user request)
+
                         th_data = [["Mode", "Density", "Coherence", "Affect", "Related Needs"]]
                         for t in themes[:6]:
                             if not isinstance(t, dict):
@@ -1079,19 +986,18 @@ def generate_report(
                         t = Table(th_data, colWidths=[1.0*inch, 0.7*inch, 1.1*inch, 0.8*inch, 2.6*inch], hAlign='LEFT')
                         t.setStyle(HEADER_STYLE)
                         story.append(t)
-                        # Show words for top 3 themes (keep this as the only label reference)
+
                         for th in themes[:3]:
                             if isinstance(th, dict):
                                 words = th.get('words', [])
                                 if words:
                                     story.append(Paragraph(f"<i>{', '.join(words[:6])}</i>", small))
                     else:
-                        # Fallback: simple label list
+
                         theme_labels = [str(t) for t in themes[:8]]
                         story.append(Paragraph(", ".join(theme_labels), body))
                     story.append(Spacer(1, 0.05*inch))
 
-                # ---- Conflict structure (parallel dynamics) ----
                 conflict_struct = card.get('conflict_structure', [])
                 if conflict_struct:
                     story.append(Paragraph("<b>■■ CONFLICT STRUCTURE (PARALLEL DYNAMICS)</b>", h3))
@@ -1123,7 +1029,7 @@ def generate_report(
                     t = Table(cs_data, colWidths=[1.5*inch, 1.5*inch, 0.6*inch, 1.2*inch, 2.0*inch], hAlign='LEFT')
                     t.setStyle(HEADER_STYLE)
                     story.append(t)
-                    # Also print domain & polarity if available
+
                     for c in conflict_struct[:5]:
                         if isinstance(c, dict):
                             domain = c.get('conflict_domain', '')
@@ -1134,7 +1040,6 @@ def generate_report(
                                 story.append(Paragraph(detail, small))
                     story.append(Spacer(1, 0.1*inch))
 
-                # ---- Card-Level Defenses (Fix 6) ----
                 card_defenses = card.get('defense_mechanisms', [])
                 if card_defenses:
                     story.append(Paragraph("<b>■■ DERIVED COPING & DEFENSES</b>", h3))
@@ -1149,9 +1054,6 @@ def generate_report(
                     story.append(Paragraph(", ".join(def_labels), body))
                     story.append(Spacer(1, 0.1*inch))
 
-
-                # ---- Theme–Conflict–Coping Alignment (Section 8) ----
-                # Unified single-pass: no index-merge bugs
                 card_themes_s8 = card.get('themes', [])
                 if isinstance(card_themes_s8, dict):
                     card_themes_s8 = card_themes_s8.get('themes', [])
@@ -1167,7 +1069,7 @@ def generate_report(
 
                 s8_rows = []
                 for row_i in range(n_s8):
-                    # Theme
+
                     th = card_themes_s8[row_i] if row_i < len(card_themes_s8) else None
                     if isinstance(th, dict):
                         t_label = str(th.get('theme', th.get('label', '—')))[:40]
@@ -1180,7 +1082,6 @@ def generate_report(
                         t_label = '—'
                         t_np_str = ', '.join(murray_needs_s8 + murray_presses_s8) or '—'
 
-                    # Conflict
                     cf = card_conflicts_s8[row_i] if row_i < len(card_conflicts_s8) else None
                     if cf and isinstance(cf, dict):
                         forces = cf.get('forces', [])
@@ -1190,7 +1091,6 @@ def generate_report(
                     else:
                         s8_conflict = '—'
 
-                    # Coping / Defense
                     cp_item = None
                     if row_i < len(card_coping_s8):
                         cp_item = str(card_coping_s8[row_i])[:35]
@@ -1210,15 +1110,13 @@ def generate_report(
                     story.append(Paragraph("<b>■■ SECTION 8: COPING STRATEGIES &amp; THEME ALIGNMENT</b>", h3))
                     s8_data = [["Related Needs/Presses", "Conflict (What vs What)", "Coping / Defense"]]
                     for row in s8_rows:
-                        # row was built as [theme, needs/presses, conflict, coping] — skip index 0 (theme)
+
                         s8_data.append([row[1], row[2], row[3]])
                     t = Table(s8_data, colWidths=[2.0*inch, 2.2*inch, 2.0*inch], hAlign='LEFT')
                     t.setStyle(HEADER_STYLE)
                     story.append(t)
                     story.append(Spacer(1, 0.1*inch))
 
-
-                # ---- Environment classification ----
                 env_class = card.get('environment_classification', {})
                 if env_class and env_class.get('primary'):
                     story.append(Paragraph("<b>■■ PSYCHOLOGICAL ENVIRONMENT</b>", h3))
@@ -1228,7 +1126,7 @@ def generate_report(
                         ["Secondary", _safe_str(env_class.get('secondary'))],
                         ["Mixed Environment", "Yes" if env_class.get('is_mixed_environment') else "No"],
                     ]
-                    # Show signal breakdown if available
+
                     signal_scores = env_class.get('signal_scores', {})
                     if signal_scores:
                         signals = []
@@ -1244,12 +1142,10 @@ def generate_report(
                     story.append(t)
                     story.append(Spacer(1, 0.1*inch))
 
-                # ---- Relational dynamics ----
                 relational = card.get('relational_patterns', {})
                 if relational:
                     story.append(Paragraph("<b>■■ RELATIONAL DYNAMICS</b>", h3))
 
-                    # Figure Classifications table (v4.0)
                     valid_figs = relational.get('valid_figure_types', [])
                     if valid_figs:
                         fig_data = [["Entity", "Figure Type", "Role Confidence"]]
@@ -1290,12 +1186,11 @@ def generate_report(
                             story.append(t)
                     story.append(Spacer(1, 0.1*inch))
 
-                # ---- Quantitative metrics ----
                 quant = card.get('quantitative_scores', {})
                 if quant:
                     story.append(Paragraph("<b>■■ QUANTITATIVE METRICS</b>", h3))
                     qd = [["Metric", "Value"]]
-                    # Metrics that should NOT be auto-scaled (raw integers)
+
                     NO_SCALE = {'word_count', 'sentences', 'sentence_count'}
                     for qk in ['word_count', 'sentences', 'coherence', 'complexity',
                                'anxiety_level', 'hero_ego_strength', 'emotional_stability',
@@ -1306,7 +1201,7 @@ def generate_report(
                                 qd.append([qk.replace('_', ' ').title(), str(int(val))])
                             else:
                                 qd.append([qk.replace('_', ' ').title(), f"{_scale(val):.2f}"])
-                    # Emotions from GoEmotions
+
                     emo_list = quant.get('emotions', [])
                     if emo_list:
                         emo_names = ", ".join([e[0] if isinstance(e, (list, tuple)) else str(e) for e in emo_list[:5]])
@@ -1317,14 +1212,12 @@ def generate_report(
                         story.append(t)
                     story.append(Spacer(1, 0.1*inch))
 
-                # ---- Indian context ----
                 indian = card.get('indian_context_factors', [])
                 if indian:
                     story.append(Paragraph("<b>■■ INDIAN CULTURAL CONTEXT</b>", h3))
                     story.append(Paragraph(", ".join(indian), body))
                     story.append(Spacer(1, 0.05*inch))
 
-                # ---- Psychosis risk ----
                 psych_risk = card.get('psychosis_risk', {})
                 if psych_risk and psych_risk.get('risk_score', 0) > 0:
                     story.append(Paragraph("<b>■■ RISK SCREENING</b>", h3))
@@ -1338,13 +1231,9 @@ def generate_report(
 
                 story.append(PageBreak())
 
-        # ====================================================================
-        # GRAPH INTELLIGENCE
-        # ====================================================================
         if graph_insights and graph_insights.get('core_constructs'):
             story.append(Paragraph("Knowledge Graph Intelligence", h2))
 
-            # Core drivers table
             core = graph_insights.get('core_constructs', [])
             if core:
                 gi_data = [["Construct", "Centrality"]]
@@ -1355,7 +1244,6 @@ def generate_report(
                 story.append(t)
                 story.append(Spacer(1, 0.1*inch))
 
-            # Key insights
             for key, label in [
                 ('dominant_motive', 'Dominant Motive'),
                 ('dominant_emotion', 'Dominant Emotion'),
@@ -1375,9 +1263,6 @@ def generate_report(
 
             story.append(PageBreak())
 
-        # ====================================================================
-        # TRAJECTORY COMPARISON
-        # ====================================================================
         if trajectory_comparison and trajectory_comparison.get('is_returning'):
             story.append(Paragraph("Longitudinal Trajectory (Returning Patient)", h2))
             story.append(Paragraph(f"Previous Sessions: {trajectory_comparison['previous_sessions']}", body))
@@ -1406,10 +1291,6 @@ def generate_report(
 
             story.append(PageBreak())
 
-
-        # ====================================================================
-        # RISK ASSESSMENT
-        # ====================================================================
         if risk_assessment and (risk_assessment.get('risk_score', 0) > 0 or risk_assessment.get('flags')):
             story.append(Paragraph("Risk Assessment", h2))
             story.append(Paragraph(
@@ -1426,9 +1307,6 @@ def generate_report(
             story.append(Paragraph("  - Encourage help-seeking if symptoms worsen", body))
             story.append(PageBreak())
 
-        # ====================================================================
-        # LEARNING SYSTEM STATS
-        # ====================================================================
         if learning_stats:
             story.append(Paragraph("Learning System Statistics", h2))
             ls_data = [
@@ -1448,9 +1326,6 @@ def generate_report(
             story.append(t)
             story.append(PageBreak())
 
-        # ====================================================================
-        # EMBEDDED VISUALIZATIONS
-        # ====================================================================
         viz_dir = output_path.parent / "visualizations"
         if viz_dir.exists():
             viz_files = sorted(viz_dir.glob("*.png"), key=lambda p: p.stat().st_mtime, reverse=True)
@@ -1465,24 +1340,20 @@ def generate_report(
                         pass
                 story.append(PageBreak())
 
-        # ====================================================================
-        # CLINICAL CONCLUSION (standalone — always present)
-        # ====================================================================
         story.append(Paragraph("Clinical Conclusion", h2))
 
         ollama_conclusion = aggregated.get('ollama_formulation_summary', '')
         ollama_med_summary = aggregated.get('ollama_clinical_summary', '')
 
         if ollama_conclusion and len(ollama_conclusion.strip()) > 80:
-            # Full comprehensive conclusion available
+
             story.append(Paragraph(ollama_conclusion.replace('\n', '<br/>'), body))
         elif ollama_med_summary and len(ollama_med_summary.strip()) > 80:
             story.append(Paragraph(ollama_med_summary.replace('\n', '<br/>'), body))
         else:
-            # Generate comprehensive analysis-based conclusion from real data
+
             conclusion_parts = []
 
-            # Emotional landscape
             attractors = aggregated.get('emotional_attractors', [])
             if attractors:
                 top_emotions = [f"{e}" for e, _ in attractors[:6]]
@@ -1492,7 +1363,6 @@ def generate_report(
                     f"These recurring emotional themes offer a helpful window into their internal world."
                 )
 
-            # Themes
             themes_data = aggregated.get('themes', {})
             if isinstance(themes_data, dict):
                 theme_list = themes_data.get('themes', [])
@@ -1511,7 +1381,6 @@ def generate_report(
                         f"These patterns highlight the situations and challenges the patient may be currently focusing on in their daily life."
                     )
 
-            # Murray needs/presses
             murray = aggregated.get('murray', {})
             needs = murray.get('needs', [])
             presses = murray.get('presses', [])
@@ -1525,7 +1394,6 @@ def generate_report(
                     np_text += f"Additionally, the patient seems to feel external pressure or influence from {', '.join(press_names)}. "
                 conclusion_parts.append(np_text)
 
-            # Relational dynamics
             relational = aggregated.get('relational', {})
             figures = relational.get('valid_figure_types', [])
             if figures:
@@ -1534,28 +1402,26 @@ def generate_report(
                     if isinstance(f, dict):
                         fig_summary.append(f"{f.get('type', 'others')}")
                 if fig_summary:
-                    # Remove duplicates while keeping order
+
                     unique_figs = list(dict.fromkeys(fig_summary))
                     conclusion_parts.append(
                         f"<b>Interpersonal Style:</b> The stories frequently involve interactions with {', '.join(unique_figs)}. "
                         f"This helps us understand how the patient views their relationships and connections with others."
                     )
 
-            # Defense mechanisms
             defenses = aggregated.get('defenses', {})
             defense_list = []
             if isinstance(defenses, dict):
                 defense_list = list(defenses.keys())[:5]
             elif isinstance(defenses, list):
                 defense_list = [d.get('defense', d.get('name', str(d))) if isinstance(d, dict) else str(d) for d in defenses][:5]
-                
+
             if defense_list:
                 conclusion_parts.append(
                     f"<b>Coping Strategies:</b> When faced with stress or conflict in the stories, the patient tends to rely on coping strategies like {', '.join(defense_list)}. "
                     f"Recognizing these patterns can help identify how the patient protects themselves emotionally during difficult times."
                 )
 
-            # Environment
             environment = aggregated.get('environment', {})
             env_type = environment.get('type', '') if isinstance(environment, dict) else str(environment)
             if env_type:
@@ -1564,15 +1430,13 @@ def generate_report(
                     f"which gives us insight into how they experience their surrounding world."
                 )
 
-            # Clinical formulation reference
             if clinical_formulation:
-                # Clean up the formulation text to be more human-readable
+
                 import re
                 clean_form = re.sub(r'[=—-]', '', clinical_formulation)
                 clean_form = clean_form.replace("CLINICAL FORMULATION (Non-Diagnostic)", "")
                 clean_form = clean_form.replace("CLINICAL FORMULATION (NonDiagnostic)", "").strip()
-                
-                # Truncate if necessary
+
                 form_text = clean_form[:500]
                 if len(clean_form) > 500:
                     form_text += "..."
@@ -1580,7 +1444,6 @@ def generate_report(
                     f"<b>Overall Clinical Impression:</b> {form_text}"
                 )
 
-            # Therapeutic recommendation
             conclusion_parts.append(
                 "<b>Next Steps:</b> These insights offer a deeper, more empathetic understanding of the patient's emotional world. "
                 "It is recommended that these themes, relationship patterns, and coping strategies be "
@@ -1589,28 +1452,24 @@ def generate_report(
                 "reviewed and contextualized by a qualified mental health professional."
             )
 
-            # Write all parts
             for part in conclusion_parts:
                 story.append(Paragraph(part, body))
                 story.append(Spacer(1, 0.08*inch))
 
         story.append(PageBreak())
 
-        # ====================================================================
-        # CANDIDATE NARRATIVES (Original Stories)
-        # ====================================================================
         if card_analyses:
             story.append(Paragraph("■ CANDIDATE NARRATIVES", h2))
             story.append(Paragraph("The following are the original, verbatim stories provided by the candidate for each image card.", body))
             story.append(Spacer(1, 0.1*inch))
-            
+
             card_mapping = {
                 'card_1': 'Card 3', 'card_2': 'Card 6', 'card_3': 'Card 11', 'card_4': 'Card 28',
                 'card_1_hi': 'Card 3', 'card_2_hi': 'Card 6', 'card_3_hi': 'Card 11', 'card_4_hi': 'Card 28'
             }
-            
+
             _BACKEND_ROOT = Path(__file__).resolve().parents[5]
-            
+
             for ca in card_analyses:
                 c_id = str(ca.get('card_id', '1')).lower()
                 c_name = card_mapping.get(c_id) or card_mapping.get(f"card_{c_id.replace('card_', '')}")
@@ -1620,7 +1479,6 @@ def generate_report(
                     elif c_name.upper().startswith('CARD '): c_name = 'Card ' + c_name[5:]
                     else: c_name = 'Card ' + c_name
 
-                # Try finding the image
                 img_path = _BACKEND_ROOT / "data" / "tat_cards" / "indianized" / f"{c_name}.webp"
                 if not img_path.exists():
                     img_path = _BACKEND_ROOT / "data" / "tat_cards" / f"{c_name}.webp"
@@ -1637,18 +1495,18 @@ def generate_report(
                             self.canv.setFillColor(colors.lightgrey)
                             self.canv.rect(0,0,1.5*inch,1.5*inch,fill=1,stroke=0)
                     row_data.append(PH())
-                
+
                 text_flow = [
                     Paragraph(f"IMAGE CARD: {c_name.upper()}", ParagraphStyle('ca_h', fontName='Helvetica-Bold', fontSize=8, textColor=colors.black)),
                     Paragraph(f'"{ca.get("story_text", "")}"', ParagraphStyle('ca_b', fontName='Helvetica-Oblique', fontSize=8.5, textColor=colors.HexColor('#4b5563'), spaceBefore=6))
                 ]
                 row_data.append(text_flow)
-                
+
                 st_table = Table([row_data], colWidths=[1.7*inch, 5.5*inch])
                 st_table.setStyle(TableStyle([
-                    ('VALIGN', (0,0), (-1,-1), 'TOP'), 
-                    ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#f9fafb')), 
-                    ('BOX', (0,0), (-1,-1), 1, colors.HexColor('#f3f4f6')), 
+                    ('VALIGN', (0,0), (-1,-1), 'TOP'),
+                    ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#f9fafb')),
+                    ('BOX', (0,0), (-1,-1), 1, colors.HexColor('#f3f4f6')),
                     ('PADDING', (0,0), (-1,-1), 10)
                 ]))
                 story.append(KeepTogether(st_table))
@@ -1656,9 +1514,6 @@ def generate_report(
 
             story.append(PageBreak())
 
-        # ====================================================================
-        # PSYCHOLOGIST VALIDATION BLOCK (v9.0)
-        # ====================================================================
         story.append(Paragraph("Psychologist Validation", h2))
         story.append(Paragraph(
             "The stories and analysis included in this report must be reviewed and validated "
@@ -1674,9 +1529,9 @@ def generate_report(
             val_license = validation_info.get('license_number', "_________________________")
             date_str = validation_info.get('validation_date', datetime.now().strftime('%d-%m-%Y'))
             e_sig_path = validation_info.get('signature_path', '')
-            
+
             sig_flowable = Paragraph("<i>Digitally Verified via Psyichub</i>", body)
-            
+
             if e_sig_path:
                 from app.database import DATA_STORE_DIR
                 full_sig_path = DATA_STORE_DIR / e_sig_path
@@ -1691,7 +1546,7 @@ def generate_report(
                         )
                     except Exception:
                         pass
-                        
+
             val_data = [
                 ["Verified By (Psychologist)", Paragraph(str(val_name), body)],
                 ["ROC / RCI No.", Paragraph(str(val_license), body)],
@@ -1719,9 +1574,6 @@ def generate_report(
         story.append(t)
         story.append(PageBreak())
 
-        # ====================================================================
-        # VERIFICATION SIGNATURE
-        # ====================================================================
         if verification_audit:
             story.append(Paragraph("System Verification & Digital Signature", h2))
             story.append(Paragraph(
@@ -1729,7 +1581,7 @@ def generate_report(
                 "The digital signature below serves as a cryptographic proof of this verification event.", body
             ))
             story.append(Spacer(1, 0.1*inch))
-            
+
             sig_data = [
                 ["Verification Timestamp (UTC)", str(verification_audit.get("timestamp") or "N/A")],
                 ["Approved By (Admin ID)", str(verification_audit.get("admin_id") or "N/A")],
@@ -1747,9 +1599,6 @@ def generate_report(
             story.append(t_sig)
             story.append(PageBreak())
 
-        # ====================================================================
-        # DISCLAIMERS
-        # ====================================================================
         story.append(PageBreak())
         story.append(Paragraph("Important Disclaimers", h2))
         story.append(Paragraph(
@@ -1760,16 +1609,15 @@ def generate_report(
         ))
         small_disc = ParagraphStyle('SmallDisc', fontName='Helvetica', fontSize=7, textColor=colors.gray)
         story.append(Spacer(1, 0.1*inch))
-        
+
         gen_time = datetime.now().strftime('%d-%m-%Y, %I:%M %p')
         story.append(Paragraph(
             f"Report generated by Psyichub Psychological Analysis System on {gen_time}", small_disc
         ))
 
-        # Footer
         story.append(Spacer(1, 30))
         story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#e5e7eb'), spaceBefore=10, spaceAfter=10))
-        
+
         disclaimer_text = (
             "DISCLAIMER: This assessment tool and its generated report are for informational and educational "
             "purposes only and are not a substitute for professional clinical diagnosis, treatment, or medical advice. "
@@ -1777,10 +1625,9 @@ def generate_report(
         )
         story.append(Paragraph(disclaimer_text, ParagraphStyle('Disclaimer', fontName='Helvetica-Oblique', fontSize=7, textColor=colors.HexColor('#ef4444'), alignment=1)))
         story.append(Spacer(1, 10))
-        
+
         story.append(Paragraph("END OF ASSESSMENT REPORT • CONFIDENTIAL", ParagraphStyle('Footer', fontName='Helvetica-Bold', fontSize=7, textColor=colors.HexColor('#9ca3af'), alignment=1)))
 
-        # Build
         try:
             doc.build(story)
             print(f"[INFO] Report saved to: {output_path}")

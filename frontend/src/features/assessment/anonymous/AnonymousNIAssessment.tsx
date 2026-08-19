@@ -55,18 +55,14 @@ export function AnonymousNIAssessment({
   onComplete: () => void;
 }) {
 
-  // Assessment flow: intro -> assessment -> completed
   const [step, setStep] = useState<"intro" | "assessment" | "completed">("intro");
   const [stories, setStories] = useState<Record<string, string>>({});
-
-  // Narrative Intelligence Cards State
 
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [cardVersion, setCardVersion] = useState<CardVersion>("indianized");
   const [rotation, setRotation] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Audio Recording State
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
@@ -79,9 +75,8 @@ export function AnonymousNIAssessment({
   const audioChunksRef = useRef<Blob[]>([]);
   const recordingTimerRef = useRef<number | null>(null);
 
-  // Initialization is handled by the parent router
   useEffect(() => {
-    // Just a placeholder, nothing to fetch here
+
   }, []);
 
   const getCardImageUrl = useCallback((filename: string) => {
@@ -90,8 +85,6 @@ export function AnonymousNIAssessment({
   }, [cardVersion]);
 
   const currentCard = cards[currentCardIndex];
-
-  // ── Audio Recording ─────────────────────────────────────────────────────────
 
   const startRecording = useCallback(async () => {
     try {
@@ -179,7 +172,6 @@ export function AnonymousNIAssessment({
     }
   }, [currentCard, selectedLanguage]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
@@ -246,7 +238,7 @@ export function AnonymousNIAssessment({
       <Helmet><title>PsyicHub - Psychological Intelligence</title></Helmet>
 
       <div className="w-full max-w-3xl flex-1 flex flex-col pt-4">
-        {/* Header */}
+
         <div className="mb-6 flex items-center gap-3">
           <img src="/psyichub-logo-v2.png" alt="PsyicHub" className="h-10 w-auto object-contain dark:filter-none" style={{ filter: "brightness(0) saturate(100%) invert(33%) sepia(43%) saturate(935%) hue-rotate(70deg) brightness(100%) contrast(83%)" }} />
         </div>
@@ -262,7 +254,7 @@ export function AnonymousNIAssessment({
               )}
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Administration Instructions */}
+
               <div className="bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-300 rounded-xl p-4 flex gap-3 shadow-sm">
                 <Info className="h-5 w-5 shrink-0 mt-0.5" />
                 <div className="space-y-2">
@@ -292,7 +284,7 @@ export function AnonymousNIAssessment({
 
         {step === "assessment" && currentCard && (
           <div className="space-y-4 flex-1 flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Progress Header */}
+
             <div className="flex justify-between items-end text-sm mb-2 px-1">
               <span className="font-semibold text-foreground">
                 Card {currentCardIndex + 1} <span className="text-muted-foreground font-normal">of {cards.length}</span>
@@ -321,7 +313,6 @@ export function AnonymousNIAssessment({
               </CardHeader>
               <CardContent className="space-y-4">
 
-                {/* Card Version Toggle */}
                 <div className="flex items-center gap-1.5 p-1 bg-muted/50 rounded-lg border w-fit">
                   {versionButtons.map(({ key, label, icon }) => (
                     <button
@@ -341,7 +332,6 @@ export function AnonymousNIAssessment({
                   ))}
                 </div>
 
-                {/* Card Image */}
                 <div className="relative aspect-video bg-muted rounded-md flex items-center justify-center overflow-hidden group">
                   <ImageWithFallback
                     src={getCardImageUrl(currentCard.filename)}
@@ -352,7 +342,6 @@ export function AnonymousNIAssessment({
                     }}
                   />
 
-                  {/* Rotation & Fullscreen Controls */}
                   <div className="absolute bottom-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm p-1 rounded-lg border shadow-sm">
                     <Button variant="ghost" size="icon" onClick={() => setRotation(r => r - 90)} title="Rotate Left 90°">
                       <RotateCcw className="h-5 w-5" />
@@ -366,7 +355,6 @@ export function AnonymousNIAssessment({
                     </Button>
                   </div>
 
-                  {/* Version badge overlay */}
                   <div className="absolute top-3 right-3">
                     <Badge className="bg-primary/90 text-primary-foreground text-[10px] uppercase tracking-wider">
                       {cardVersion === "indianized" ? "🇮🇳 Indianized" : "🌍 Globalized"}
@@ -374,7 +362,6 @@ export function AnonymousNIAssessment({
                   </div>
                 </div>
 
-                {/* Fullscreen Modal */}
                 {isFullscreen && (
                   <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4" onClick={() => setIsFullscreen(false)}>
                     <Button
@@ -394,7 +381,6 @@ export function AnonymousNIAssessment({
                   </div>
                 )}
 
-                {/* Patient Instruction */}
                 <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 flex items-start gap-3 my-4">
                   <Info className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                   <div className="space-y-1">
@@ -409,12 +395,11 @@ export function AnonymousNIAssessment({
                   </div>
                 </div>
 
-                {/* Narrative Input Area */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-sm font-medium">Patient Narrative Input</label>
                     <div className="flex items-center gap-2">
-                      {/* Language Selector Dropdown */}
+
                       <div className="relative">
                         <button
                           onClick={() => setIsLangDropdownOpen(prev => !prev)}
@@ -467,7 +452,6 @@ export function AnonymousNIAssessment({
                       disabled={isSubmitting || isTranscribing}
                     />
 
-                    {/* Audio Recording Button */}
                     <div className="absolute bottom-3 right-3 flex flex-col items-center gap-1.5">
                       {isRecording ? (
                         <button
@@ -520,7 +504,6 @@ export function AnonymousNIAssessment({
                   </div>
                 </div>
 
-                {/* Submit / Next Button */}
                 <div className="flex justify-end pt-4">
                   <Button
                     onClick={handleNextCard}
@@ -540,7 +523,6 @@ export function AnonymousNIAssessment({
                   </Button>
                 </div>
 
-                {/* Submission Confirmation Dialog */}
                 <AlertDialog open={showSubmitConfirm} onOpenChange={setShowSubmitConfirm}>
                   <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
                     <AlertDialogHeader>

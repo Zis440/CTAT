@@ -32,7 +32,6 @@ export function SessionSetupView() {
   const [copied, setCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Fetch balance on load to ensure it's accurate
   useEffect(() => {
     async function fetchBalance() {
       try {
@@ -45,7 +44,6 @@ export function SessionSetupView() {
     fetchBalance();
   }, [setBalance]);
 
-  // Fetch dynamic pricing from the assessments table
   useEffect(() => {
     async function fetchDynamicPricing() {
       try {
@@ -77,7 +75,6 @@ export function SessionSetupView() {
     );
   }
 
-  // Cost Calculation Logic
   const rate = baseRate;
   const baseCost = rate * selectedCards.length;
   const hasDiscount = selectedCards.length > 1;
@@ -96,7 +93,6 @@ export function SessionSetupView() {
     ...(isValidationRequested ? [{ label: "Validate by RCI Verified Psychologist:", value: formatRupees(10000) }] : []),
     { label: "Total Cost:", value: formatRupees(finalCost * 100), isTotal: true },
   ];
-
 
   const handleStartSession = () => {
     if (selectedCards.length === 0) {
@@ -176,8 +172,6 @@ export function SessionSetupView() {
         <title>Session Setup | PsyicHub - Psychological Intelligence</title>
       </Helmet>
 
-
-
       <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
@@ -199,7 +193,6 @@ export function SessionSetupView() {
           </div>
         </div>
 
-        {/* Administration Instructions (Task 16) */}
         <div className="bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-300 rounded-xl p-4 flex gap-3 shadow-sm">
           <Info className="h-5 w-5 shrink-0 mt-0.5" />
           <div className="space-y-2">
@@ -213,7 +206,6 @@ export function SessionSetupView() {
 
         <CardGrid version={cardVersion} />
 
-        {/* Start Session Confirmation Dialog */}
         <PaymentConfirmationModal
           isOpen={showStartConfirm}
           onOpenChange={setShowStartConfirm}
@@ -239,7 +231,6 @@ export function SessionSetupView() {
           }
         />
 
-        {/* Share Link Confirmation Dialog */}
         <PaymentConfirmationModal
           isOpen={showShareConfirm}
           onOpenChange={setShowShareConfirm}
@@ -265,7 +256,6 @@ export function SessionSetupView() {
           }
         />
 
-        {/* Link Dialog */}
         <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>

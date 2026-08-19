@@ -1,47 +1,142 @@
+# ==============================================================================
+# Environment Variables & Sensitive Credentials
+# ==============================================================================
 .env
-backend/.env
-backend/logs/
-backend/model_cache/
-backend/data_store/
-backend/saved_learning/
-backend/ollama_humanizer.log
-backend/patient_database.csv
+.env.*
+!.env.example
+*.env
+credentials.txt
+/test_acc_pass.txt
+*.pem
+*.key
+*.cert
+
+# ==============================================================================
+# Python Virtual Environments & Bytecode
+# ==============================================================================
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
 .venv/
-node_modules/
+ENV/
+build/
+develop-eggs/
 dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
 
-# SQLite databases
+# ==============================================================================
+# Node / Frontend Artifacts
+# ==============================================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.pnpm-debug.log*
+frontend/dist/
+frontend/dist-ssr/
+frontend/.local/
+frontend/.pwa/
+
+# ==============================================================================
+# IDE & Operating System Files
+# ==============================================================================
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ==============================================================================
+# Databases & SQL Dumps
+# ==============================================================================
 *.db
+*.sqlite
+*.sqlite3
+backend/auth.db
+ct_data.sql
+SEED_DB.sql
+seed_db.sql
+SUPERADMIN.sql
+DATABASE_SCHEMA.sql
 
-# Log files
+# ==============================================================================
+# Logs & Audit Dumps
+# ==============================================================================
 *.log
-
-# Generated audit logs
+logs/
+backend/logs/
+backend/ollama_humanizer.log
 backend/audit_logs/
 backend/test_audit_logs/
 
-# OS-specific
-.DS_Store
-Thumbs.db
+# ==============================================================================
+# Runtime & Generated Data Stores
+# ==============================================================================
+backend/data_store/
+backend/model_cache/
+backend/saved_learning/
+backend/patient_database.csv
+backend/outputs/
+backend/sessions/
+backend/uploads/
+backend/data/audio_temp/
+backend/emoji_hits.txt
 
-#acc and pass
-/test_acc_pass.txt
+# ==============================================================================
+# Machine Learning Model Binaries & Weights
+# ==============================================================================
+*.bin
+*.safetensors
+*.gguf
+*.pt
+*.pth
+*.onnx
 
-
-/new-changes me.txt
-/new-changes.txt
-ct_data.sql
+# ==============================================================================
+# One-off / Temporary Scripts, Scratch & Notes
+# ==============================================================================
+new-changes.txt
+new-changes me.txt
 run_conversion.bat
-seed_db.sql
-
-
-/PRE SCREENING
-
-# Ignored scripts
+/PRE SCREENING/
 update_patients*.py
 check_assessments.py
 delete_duplicates.py
-
-credentials.txt
+backend/alter_db.py
+backend/scripts - temp/
+backend/scripts/add_columns.py
+backend/scripts/add_ocr_columns.py
+backend/scripts/audit_schema.py
+backend/scripts/debug_verify.py
+backend/scripts/fix_stuck_verification.py
+backend/scripts/test_sbert_solo.py
+backend/scripts/update_rci_requirement.py
+scratch_*.py

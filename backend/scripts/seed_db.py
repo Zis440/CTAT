@@ -17,7 +17,6 @@ import os
 import uuid
 from datetime import datetime
 
-# ── Path setup ────────────────────────────────────────────────────
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from dotenv import load_dotenv
@@ -32,7 +31,6 @@ if not DATABASE_URL:
     print("❌ DATABASE_URL not found in .env")
     sys.exit(1)
 
-# ── Connect ───────────────────────────────────────────────────────
 try:
     conn = psycopg2.connect(DATABASE_URL)
     conn.autocommit = False
@@ -42,17 +40,14 @@ except Exception as e:
     print(f"❌ Failed to connect: {e}")
     sys.exit(1)
 
-
 try:
 
-    # ── 1. Super Admin ────────────────────────────────────────────
     print("Seeding: super_admin user")
 
     ADMIN_EMAIL     = "admin@ct.com"
     ADMIN_PASSWORD  = "admin123"
     ADMIN_ID        = str(uuid.uuid4())
 
-    # Check if already exists
     cur.execute("SELECT id FROM users WHERE email = %s", (ADMIN_EMAIL,))
     existing = cur.fetchone()
 
@@ -77,8 +72,8 @@ try:
             ADMIN_ID,
             ADMIN_EMAIL,
             hashed,
-            "Psyichub",          # first_name
-            "Admin",                  # last_name
+            "Psyichub",
+            "Admin",
             "super_admin",
             "individual",
             "approved",
@@ -91,8 +86,6 @@ try:
         print(f"     Role     : super_admin")
         print(f"     ID       : {ADMIN_ID}")
 
-
-    # ── 2. Default TAT Pricing ────────────────────────────────────
     print("\nSeeding: test_pricing")
 
     pricing_rows = [
@@ -137,13 +130,10 @@ try:
         ))
         print(f"  ✅ {p['test_type']} — ₹{p['individual_price_paise']//100} (individual) / ₹{p['clinic_price_paise']//100} (clinic)")
 
-
-    # ── Commit ────────────────────────────────────────────────────
     conn.commit()
     print("\n✅ Seed complete.")
     print("\n⚠️  IMPORTANT: Change the admin password after first login.")
     print("   Settings → Change Password in the admin dashboard.\n")
-
 
 except Exception as e:
     conn.rollback()

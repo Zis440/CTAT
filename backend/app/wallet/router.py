@@ -31,9 +31,6 @@ RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
 RAZORPAY_WEBHOOK_SECRET = os.getenv("RAZORPAY_WEBHOOK_SECRET", "")
 
-
-# ── Pydantic schemas ──────────────────────────────────────────────────────────
-
 class TransactionOut(BaseModel):
     id: str
     type: str
@@ -47,16 +44,13 @@ class TransactionOut(BaseModel):
 
     model_config = {"from_attributes": True}
 
-
 class BalanceOut(BaseModel):
     balance_paise: int
     balance_rupees: float
     currency: str
 
-
 class CreateOrderRequest(BaseModel):
-    amount_rupees: float  # e.g., 500.0 for ₹500
-
+    amount_rupees: float
 
 class VerifyPaymentRequest(BaseModel):
     razorpay_order_id: str
@@ -64,13 +58,9 @@ class VerifyPaymentRequest(BaseModel):
     razorpay_signature: str
     amount_rupees: float
 
-
 class DeductRequest(BaseModel):
     amount_paise: int
     description: str
-
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _get_target_user_id(current_user: User, db: Session) -> str:
     """Resolve the actual wallet owner. For clinic staff, this is the clinic admin. For org staff, this is the org admin."""
@@ -84,20 +74,17 @@ def _get_target_user_id(current_user: User, db: Session) -> str:
             return admin.id
     return current_user.id
 
-
 def _get_wallet(user_id: str, db: Session, *, lock: bool = False) -> Wallet:
     query = db.query(Wallet).filter(Wallet.user_id == user_id)
     if lock:
-        query = query.with_for_update()  # PostgreSQL row-level lock (FOR UPDATE)
+        query = query.with_for_update()
     wallet = query.first()
     if not wallet:
-        # Auto-create wallet for users created outside the registration flow
-        # (e.g. admin users created via create_admin.py)
+
         wallet = Wallet(user_id=user_id)
         db.add(wallet)
-        db.flush()  # assign ID without committing — caller owns the transaction
+        db.flush()
     return wallet
-
 
 def _record_transaction(
     wallet: Wallet,
@@ -122,7 +109,6 @@ def _record_transaction(
     db.add(tx)
     return tx
 
-
 def get_assessment_price(user: User, assessment_name: str, db: Session) -> int:
     """Returns the price in paise for the given assessment based on user account type."""
     assessment_row = db.query(Assessment).filter(Assessment.name == assessment_name).first()
@@ -136,9 +122,6 @@ def get_assessment_price(user: User, assessment_name: str, db: Session) -> int:
         else:
             return int(assessment_row.clinic_price * 100) if assessment_row.clinic_price else 2000
     return 3000 if is_individual else 2000
-
-
-# ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.get("/balance", response_model=BalanceOut)
 def get_balance(
@@ -169,41 +152,38 @@ def get_transactions(
 ):
     target_user_id = _get_target_user_id(current_user, db)
     wallet = _get_wallet(target_user_id, db)
-    
+
     query = db.query(WalletTransaction, User.first_name, User.last_name)\
         .outerjoin(User, WalletTransaction.created_by_id == User.id)\
         .filter(WalletTransaction.wallet_id == wallet.id)
 
-    # If staff has permission, they can see all wallet transactions.
-    # Otherwise, they can only see their own transactions.
     if current_user.role in (UserRole.clinic_staff, UserRole.org_staff):
         perms = current_user.module_permissions or {}
         if created_by_me or not perms.get("can_view_wallet_history", False):
             query = query.filter(WalletTransaction.created_by_id == current_user.id)
-        
+
     if type_filter:
         query = query.filter(WalletTransaction.type == type_filter)
     if date_from:
         query = query.filter(WalletTransaction.created_at >= date_from)
     if date_to:
         query = query.filter(WalletTransaction.created_at <= date_to)
-        
+
     total = query.count()
-    
+
     txs = (
         query.order_by(WalletTransaction.created_at.desc())
         .offset(offset)
         .limit(limit)
         .all()
     )
-    
-    # Extract PAT_ IDs and UUIDs to map them to actual patient names
+
     pat_ids = set()
     pat_pattern = re.compile(r"PAT_[A-Z0-9]+|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
     for tx, _, _ in txs:
         if tx.description:
             pat_ids.update(pat_pattern.findall(tx.description))
-            
+
     pat_name_map = {}
     if pat_ids:
         patients = db.query(Patient.id, Patient.first_name, Patient.last_name).filter(Patient.id.in_(pat_ids)).all()
@@ -212,7 +192,7 @@ def get_transactions(
             name = " ".join([p for p in parts if p]).strip()
             if name:
                 pat_name_map[p_id] = name
-                
+
     transactions_out = []
     for tx, first_name, last_name in txs:
         desc = tx.description
@@ -220,7 +200,7 @@ def get_transactions(
             for p_id in pat_pattern.findall(desc):
                 if p_id in pat_name_map:
                     desc = desc.replace(p_id, pat_name_map[p_id])
-                    
+
         transactions_out.append({
             "id": tx.id,
             "type": tx.type.value,
@@ -233,12 +213,11 @@ def get_transactions(
             "created_by_name": f"{first_name or ''} {last_name or ''}".strip() if first_name else None,
             "created_at": tx.created_at.isoformat() if tx.created_at else None,
         })
-    
+
     return {
         "total": total,
         "transactions": transactions_out,
     }
-
 
 @router.post("/recharge/create-order")
 def create_recharge_order(
@@ -280,7 +259,7 @@ def create_recharge_order(
         )
 
     try:
-        import razorpay  # type: ignore
+        import razorpay
         client = razorpay.Client(auth=(key_id, key_secret))
         amount_paise = int(req.amount_rupees * 100)
         order = client.order.create(
@@ -295,7 +274,7 @@ def create_recharge_order(
             "order_id": order["id"],
             "amount_paise": amount_paise,
             "currency": "INR",
-            "key_id": key_id,  # Safe to expose; secret is never sent
+            "key_id": key_id,
         }
     except ImportError:
         raise HTTPException(
@@ -304,7 +283,6 @@ def create_recharge_order(
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create order: {e}")
-
 
 @router.post("/recharge/verify")
 def verify_payment_and_credit(
@@ -320,7 +298,6 @@ def verify_payment_and_credit(
     if not key_secret:
         raise HTTPException(status_code=503, detail="Razorpay not configured")
 
-    # Verify HMAC-SHA256 signature
     expected_sig = hmac.new(
         key_secret.encode(),
         f"{req.razorpay_order_id}|{req.razorpay_payment_id}".encode(),
@@ -334,7 +311,6 @@ def verify_payment_and_credit(
     target_user_id = _get_target_user_id(current_user, db)
     wallet = _get_wallet(target_user_id, db, lock=True)
 
-    # Prevent duplicate credits
     existing = (
         db.query(WalletTransaction)
         .filter(WalletTransaction.razorpay_payment_id == req.razorpay_payment_id)
@@ -369,7 +345,6 @@ def verify_payment_and_credit(
         "new_balance_rupees": wallet.balance_paise / 100.0,
     }
 
-
 @router.post("/recharge/webhook")
 async def razorpay_webhook(
     request: Request,
@@ -382,15 +357,14 @@ async def razorpay_webhook(
     """
     webhook_secret = os.getenv("RAZORPAY_WEBHOOK_SECRET", "")
     if not webhook_secret:
-        # Ignore if webhook secret is not configured
+
         return {"status": "ignored", "reason": "webhook secret not set"}
 
     if not x_razorpay_signature:
         raise HTTPException(status_code=400, detail="Missing signature")
 
     payload_body = await request.body()
-    
-    # Verify HMAC-SHA256 signature
+
     expected_sig = hmac.new(
         webhook_secret.encode(),
         payload_body,
@@ -409,16 +383,16 @@ async def razorpay_webhook(
     event = payload.get("event")
     if event == "payment.captured":
         payment_entity = payload.get("payload", {}).get("payment", {}).get("entity", {})
-        
+
         payment_id = payment_entity.get("id")
         order_id = payment_entity.get("order_id")
         amount_paise = payment_entity.get("amount")
         notes = payment_entity.get("notes", {})
         user_id = notes.get("user_id")
         purpose = notes.get("purpose")
-        
+
         if purpose == "wallet_recharge" and user_id and payment_id:
-            # Check if transaction already exists (idempotency)
+
             existing = (
                 db.query(WalletTransaction)
                 .filter(WalletTransaction.razorpay_payment_id == payment_id)
@@ -439,7 +413,7 @@ async def razorpay_webhook(
                         created_by_id=user_id,
                     )
                     db.commit()
-                    
+
                     audit_service.log_activity(
                         db=db,
                         user_id=user_id,
@@ -447,11 +421,10 @@ async def razorpay_webhook(
                         details={"amount_paise": amount_paise, "razorpay_payment_id": payment_id}
                     )
                 except HTTPException:
-                    # Wallet not found, cannot credit
+
                     pass
 
     return {"status": "ok"}
-
 
 @router.post("/deduct")
 def deduct_balance(

@@ -27,7 +27,6 @@ export function GenerateLinkPage() {
         <title>Generated Links</title>
       </Helmet>
 
-      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-border/40 pb-6">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2">
@@ -80,9 +79,9 @@ export function GenerateLinkPage() {
                         </TableCell>
                         <TableCell>{formatDate(link.used_at)}</TableCell>
                         <TableCell className="flex items-center gap-2">
-                          <a 
-                            href={fullUrl} 
-                            target="_blank" 
+                          <a
+                            href={fullUrl}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-mono"
                             title={fullUrl}
@@ -99,7 +98,7 @@ export function GenerateLinkPage() {
                                     import("@tanstack/react-query").then(m => {
                                       const qc = new m.QueryClient();
                                       qc.invalidateQueries({ queryKey: ['org', 'anonymous-links'] });
-                                      window.location.reload(); // Simple reload for now
+                                      window.location.reload();
                                     });
                                   } catch (e) {
                                     console.error(e);

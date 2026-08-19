@@ -59,8 +59,7 @@ export const clinicAdminRoutes = [
       { path: "clinic/support-requests", element: <ClinicStaffSupportRequestsPage /> },
       { path: "clinic/staff-settings", element: <ClinicStaffSettingsPage /> },
       { path: "clinic/settings", element: <ClinicSettingsPage /> },
-      
-      // Shared pages that clinic admin accesses via prefixed paths
+
       { path: "clinic/dashboard-analysis", element: <AnalysisDashboard /> },
       { path: "clinic/session-history/result", element: <AnalysisDashboard /> },
       { path: "clinic/session/NI/report/synthesizing", element: <AnalysisDashboard /> },

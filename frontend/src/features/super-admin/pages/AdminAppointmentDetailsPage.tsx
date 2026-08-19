@@ -57,8 +57,6 @@ import {
 } from "@/features/super-admin/services/adminService";
 import { format, parseISO } from "date-fns";
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-
 const APPOINTMENT_STATUSES = [
   { value: "scheduled", label: "Scheduled" },
   { value: "completed", label: "Completed" },
@@ -87,7 +85,6 @@ function formatCreatedAt(ts: string) {
   try { return format(parseISO(ts), "d MMM yyyy, h:mm a"); } catch { return ts; }
 }
 
-// ── Field display helper ─────────────────────────────────────────────────────
 function InfoField({
   icon,
   label,
@@ -112,7 +109,6 @@ function EmptyVal() {
   return <span className="text-muted-foreground italic font-normal">Not specified</span>;
 }
 
-// ── Loading skeleton ─────────────────────────────────────────────────────────
 function LoadingSkeleton() {
   return (
     <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -154,7 +150,6 @@ function LoadingSkeleton() {
   );
 }
 
-// ── Component ────────────────────────────────────────────────────────────────
 export function AdminAppointmentDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -164,7 +159,6 @@ export function AdminAppointmentDetailsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Editable fields
   const [apptDate, setApptDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [durationMinutes, setDurationMinutes] = useState(60);
@@ -172,7 +166,6 @@ export function AdminAppointmentDetailsPage() {
   const [purpose, setPurpose] = useState("");
   const [notes, setNotes] = useState("");
 
-  // ── Load ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!id) return;
     setIsLoading(true);
@@ -186,7 +179,7 @@ export function AdminAppointmentDetailsPage() {
         navigate("/admin/appointments");
       })
       .finally(() => setIsLoading(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [id]);
 
   const syncForm = (data: AppointmentAdminOut) => {
@@ -203,7 +196,6 @@ export function AdminAppointmentDetailsPage() {
     setIsEditing(checked);
   };
 
-  // ── Save ──────────────────────────────────────────────────────────────────
   const handleSave = async () => {
     if (!appt || !id) return;
     setIsSaving(true);
@@ -217,7 +209,7 @@ export function AdminAppointmentDetailsPage() {
         notes: notes.trim() || undefined,
       };
       const updated = await updateAdminAppointment(id, payload);
-      // Merge back (the PATCH returns AppointmentOut without names, so preserve them)
+
       const merged: AppointmentAdminOut = {
         ...updated,
         psychologist_name: appt.psychologist_name,
@@ -242,7 +234,6 @@ export function AdminAppointmentDetailsPage() {
     toast.info("Changes discarded.");
   };
 
-  // ── Render ────────────────────────────────────────────────────────────────
   if (isLoading) return <LoadingSkeleton />;
   if (!appt) return null;
 
@@ -255,7 +246,6 @@ export function AdminAppointmentDetailsPage() {
         <title>Appointment — {appt.patient_name ?? appt.id}  | PsyicHub - Psychological Intelligence</title>
       </Helmet>
 
-      {/* Top bar */}
       <div className="flex items-center justify-end">
 
         <motion.div
@@ -279,7 +269,6 @@ export function AdminAppointmentDetailsPage() {
         </motion.div>
       </div>
 
-      {/* Identity card */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -289,12 +278,11 @@ export function AdminAppointmentDetailsPage() {
           <div className="h-1 bg-gradient-to-r from-primary/60 via-primary to-primary/60" />
           <CardContent className="pt-6">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-              {/* Avatar */}
+
               <div className="h-16 w-16 rounded-2xl border-2 border-primary/20 bg-primary/10 shrink-0 flex items-center justify-center text-2xl font-bold text-primary shadow-inner">
                 {patientInitial}
               </div>
 
-              {/* Main info */}
               <div className="flex-1 text-center sm:text-left space-y-3 w-full">
                 <h2 className="text-2xl font-bold tracking-tight">
                   {appt.patient_name ?? "Unknown Patient"}
@@ -341,10 +329,8 @@ export function AdminAppointmentDetailsPage() {
         </Card>
       </motion.div>
 
-      {/* Detail grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-        {/* Scheduling details */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -359,7 +345,7 @@ export function AdminAppointmentDetailsPage() {
               <CardDescription>Date, time, and duration of the appointment.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Date */}
+
               <div className="space-y-1.5">
                 <Label className="text-muted-foreground font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
                   <CalendarIcon className="h-3.5 w-3.5" /> Appointment Date
@@ -378,7 +364,6 @@ export function AdminAppointmentDetailsPage() {
                 )}
               </div>
 
-              {/* Start time */}
               <div className="space-y-1.5">
                 <Label className="text-muted-foreground font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
                   <Clock className="h-3.5 w-3.5" /> Start Time
@@ -397,7 +382,6 @@ export function AdminAppointmentDetailsPage() {
                 )}
               </div>
 
-              {/* Duration */}
               <div className="space-y-1.5">
                 <Label className="text-muted-foreground font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
                   <Clock className="h-3.5 w-3.5" /> Duration (minutes)
@@ -422,7 +406,6 @@ export function AdminAppointmentDetailsPage() {
           </Card>
         </motion.div>
 
-        {/* People */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -437,7 +420,7 @@ export function AdminAppointmentDetailsPage() {
               <CardDescription>Patient and assigned psychologist.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
-              {/* Patient */}
+
               <div className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/20">
                 <div className="h-9 w-9 rounded-xl bg-primary/10 border border-primary/15 flex items-center justify-center font-bold text-primary text-sm shrink-0">
                   {patientInitial}
@@ -449,7 +432,6 @@ export function AdminAppointmentDetailsPage() {
                 </div>
               </div>
 
-              {/* Psychologist */}
               <div className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/20">
                 <div className="h-9 w-9 rounded-xl bg-violet-500/10 border border-violet-500/15 flex items-center justify-center font-bold text-violet-500 text-sm shrink-0">
                   {staffInitial}
@@ -464,7 +446,6 @@ export function AdminAppointmentDetailsPage() {
                 </div>
               </div>
 
-              {/* Clinic */}
               <InfoField
                 icon={<Building2 className="h-3.5 w-3.5" />}
                 label="Clinic"
@@ -483,7 +464,6 @@ export function AdminAppointmentDetailsPage() {
           </Card>
         </motion.div>
 
-        {/* Status & Purpose */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -498,7 +478,7 @@ export function AdminAppointmentDetailsPage() {
               <CardDescription>Current status and the reason for the appointment.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Status */}
+
               <div className="space-y-1.5">
                 <Label className="text-muted-foreground font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
                   <Activity className="h-3.5 w-3.5" /> Status
@@ -528,7 +508,6 @@ export function AdminAppointmentDetailsPage() {
                 )}
               </div>
 
-              {/* Purpose */}
               <div className="space-y-1.5">
                 <Label className="text-muted-foreground font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
                   <FileText className="h-3.5 w-3.5" /> Purpose / Reason
@@ -550,7 +529,6 @@ export function AdminAppointmentDetailsPage() {
           </Card>
         </motion.div>
 
-        {/* Notes */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -588,7 +566,6 @@ export function AdminAppointmentDetailsPage() {
         </motion.div>
       </div>
 
-      {/* Record metadata */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -624,7 +601,6 @@ export function AdminAppointmentDetailsPage() {
         </Card>
       </motion.div>
 
-      {/* Save / Discard bar */}
       {isEditing && (
         <motion.div
           initial={{ opacity: 0, y: 12 }}

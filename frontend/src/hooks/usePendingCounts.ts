@@ -10,12 +10,11 @@ export interface PendingCounts {
 
 export function usePendingCounts() {
   const { user } = useAuthStore();
-  
-  // Only fetch if the user is an admin or psychologist
+
   const isValidRole = user?.role && [
-    "super_admin", 
-    "clinic_admin", 
-    "org_admin", 
+    "super_admin",
+    "clinic_admin",
+    "org_admin",
     "individual_psychologist"
   ].includes(user.role);
 
@@ -26,6 +25,6 @@ export function usePendingCounts() {
       return data;
     },
     enabled: !!user && isValidRole,
-    refetchInterval: 60000, // Poll every minute
+    refetchInterval: 60000,
   });
 }

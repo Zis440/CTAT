@@ -13,17 +13,11 @@ ADDED:
 ✔ never silent hang
 """
 
-# ============================================================
-# HF SAFETY (PREVENTS HIDDEN DOWNLOAD BLOCKS)
-# ============================================================
-
 import os
 import sys
 os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
 os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
-# ============================================================
 
 import spacy
 import torch
@@ -40,23 +34,16 @@ import time
 
 logger = logging.getLogger(__name__)
 
-
-# ============================================================
-# SAFE LOAD WRAPPER
-# ============================================================
-
 def safe_load(name, fn):
     """Load a model, suppressing warnings. Returns (model, success_bool)."""
     start = time.time()
 
-    # Save real stdout/stderr — some libraries (PyABSA) hijack them
     _real_stdout = sys.stdout
     _real_stderr = sys.stderr
 
     try:
         obj = fn()
 
-        # Force-restore stdout/stderr in case the library replaced them
         sys.stdout = _real_stdout
         sys.stderr = _real_stderr
 
@@ -71,20 +58,10 @@ def safe_load(name, fn):
         logger.debug(f"Model {name} failed: {e}")
         return None, False
 
-
-# ============================================================
-# DEVICE RESOLUTION
-# ============================================================
-
 def _resolve_torch_device(use_gpu: bool):
     if use_gpu and torch.cuda.is_available():
         return torch.device("cuda"), 0
     return torch.device("cpu"), -1
-
-
-# ============================================================
-# MAIN CLASS
-# ============================================================
 
 class EnhancedNLPProcessor:
 
@@ -103,13 +80,8 @@ class EnhancedNLPProcessor:
         self._validate_core_models()
         self._startup_report()
 
-    # =========================================================
-    # MODEL LOADING
-    # =========================================================
-
     def _load_models(self):
 
-        # ---------- spaCy ----------
         def load_spacy():
             try:
                 return spacy.load(self.config.SPACY_MODEL)
@@ -119,20 +91,14 @@ class EnhancedNLPProcessor:
 
         self.nlp, self._model_status["spacy"] = safe_load("spaCy", load_spacy)
 
-        # ---------- KeyBERT ----------
         self.kw_model, self._model_status["keybert"] = safe_load(
             "KeyBERT",
             lambda: KeyBERT(model=self.config.KEYBERT_MODEL)
         )
 
-        # ---------- PyABSA ----------
-        # SKIPPED: PyABSA's DeBERTa model causes a native segfault (0xC0000005)
-        # on this environment. Aspect-sentiment triplet extraction is disabled
-        # but all other analysis remains fully functional.
         self.aspect_extractor = None
         self._model_status["pyabsa"] = False
 
-        # ---------- Sentence-BERT ----------
         def load_sentencebert():
             from sentence_transformers import SentenceTransformer
             model = SentenceTransformer(
@@ -151,7 +117,6 @@ class EnhancedNLPProcessor:
             load_sentencebert
         )
 
-        # ---------- RoBERTa ----------
         def load_roberta():
             tokenizer = AutoTokenizer.from_pretrained(
                 self.config.ROBERTA_SENTIMENT_MODEL,
@@ -174,7 +139,6 @@ class EnhancedNLPProcessor:
             load_roberta
         )
 
-        # ---------- GoEmotions ----------
         def load_goemotions():
             model_name = getattr(
                 self.config,
@@ -207,13 +171,11 @@ class EnhancedNLPProcessor:
             load_goemotions
         )
 
-        # ---------- VADER ----------
         self.vader, self._model_status["vader"] = safe_load(
             "VADER",
             SentimentIntensityAnalyzer
         )
 
-        # ---------- NLTK ----------
         print(">>> START NLTK load")
         try:
             nltk.download("stopwords", quiet=True)
@@ -222,10 +184,6 @@ class EnhancedNLPProcessor:
         except:
             self.stopwords = set()
         print("<<< DONE NLTK load")
-
-    # =========================================================
-    # VALIDATION
-    # =========================================================
 
     def _validate_core_models(self):
         required = ["spacy", "keybert", "sentence_bert"]
@@ -236,10 +194,6 @@ class EnhancedNLPProcessor:
     def _startup_report(self):
         for k, v in self._model_status.items():
             logger.debug(f"  {k:<15} {'READY' if v else 'DISABLED'}")
-
-    # =========================================================
-    # PUBLIC API (UNCHANGED)
-    # =========================================================
 
     def extract_keywords(self, text: str, top_n: int = 10):
         if not self.kw_model:
@@ -261,7 +215,7 @@ class EnhancedNLPProcessor:
                 r = self.sentiment_pipeline(text, truncation=True)[0]
                 label = r.get('label', '').upper()
                 score = r['score']
-                # Convert RoBERTa's (label, probability) → signed compound
+
                 if 'NEGATIVE' in label or label in ('LABEL_0',):
                     roberta_compound = -score
                 elif 'POSITIVE' in label or label in ('LABEL_1',):
@@ -269,7 +223,7 @@ class EnhancedNLPProcessor:
                 else:
                     roberta_compound = 0.0
                 result['roberta_compound'] = roberta_compound
-                # Blend VADER and RoBERTa (both contribute)
+
                 result['compound'] = (vader_compound + roberta_compound) / 2.0
             except:
                 pass

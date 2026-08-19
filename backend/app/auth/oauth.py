@@ -24,9 +24,6 @@ from app.models.wallet import Wallet
 
 router = APIRouter(prefix="/oauth", tags=["oauth"])
 
-
-# ── OAuth Configuration (from environment) ────────────────────────────────────
-
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
 GOOGLE_REDIRECT_URI = os.getenv(
@@ -44,8 +41,6 @@ MICROSOFT_TENANT = os.getenv("MICROSOFT_TENANT", "common")
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
-# ── Provider endpoints ────────────────────────────────────────────────────────
-
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
@@ -58,15 +53,9 @@ MICROSOFT_TOKEN_URL_TEMPLATE = (
 )
 MICROSOFT_USERINFO_URL = "https://graph.microsoft.com/v1.0/me"
 
-
-# ── State helpers ─────────────────────────────────────────────────────────────
-
 def generate_state() -> str:
     """Generate a cryptographically random state string for CSRF protection."""
     return secrets.token_urlsafe(32)
-
-
-# ── Authorization URL builders ────────────────────────────────────────────────
 
 def build_google_auth_url(state: str) -> str:
     """Build the Google OAuth 2.0 consent screen URL."""
@@ -81,7 +70,6 @@ def build_google_auth_url(state: str) -> str:
     }
     return f"{GOOGLE_AUTH_URL}?{urllib.parse.urlencode(params)}"
 
-
 def build_microsoft_auth_url(state: str) -> str:
     """Build the Microsoft OAuth 2.0 consent screen URL."""
     params = {
@@ -95,16 +83,13 @@ def build_microsoft_auth_url(state: str) -> str:
     base = MICROSOFT_AUTH_URL_TEMPLATE.format(tenant=MICROSOFT_TENANT)
     return f"{base}?{urllib.parse.urlencode(params)}"
 
-
-# ── Token exchange ────────────────────────────────────────────────────────────
-
 def exchange_code_for_google(code: str) -> dict:
     """
     Exchange a Google authorization code for user information.
 
     Returns dict with keys: id, email, name, picture
     """
-    # Step 1: Exchange code for access token
+
     token_response = requests.post(
         GOOGLE_TOKEN_URL,
         data={
@@ -119,7 +104,6 @@ def exchange_code_for_google(code: str) -> dict:
     token_response.raise_for_status()
     access_token = token_response.json()["access_token"]
 
-    # Step 2: Fetch user info
     user_response = requests.get(
         GOOGLE_USERINFO_URL,
         headers={"Authorization": f"Bearer {access_token}"},
@@ -127,7 +111,6 @@ def exchange_code_for_google(code: str) -> dict:
     )
     user_response.raise_for_status()
     return user_response.json()
-
 
 def exchange_code_for_microsoft(code: str) -> dict:
     """
@@ -137,7 +120,6 @@ def exchange_code_for_microsoft(code: str) -> dict:
     """
     token_url = MICROSOFT_TOKEN_URL_TEMPLATE.format(tenant=MICROSOFT_TENANT)
 
-    # Step 1: Exchange code for access token
     token_response = requests.post(
         token_url,
         data={
@@ -153,7 +135,6 @@ def exchange_code_for_microsoft(code: str) -> dict:
     token_response.raise_for_status()
     access_token = token_response.json()["access_token"]
 
-    # Step 2: Fetch user info from Microsoft Graph
     user_response = requests.get(
         MICROSOFT_USERINFO_URL,
         headers={"Authorization": f"Bearer {access_token}"},
@@ -161,9 +142,6 @@ def exchange_code_for_microsoft(code: str) -> dict:
     )
     user_response.raise_for_status()
     return user_response.json()
-
-
-# ── User creation / account linking ───────────────────────────────────────────
 
 def create_or_link_oauth_user(
     provider: str,
@@ -181,7 +159,7 @@ def create_or_link_oauth_user(
       2. If a user with this email exists → link the OAuth identity (account linking)
       3. Otherwise → create a new user (new OAuth sign-up)
     """
-    # 1. Check for existing OAuth link
+
     existing = (
         db.query(User)
         .filter(
@@ -191,7 +169,7 @@ def create_or_link_oauth_user(
         .first()
     )
     if existing:
-        # Update profile from provider (name/avatar may change)
+
         if name:
             parts = name.split(None, 1)
             existing.first_name = parts[0]
@@ -202,7 +180,6 @@ def create_or_link_oauth_user(
         db.refresh(existing)
         return existing
 
-    # 2. Check for existing account with same email (link accounts)
     by_email = db.query(User).filter(User.email == email).first()
     if by_email:
         by_email.oauth_provider = provider
@@ -213,12 +190,11 @@ def create_or_link_oauth_user(
         db.refresh(by_email)
         return by_email
 
-    # 3. Create brand-new user
     _name = name or email.split("@")[0]
     _parts = _name.split(None, 1)
     new_user = User(
         email=email,
-        hashed_password=None,  # OAuth-only, no password
+        hashed_password=None,
         first_name=_parts[0],
         last_name=_parts[1] if len(_parts) > 1 else None,
         oauth_provider=provider,
@@ -229,9 +205,8 @@ def create_or_link_oauth_user(
         verification_status=VerificationStatus.not_submitted,
     )
     db.add(new_user)
-    db.flush()  # Populate new_user.id
+    db.flush()
 
-    # Auto-create wallet for the new user
     wallet = Wallet(user_id=new_user.id)
     db.add(wallet)
 
@@ -239,16 +214,12 @@ def create_or_link_oauth_user(
     db.refresh(new_user)
     return new_user
 
-
-# ── Router Endpoints ──────────────────────────────────────────────────────────
-
 @router.get("/google")
 def login_google():
     """Redirect to Google's OAuth consent screen."""
     state = generate_state()
     url = build_google_auth_url(state)
     return RedirectResponse(url)
-
 
 @router.get("/google/callback")
 def callback_google(code: str = Query(None), error: str = Query(None), db: Session = Depends(get_db)):
@@ -282,14 +253,12 @@ def callback_google(code: str = Query(None), error: str = Query(None), db: Sessi
     token = create_access_token({"sub": user.id, "role": user.role.value if isinstance(user.role, UserRole) else user.role})
     return RedirectResponse(f"{FRONTEND_URL}/auth/oauth/callback?token={token}")
 
-
 @router.get("/microsoft")
 def login_microsoft():
     """Redirect to Microsoft's OAuth consent screen."""
     state = generate_state()
     url = build_microsoft_auth_url(state)
     return RedirectResponse(url)
-
 
 @router.get("/microsoft/callback")
 def callback_microsoft(code: str = Query(None), error: str = Query(None), db: Session = Depends(get_db)):
@@ -304,7 +273,6 @@ def callback_microsoft(code: str = Query(None), error: str = Query(None), db: Se
     except Exception as e:
         return RedirectResponse(f"{FRONTEND_URL}/login?error=Failed+to+exchange+token")
 
-    # Microsoft Graph returns mail or userPrincipalName
     email = user_info.get("mail") or user_info.get("userPrincipalName")
     if not email:
         return RedirectResponse(f"{FRONTEND_URL}/login?error=Microsoft+did+not+provide+an+email")
@@ -314,7 +282,7 @@ def callback_microsoft(code: str = Query(None), error: str = Query(None), db: Se
         provider_id=user_info["id"],
         email=email,
         name=user_info.get("displayName", ""),
-        avatar_url=None,  # Avatar requires a separate Graph API call usually
+        avatar_url=None,
         db=db,
     )
 

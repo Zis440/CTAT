@@ -44,14 +44,12 @@ export function SettingsPage() {
   const { user, setUser, markVerificationSeen, logout } = useAuthStore();
   const navigate = useNavigate();
 
-  // Clear verification status dot when user visits settings page
   useEffect(() => {
     if (user && (user.verification_status === "approved" || user.verification_status === "rejected")) {
       markVerificationSeen(user.verification_status);
     }
   }, [user, markVerificationSeen]);
 
-  // Profile state
   const [title, setTitle] = useState(user?.title || "");
   const [firstName, setFirstName] = useState(user?.first_name || "");
   const [lastName, setLastName] = useState(user?.last_name || "");
@@ -67,7 +65,6 @@ export function SettingsPage() {
   const [isUploadingSignature, setIsUploadingSignature] = useState(false);
   const [isRemovingSignature, setIsRemovingSignature] = useState(false);
 
-  // Track whether profile form has unsaved changes
   const hasProfileChanges =
     title !== (user?.title || "") ||
     firstName !== (user?.first_name || "") ||
@@ -89,7 +86,6 @@ export function SettingsPage() {
     toast.info("Changes discarded");
   };
 
-  // Password state
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
@@ -98,7 +94,6 @@ export function SettingsPage() {
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
 
-  // AlertDialog state
   const [showProfileConfirm, setShowProfileConfirm] = useState(false);
   const [showDomainChangeConfirm, setShowDomainChangeConfirm] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
@@ -122,7 +117,6 @@ export function SettingsPage() {
       setShowDeleteConfirm(false);
     }
   };
-
 
   const getInitials = (firstName: string, lastName?: string) => {
     const initials = firstName.charAt(0) + (lastName ? lastName.charAt(0) : "");
@@ -165,7 +159,6 @@ export function SettingsPage() {
     if (!e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0];
 
-    // Validate file size (e.g., 5MB max)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Image must be smaller than 5MB");
       return;
@@ -182,7 +175,7 @@ export function SettingsPage() {
       toast.error(err.response?.data?.detail || "Failed to update avatar");
     } finally {
       setIsUploadingAvatar(false);
-      // Reset input
+
       e.target.value = "";
     }
   };
@@ -191,7 +184,6 @@ export function SettingsPage() {
     if (!e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0];
 
-    // Validate file size (e.g., 5MB max)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Image must be smaller than 5MB");
       return;
@@ -208,7 +200,7 @@ export function SettingsPage() {
       toast.error(err.response?.data?.detail || "Failed to update e-signature");
     } finally {
       setIsUploadingSignature(false);
-      // Reset input
+
       e.target.value = "";
     }
   };
@@ -263,7 +255,7 @@ export function SettingsPage() {
 
   const handlePasswordFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Pre-validate before showing dialog
+
     if (!currentPassword) {
       toast.error("Please enter your current password.");
       return;
@@ -285,9 +277,8 @@ export function SettingsPage() {
         <title>Settings | PsyicHub - Psychological Intelligence</title>
       </Helmet>
 
-
       <div className="space-y-8 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-        {/* Header */}
+
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -303,7 +294,6 @@ export function SettingsPage() {
           </p>
         </motion.div>
 
-        {/* Tabs */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -321,10 +311,9 @@ export function SettingsPage() {
               </TabsTrigger>
             </TabsList>
 
-            {/* PROFILE TAB */}
             <TabsContent value="profile">
               <div className="space-y-6">
-                {/* Avatar */}
+
                 <Card className="border-primary/10 bg-background/80 backdrop-blur-sm">
                   <CardContent className="pt-6">
                     <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-5">
@@ -377,7 +366,6 @@ export function SettingsPage() {
                   </CardContent>
                 </Card>
 
-                {/* Profile Form */}
                 <Card className="border-primary/10 bg-background/80 backdrop-blur-sm">
                   <CardContent className="pt-6">
                     <form onSubmit={handleProfileFormSubmit} className="space-y-6">
@@ -530,7 +518,6 @@ export function SettingsPage() {
                   </CardContent>
                 </Card>
 
-                {/* Account Assessment Authority */}
                 <Card
                   className="border-primary/10 bg-background/80 backdrop-blur-sm cursor-pointer hover:border-primary/30 transition-all"
                   onClick={() => navigate("/verification")}
@@ -561,9 +548,8 @@ export function SettingsPage() {
                   </CardContent>
                 </Card>
 
-                {/* RCI Verification Status */}
                 {user?.professional_domain === "Clinical Psychologist" && !!user?.rci_number && (
-                  <Card 
+                  <Card
                     className="border-primary/20 bg-background/80 backdrop-blur-sm cursor-pointer hover:border-primary/50 transition-colors"
                     onClick={() => navigate("/verification")}
                   >
@@ -609,7 +595,6 @@ export function SettingsPage() {
                   </Card>
                 )}
 
-                {/* E-Signature Upload (Individual Only) */}
                 {user?.account_type === "individual" && (
                   <Card className="border-primary/10 bg-background/80 backdrop-blur-sm">
                     <CardContent className="pt-6 flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-5">
@@ -656,7 +641,7 @@ export function SettingsPage() {
                             )}
                           </label>
                         </Button>
-                        
+
                         {user?.e_signature_path && (
                           <Button
                             type="button"
@@ -680,10 +665,9 @@ export function SettingsPage() {
               </div>
             </TabsContent>
 
-            {/* SECURITY TAB */}
             <TabsContent value="security">
               <div className="space-y-6">
-                {/* Change Password */}
+
                 <Card className="border-primary/10 bg-background/80 backdrop-blur-sm">
                   <CardHeader>
                     <CardTitle className="text-lg font-bold text-text">
@@ -809,7 +793,6 @@ export function SettingsPage() {
                   </CardContent>
                 </Card>
 
-                {/* Active Sessions */}
                 <Card className="border-primary/10 bg-background/80 backdrop-blur-sm">
                   <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="space-y-1.5">
@@ -851,7 +834,6 @@ export function SettingsPage() {
                   </CardContent>
                 </Card>
 
-                {/* Danger Zone */}
                 <Card className="border-destructive/15 bg-background/80 backdrop-blur-sm">
                   <CardHeader>
                     <CardTitle className="text-lg font-bold text-destructive">
@@ -891,7 +873,6 @@ export function SettingsPage() {
           </Tabs>
         </motion.div>
 
-        {/* Profile Save Confirmation */}
         <AlertDialog open={showProfileConfirm} onOpenChange={setShowProfileConfirm}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -909,7 +890,6 @@ export function SettingsPage() {
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* Domain Change Confirmation */}
         <AlertDialog open={showDomainChangeConfirm} onOpenChange={setShowDomainChangeConfirm}>
           <AlertDialogContent className="border-destructive/20">
             <AlertDialogHeader>
@@ -935,7 +915,6 @@ export function SettingsPage() {
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* Password Change Confirmation */}
         <AlertDialog open={showPasswordConfirm} onOpenChange={setShowPasswordConfirm}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -953,7 +932,6 @@ export function SettingsPage() {
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* Sign Out All Sessions Confirmation */}
         <AlertDialog open={showSignOutConfirm} onOpenChange={setShowSignOutConfirm}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -983,8 +961,6 @@ export function SettingsPage() {
           </AlertDialogContent>
         </AlertDialog>
 
-
-        {/* Delete Account Confirmation */}
         <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -1016,7 +992,6 @@ export function SettingsPage() {
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* Signature Delete Confirmation */}
         <AlertDialog open={showSignatureDeleteConfirm} onOpenChange={setShowSignatureDeleteConfirm}>
           <AlertDialogContent>
             <AlertDialogHeader>

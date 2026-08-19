@@ -33,7 +33,6 @@ export function ClinicAdminGeneratedLinksPage() {
         <title>Generated Links  | PsyicHub - Psychological Intelligence</title>
       </Helmet>
 
-      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-border/40 pb-6">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2">
@@ -45,7 +44,6 @@ export function ClinicAdminGeneratedLinksPage() {
           </p>
         </div>
       </div>
-
 
       <Card className="border-primary/10 bg-background/50 backdrop-blur-sm">
         <CardHeader>

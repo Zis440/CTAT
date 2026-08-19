@@ -2,7 +2,6 @@ from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
-# Auth Schemas
 class Token(BaseModel):
     access_token: str
     refresh_token: str
@@ -18,7 +17,6 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
-# User Schemas
 class UserBase(BaseModel):
     email: EmailStr
     name: str
@@ -34,13 +32,12 @@ class UserResponse(UserBase):
     class Config:
         from_attributes = True
 
-# Assessment Schemas
 class QuestionnaireResponseInput(BaseModel):
     question_id: str
     score: int
 
 class GameMetricInput(BaseModel):
-    game_type: str  # BD, SI, DS, MR, VC, AR, SS, VP, IN, CD, STORY
+    game_type: str
     score: float
     movement_count: int
     completion_time_seconds: float

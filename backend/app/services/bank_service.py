@@ -19,14 +19,12 @@ from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
-
 @dataclass
 class BankVerificationResult:
     verified: bool
     account_holder_name: Optional[str] = None
     message: Optional[str] = None
     reference_id: Optional[str] = None
-
 
 class BankVerificationService:
     """Razorpay-based bank account verification via Fund Account Validation."""
@@ -69,7 +67,7 @@ class BankVerificationService:
             BankVerificationResult with verification status
         """
         if not self.enabled or not self._client:
-            # ── DEV MODE ──────────────────────────────────────────────────
+
             logger.info(
                 f"🏦 BANK VERIFICATION (DEV MODE)\n"
                 f"   Account: {account_number}\n"
@@ -85,8 +83,7 @@ class BankVerificationService:
             )
 
         try:
-            # Create a Fund Account Validation request
-            # Razorpay validates the account by performing a penny drop (₹1 credit)
+
             payload = {
                 "account_number": account_number,
                 "ifsc": ifsc_code.upper(),
@@ -103,7 +100,6 @@ class BankVerificationService:
                 },
             }
 
-            # Use Razorpay's Fund Account Validation API
             response = self._client.utility.verify_bank_account(payload)
 
             status = response.get("status", "")
@@ -111,7 +107,7 @@ class BankVerificationService:
             ref_id = response.get("id", "")
 
             if status == "completed":
-                # Name matching — fuzzy check
+
                 name_matches = self._name_matches(beneficiary_name, registered_name)
 
                 if name_matches:
@@ -159,9 +155,7 @@ class BankVerificationService:
             return False
         e = " ".join(expected.strip().lower().split())
         a = " ".join(actual.strip().lower().split())
-        # Exact match or one contains the other
+
         return e == a or e in a or a in e
 
-
-# Singleton instance
 bank_service = BankVerificationService()

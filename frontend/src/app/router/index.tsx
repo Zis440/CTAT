@@ -20,6 +20,5 @@ export const router = createBrowserRouter([
   ...individualRoutes,
   ...sharedRoutes,
 
-  // Catch-all 404 page
   { path: "*", element: <NotFoundPage /> },
 ]);

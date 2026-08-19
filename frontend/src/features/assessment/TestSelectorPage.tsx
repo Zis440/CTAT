@@ -1,5 +1,3 @@
-// src/features/assessment/TestSelectorPage.tsx
-// Step 1 of the assessment flow: pick which test to run.
 
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -26,7 +24,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-// Map registry icon strings → Lucide components
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   brain: Brain,
   heart: Heart,
@@ -52,12 +49,11 @@ export function TestSelectorPage() {
     }
   }, [user?.role]);
 
-  // Dynamic pricing and assessment info fetched from the database
   const [dbAssessments, setDbAssessments] = useState<any[]>([]);
   const [pricingMap, setPricingMap] = useState<Record<string, {clinic: number | null, psychologist: number | null, org: number | null}>>({});
 
   useEffect(() => {
-    // Fetch live pricing from the database
+
     const fetchPricing = async () => {
       try {
         const response = await apiClient.get("/assessments/");
@@ -90,9 +86,9 @@ export function TestSelectorPage() {
   const isIndividual = user?.account_type === "individual";
   const isOrg = user?.role === "org_admin" || user?.role === "org_staff";
   const isStaff = user?.role === "clinic_staff" || user?.role === "org_staff";
-  const canAssess = !isStaff || 
-    (user?.module_permissions?.assessments !== undefined 
-      ? user.module_permissions.assessments 
+  const canAssess = !isStaff ||
+    (user?.module_permissions?.assessments !== undefined
+      ? user.module_permissions.assessments
       : user?.can_assess);
 
   const setTestType = useSessionStore((state: any) => state.setTestType);
@@ -105,7 +101,7 @@ export function TestSelectorPage() {
     }
 
     const dbPricing = pricingMap[selectedTest.slug] || pricingMap[selectedTest.name.toLowerCase()];
-    const dbPrice = dbPricing 
+    const dbPrice = dbPricing
       ? (isIndividual ? dbPricing.psychologist : (isOrg ? dbPricing.org : dbPricing.clinic))
       : null;
     const price = dbPrice != null ? dbPrice : selectedTest.creditCost;
@@ -132,7 +128,7 @@ export function TestSelectorPage() {
   if (user?.role === "clinic_staff") roleSuffix = "Clinic Staff";
   if (user?.role === "org_admin") roleSuffix = "Org Admin";
   if (user?.role === "org_staff") roleSuffix = "Org Staff";
-  
+
   const pageTitle = `Select Assessment | ${roleSuffix}`;
 
   const isOrgAccount = user?.role === "org_admin" || user?.role === "org_staff";
@@ -202,7 +198,7 @@ export function TestSelectorPage() {
       </Helmet>
 
       <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-        {/* Header */}
+
         <div className="mb-8">
           <h2 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-2">
             <ClipboardList className="h-7 w-7 text-primary" />
@@ -214,7 +210,7 @@ export function TestSelectorPage() {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8 items-start">
-          {/* Left Column: Test Grid */}
+
           <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {(() => {
               const isOrgAccount = user?.role === "org_admin" || user?.role === "org_staff";
@@ -231,11 +227,10 @@ export function TestSelectorPage() {
                 }
                 return registryTest;
               });
-              
+
               if (isOrgAccount) {
-                // Filter out advance and intermediate screening for all org accounts so staff and admin views are identical
                 displayTests = displayTests.filter(t => t.slug !== "advance-screening" && t.slug !== "intermediate-screening");
-                
+
                 displayTests.sort((a, b) => {
                   const getRank = (slug: string) => {
                     if (slug === "screening-tool") return 1;
@@ -247,7 +242,6 @@ export function TestSelectorPage() {
                   return getRank(a.slug) - getRank(b.slug);
                 });
               } else {
-                // For non-org accounts, keep TAT first
                 displayTests.sort((a, b) => {
                   if (a.slug === "tat") return -1;
                   if (b.slug === "tat") return 1;
@@ -275,7 +269,6 @@ export function TestSelectorPage() {
             })}
           </div>
 
-          {/* Right Column: Selected Test Detail + Continue */}
           <div className="w-full lg:w-80 shrink-0 lg:sticky lg:top-20">
             {selectedTest && selectedTest.status === "active" ? (
               <Card className="border-primary/30 shadow-md">
@@ -306,13 +299,12 @@ export function TestSelectorPage() {
                       <span className="text-sm font-medium">Test Fee</span>
                       {(() => {
                         const dbPricing = pricingMap[selectedTest.slug] || pricingMap[selectedTest.name.toLowerCase()];
-                        const dbPrice = dbPricing 
+                        const dbPrice = dbPricing
                           ? (isIndividual ? dbPricing.psychologist : (isOrg ? dbPricing.org : dbPricing.clinic))
                           : null;
-                        
-                        // Fallback to registry creditCost if DB price is not set
+
                         const displayPrice = dbPrice != null ? dbPrice : selectedTest.creditCost;
-                        
+
                         if (displayPrice != null && displayPrice > 0) {
                           return (
                             <div className="text-right">
@@ -323,7 +315,7 @@ export function TestSelectorPage() {
                             </div>
                           );
                         }
-                        
+
                         return <span className="text-muted-foreground">Free</span>;
                       })()}
                     </div>
@@ -338,7 +330,6 @@ export function TestSelectorPage() {
                     )}
                   </div>
 
-                  {/* Continue Confirmation Dialog */}
                   <AlertDialog open={showContinueConfirm} onOpenChange={setShowContinueConfirm}>
                     <AlertDialogContent>
                       <AlertDialogHeader>
@@ -373,7 +364,6 @@ export function TestSelectorPage() {
   );
 }
 
-// ── TestCard Component ────────────────────────────────────────────────────────
 function TestCard({
   test,
   Icon,
@@ -400,14 +390,13 @@ function TestCard({
         }`}
       onClick={onSelect}
     >
-      {/* Selected badge */}
+
       {isSelected && isActive && (
         <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
           Selected
         </Badge>
       )}
 
-      {/* Coming Soon overlay badge */}
       {!isActive && (
         <Badge
           variant="secondary"
@@ -449,7 +438,6 @@ function TestCard({
           </p>
         </div>
 
-        {/* Meta badges */}
         <div className="flex flex-wrap items-center justify-center gap-1.5 mt-auto">
           {test.category && (
             <Badge variant="outline" className="text-[10px] px-1.5 py-0">

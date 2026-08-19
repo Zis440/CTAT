@@ -13,13 +13,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import { Backlight } from "@/components/ui/backlight";
-// import { Separator } from "@/components/ui/separator";
+
 import { login } from "@/services/authService";
 import { useAuthStore, useAuthHydrated } from "@/store/useAuthStore";
 import { BrainAnalysisUI } from "./components/BrainAnalysisUI";
-
-// CHANGED: Removed ACCOUNT_TYPE_OPTIONS — account type is determined during
-// signup and stored server-side.  Login only requires email + password.
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -29,7 +26,7 @@ export function LoginPage() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const user = useAuthStore((s) => s.user);
   const hydrated = useAuthHydrated();
-  // Support ?redirect=/support query param from footer links (non-logged-in users)
+
   const queryRedirect = new URLSearchParams(location.search).get("redirect");
   const from = queryRedirect || (location.state as any)?.from?.pathname || "/dashboard";
 
@@ -37,9 +34,7 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  // CHANGED: Removed accountType state — no longer needed on the login form;
 
-  // If already authenticated, redirect away from login page
   if (hydrated && isAuthenticated && user) {
     let dest = "/dashboard";
     if (user.role === "super_admin") dest = "/admin";
@@ -54,17 +49,15 @@ export function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // CHANGED: Removed account-type validation guard — backend determines role
     setIsLoading(true);
     try {
-      // CHANGED: No longer sending account_type in the login payload
+
       const res = await login({ email, password });
       setAuth(res.access_token, res.user);
       const fullName = [res.user.first_name, res.user.last_name].filter(Boolean).join(" ");
       toast.success(`Welcome back ${fullName}!`);
 
-      // Role-based redirect: admins go to admin panel, clinic admins to clinic dashboard, others to dashboard
-      let roleRedirect = "/dashboard"; // default for individual_psychologist
+      let roleRedirect = "/dashboard";
       if (res.user.role === "super_admin") {
         roleRedirect = "/admin";
       } else if (res.user.role === "clinic_admin") {
@@ -77,7 +70,6 @@ export function LoginPage() {
         roleRedirect = "/org-staff/dashboard";
       }
 
-      // Use the saved `from` only if it was explicitly set (not the default)
       const destination = from !== "/dashboard" ? from : roleRedirect;
       navigate(destination, { replace: true });
     } catch (err: any) {
@@ -111,12 +103,11 @@ export function LoginPage() {
 
       <LandingNavbar />
 
-      {/* SVG Filter for precise #5D6D1C tinting in light mode */}
       <svg width="0" height="0" className="absolute pointer-events-none">
         <defs>
           <filter id="tint-light" colorInterpolationFilters="sRGB">
             <feColorMatrix type="saturate" values="0" />
-            {/* Map grayscale luminance to #5D6D1C (R:93/255=0.365, G:109/255=0.427, B:28/255=0.110) */}
+
             <feColorMatrix type="matrix" values="
               0.365 0 0 0 0
               0 0.427 0 0 0
@@ -127,15 +118,13 @@ export function LoginPage() {
         </defs>
       </svg>
 
-      {/* ── Ambient background blobs (identical to original /auth) ── */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/4 -left-32 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-1/4 -right-32 w-80 h-80 bg-accent/10 rounded-full blur-3xl animate-pulse [animation-delay:1s]" />
       </div>
 
-      {/* ── Main split layout ── */}
       <main className="min-h-[100dvh] flex-1 flex relative z-10">
-        {/* ── LEFT PANE — form (full width on mobile, 50% on ≥lg) ── */}
+
         <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-20 lg:py-24">
           <motion.div
             initial={{ opacity: 0, x: -24 }}
@@ -154,12 +143,9 @@ export function LoginPage() {
               </CardHeader>
 
               <CardContent>
-                {/* CHANGED: Removed the Account Type selector entirely.
-                  The account type / role is determined at signup and stored
-                  server-side.  Login only needs email + password. */}
+
                 <form onSubmit={handleLogin} className="space-y-5">
 
-                  {/* Email */}
                   <div className="space-y-2">
                     <Label
                       htmlFor="login-email"
@@ -179,7 +165,6 @@ export function LoginPage() {
                     />
                   </div>
 
-                  {/* Password */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label
@@ -222,7 +207,6 @@ export function LoginPage() {
                     </div>
                   </div>
 
-                  {/* Submit */}
                   <Button
                     type="submit"
                     disabled={isLoading}
@@ -238,7 +222,6 @@ export function LoginPage() {
                   </Button>
                 </form>
 
-                {/* Sign-up CTA */}
                 <p className="text-center text-sm text-text/50 mt-6">
                   Don&apos;t have an account?{" "}
                   <Link
@@ -257,15 +240,13 @@ export function LoginPage() {
           </motion.div>
         </div>
 
-        {/* ── RIGHT PANE — Illustration and Interactive Elements ── */}
         <div
           className="hidden lg:flex lg:w-1/2 items-center justify-center relative overflow-hidden p-4"
           aria-hidden="true"
         >
-          {/* Transparent container */}
+
           <div className="absolute inset-4 flex items-center justify-center overflow-hidden">
 
-            {/* Bottom Layer: Dot Pattern Background (Spread across right side) */}
             <div
               className="absolute top-0 bottom-0 right-0 w-[65%] z-10 pointer-events-none"
               style={{
@@ -285,7 +266,6 @@ export function LoginPage() {
 
             <div className="relative w-full max-w-xl xl:max-w-[650px] flex items-center justify-center">
 
-              {/* Backlight specifically for the bottom portion (shoulders/neck) */}
               <div className="absolute inset-0 z-15 pointer-events-none flex items-center justify-center">
                 <Backlight className="w-full h-full absolute inset-0" blur={40}>
                   <div className="w-full h-full" style={{ WebkitMaskImage: 'linear-gradient(to bottom, transparent 65%, black 85%, transparent 100%)', maskImage: 'linear-gradient(to bottom, transparent 65%, black 85%, transparent 100%)' }}>
@@ -294,7 +274,6 @@ export function LoginPage() {
                 </Backlight>
               </div>
 
-              {/* Middle Layer: Image Art */}
               <img
                 src="/login-art.png"
                 alt="Login Art"
@@ -306,7 +285,6 @@ export function LoginPage() {
                 }}
               />
 
-              {/* Top Layer: Brain Analysis Nodes & UI */}
               <div className="absolute inset-0 z-30 pointer-events-none">
                 <BrainAnalysisUI />
               </div>
@@ -315,10 +293,6 @@ export function LoginPage() {
           </div>
         </div>
       </main>
-
-      {/* <div id="pricing" className="container mx-auto px-6 lg:px-10 max-w-[1440px] py-16 sm:py-24">
-        <Pricing />
-      </div> */}
 
       <Footer />
     </div>

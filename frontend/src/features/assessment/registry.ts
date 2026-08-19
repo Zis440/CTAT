@@ -1,4 +1,3 @@
-// features/assessment/registry.ts
 
 export type TestStatus = "active" | "coming-soon";
 
@@ -9,10 +8,10 @@ export interface TestModule {
   description: string;
   status: TestStatus;
   icon: string;
-  route: string; // e.g. "/assessment/tat"
-  creditCost: number; // 0 if coming-soon
-  ageGroup?: string; // e.g. "Adults", "Children", "Adolescents"
-  category?: string; // e.g. "Projective", "Behavioral", "Symptom Checklist"
+  route: string;
+  creditCost: number;
+  ageGroup?: string;
+  category?: string;
   minAge?: number;
   maxAge?: number;
   duration?: string;
@@ -192,11 +191,3 @@ export const TEST_REGISTRY: TestModule[] = [
     ageGroup: "Adults",
   },
 ];
-
-// ─────────────────────────────────────────────────────────────────
-// TO ADD A NEW TEST:
-//  1. Create a new folder under features/assessment/<test-slug>/
-//  2. Add an entry to TEST_REGISTRY above
-//  3. Register the route in app/router.tsx
-//  That's it. No other file needs to be touched.
-// ─────────────────────────────────────────────────────────────────

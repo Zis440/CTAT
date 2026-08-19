@@ -6,16 +6,6 @@ import { Helmet } from "react-helmet-async";
 import { useAuthStore } from "@/store/useAuthStore";
 import { getMe } from "@/services/authService";
 
-/**
- * OAuthCallbackPage — handles the redirect from the backend after OAuth consent.
- *
- * URL: /auth/oauth/callback?token=JWT  (success)
- * URL: /auth/oauth/callback?error=...  (failure)
- *
- * On success: stores the JWT, fetches user profile, navigates to /dashboard.
- * On failure: shows an error and redirects to /login.
- */
-
 const ERROR_MESSAGES: Record<string, string> = {
   missing_params: "OAuth response was incomplete. Please try again.",
   no_email: "Your account does not have an email address. Please use a different provider.",
@@ -51,7 +41,6 @@ export function OAuthCallbackPage() {
       return;
     }
 
-    // Store the token temporarily so apiClient includes it in the /me request
     const tempStore = useAuthStore.getState();
     tempStore.setAuth(token, {
       id: "",
@@ -63,20 +52,19 @@ export function OAuthCallbackPage() {
       is_active: true,
     });
 
-    // Fetch the full user profile
     getMe()
       .then((user) => {
         setAuth(token, user);
         const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ");
         toast.success(`Welcome${fullName ? `, ${fullName}` : ""}!`);
-        
+
         let dest = "/dashboard";
         if (user.role === "super_admin") dest = "/admin";
         else if (user.role === "clinic_admin") dest = "/clinic/dashboard";
         else if (user.role === "clinic_staff") dest = "/clinic-staff/dashboard";
         else if (user.role === "org_admin") dest = "/org/dashboard";
         else if (user.role === "org_staff") dest = "/org-staff/dashboard";
-        
+
         navigate(dest, { replace: true });
       })
       .catch((err) => {
@@ -87,7 +75,7 @@ export function OAuthCallbackPage() {
         toast.error("Profile fetch failed. Please try again.");
         setTimeout(() => navigate("/login", { replace: true }), 3000);
       });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background font-sans">

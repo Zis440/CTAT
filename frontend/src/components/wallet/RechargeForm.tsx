@@ -1,5 +1,3 @@
-// ─── RechargeForm ───────────────────────────────────────────────────────────
-// Wallet recharge form — allows user to enter a custom amount and pay via Razorpay.
 
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,7 +42,6 @@ export default function RechargeForm({ onSuccess }: RechargeFormProps) {
     try {
       const order = await createRechargeOrder(rupees * 100);
 
-      // Check if Razorpay is loaded
       if (!(window as any).Razorpay) {
         toast.error("Razorpay SDK not loaded. Please refresh and try again.");
         return;
@@ -91,7 +88,7 @@ export default function RechargeForm({ onSuccess }: RechargeFormProps) {
 
   return (
     <div className="space-y-8 w-full">
-      {/* Premium Current Balance Card */}
+
       <Card className="relative overflow-hidden border-0 bg-linear-to-br from-primary/15 via-primary/5 to-transparent shadow-lg shadow-primary/5">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent opacity-60"></div>
         <CardContent className="pt-8 pb-8 relative z-10">
@@ -109,15 +106,11 @@ export default function RechargeForm({ onSuccess }: RechargeFormProps) {
                 </div>
               </div>
             </div>
-            {/* <div className="bg-background/40 backdrop-blur-sm px-4 py-2 rounded-full border border-primary/10 text-xs font-bold text-muted-foreground flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-              Wallet Active
-            </div> */}
+
           </div>
         </CardContent>
       </Card>
 
-      {/* Premium Recharge Form */}
       <Card className="border-border/40 shadow-xl shadow-black/5 overflow-hidden">
         <CardHeader className="pb-2 pt-6">
           <CardTitle className="text-xl font-extrabold flex items-center gap-3">
@@ -131,7 +124,7 @@ export default function RechargeForm({ onSuccess }: RechargeFormProps) {
           </p>
         </CardHeader>
         <CardContent className="space-y-8 pt-8">
-          {/* Quick amount selection */}
+
           <div className="space-y-3">
             <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Quick Select</label>
             <div className="flex flex-wrap gap-3 mt-2">
@@ -152,7 +145,6 @@ export default function RechargeForm({ onSuccess }: RechargeFormProps) {
             </div>
           </div>
 
-          {/* Custom amount input */}
           <div className="space-y-3">
             <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Custom Amount</label>
             <div className="flex flex-col sm:flex-row items-stretch gap-4 mt-2">
@@ -188,7 +180,6 @@ export default function RechargeForm({ onSuccess }: RechargeFormProps) {
               </Button>
             </div>
 
-            {/* Payment Confirmation Dialog */}
             <AlertDialog open={showPayConfirm} onOpenChange={setShowPayConfirm}>
               <AlertDialogContent>
                 <AlertDialogHeader>

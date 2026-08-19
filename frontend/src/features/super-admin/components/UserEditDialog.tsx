@@ -1,5 +1,3 @@
-// src/features/admin/components/UserEditDialog.tsx
-// Modal dialog for editing a user's details (role, status, profile fields).
 
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
@@ -73,7 +71,6 @@ export function UserEditDialog({
   const [isSaving, setIsSaving] = useState(false);
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
 
-  // ── Form state ──────────────────────────────────────────────────────────
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -86,7 +83,6 @@ export function UserEditDialog({
   const [rocNumber, setRocNumber] = useState("");
   const [isActive, setIsActive] = useState(true);
 
-  // Populate form from user data (uses first_name/last_name from API)
   useEffect(() => {
     if (user) {
       setFirstName(user.first_name || "");
@@ -148,7 +144,7 @@ export function UserEditDialog({
         </DialogHeader>
 
         <div className="grid gap-6 py-4">
-          {/* Personal Information */}
+
           <div className="space-y-4">
             <h4 className="text-sm font-medium text-muted-foreground border-b pb-2">Personal Information</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -189,7 +185,6 @@ export function UserEditDialog({
             </div>
           </div>
 
-          {/* Account Details */}
           <div className="space-y-4">
             <h4 className="text-sm font-medium text-muted-foreground border-b pb-2">Account Details</h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -244,7 +239,6 @@ export function UserEditDialog({
             </div>
           </div>
 
-          {/* Professional Information */}
           <div className="space-y-4">
             <h4 className="text-sm font-medium text-muted-foreground border-b pb-2">Professional Information</h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -275,7 +269,6 @@ export function UserEditDialog({
             </div>
           </div>
 
-          {/* System Status */}
           <div className="space-y-4">
             <h4 className="text-sm font-medium text-muted-foreground border-b pb-2">System Status</h4>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between rounded-lg border p-4 bg-muted/40">
@@ -310,7 +303,6 @@ export function UserEditDialog({
       </DialogContent>
     </Dialog>
 
-    {/* Save Confirmation Dialog */}
     <AlertDialog open={showSaveConfirm} onOpenChange={setShowSaveConfirm}>
       <AlertDialogContent>
         <AlertDialogHeader>

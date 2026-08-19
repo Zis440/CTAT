@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Loader2, ShieldCheck, FileText, Share2, Play, RefreshCw, Eye } from "lucide-react";
 
-export type AssessmentActionVariant = 
+export type AssessmentActionVariant =
   | "validate"
   | "download"
   | "share"

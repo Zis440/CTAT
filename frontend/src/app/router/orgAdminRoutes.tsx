@@ -13,7 +13,6 @@ import { OrgSupportPage } from "@/features/org-admin/pages/OrgSupportPage";
 import { OrgStaffSupportRequestsPage } from "@/features/org-admin/pages/OrgStaffSupportRequestsPage";
 import { OrgSettingsPage } from "@/features/org-admin/pages/OrgSettingsPage";
 
-
 import { AnalysisDashboard } from "@/features/assessment/tat/pages/ResultsDashboardPage";
 import { SessionHistoryPage } from "@/features/assessment/tat/pages/SessionHistoryPage";
 import { TestSelectorPage } from "@/features/assessment/TestSelectorPage";
@@ -52,7 +51,6 @@ export const orgAdminRoutes = [
       { path: "org/staff-settings", element: <OrgSettingsPage /> },
       { path: "org/settings", element: <OrgSettingsPage /> },
 
-      // Shared assessment features accessible to org admin
       { path: "org/session-history/result", element: <AnalysisDashboard /> },
       { path: "org/session/NI/report/synthesizing", element: <AnalysisDashboard /> },
       { path: "org/session/NI/report/:id", element: <AnalysisDashboard /> },

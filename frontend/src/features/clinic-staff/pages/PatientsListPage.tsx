@@ -42,7 +42,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-
 interface PatientRecord {
   id: string;
   patient_type: string;
@@ -65,12 +64,9 @@ export function PatientsPage() {
   const currentPage = parseInt(pageId as string, 10) || 1;
   const ITEMS_PER_PAGE = 30;
 
-
-
   const [search, setSearch] = useState("");
   const [filterGender, setFilterGender] = useState<string>("all");
 
-  // Add Patient state
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -146,7 +142,6 @@ export function PatientsPage() {
       setIsAddOpen(false);
       loadPatients();
 
-      // Reset form
       setName("");
       setLastName("");
       setPhone("");
@@ -590,7 +585,7 @@ export function PatientsPage() {
             </Table>
           </CardContent>
         </Card>
-        {/* Pagination */}
+
         {totalPages >= 0 && !isLoading && (
           <div className="pt-6 pb-10 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-xs text-muted-foreground w-full sm:w-auto text-center sm:text-left">

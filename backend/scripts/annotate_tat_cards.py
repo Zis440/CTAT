@@ -1,16 +1,3 @@
-"""
-TAT Card Visual Annotation Script — Powered by Ollama LLaVA
-
-Generates rich, clinically-structured scene descriptions for each TAT card
-image using a Vision-Language Model (LLaVA). Results are cached as JSON
-with file-hash tracking so only changed/new images are re-annotated.
-
-Usage:
-    python scripts/annotate_tat_cards.py
-    python scripts/annotate_tat_cards.py --force          # re-annotate all
-    python scripts/annotate_tat_cards.py --card Card_6    # annotate single card
-    python scripts/annotate_tat_cards.py --model llava:13b  # use larger model
-"""
 
 import argparse
 import base64
@@ -22,7 +9,6 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-# Resolve paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
 BACKEND_ROOT = SCRIPT_DIR.parent
 DATA_DIR = BACKEND_ROOT / "data"
@@ -31,10 +17,8 @@ ANNOTATIONS_FILE = DATA_DIR / "tat_vision_annotations.json"
 
 OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
 
-# Supported image extensions (priority order)
 IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp"]
 
-# ─── Clinical annotation prompt ───────────────────────────────────────────────
 ANNOTATION_PROMPT = """You are a clinical psychologist analyzing a Thematic Apperception Test (TAT) card.
 This is a grayscale illustration from the 1930s-1940s used in psychological assessment.
 
@@ -78,7 +62,6 @@ Respond in this EXACT JSON format (no markdown, no extra text):
   "key_visual_elements": ["list", "of", "most", "notable", "elements"]
 }"""
 
-
 def compute_file_hash(filepath: str) -> str:
     """Compute SHA-256 hash of file contents."""
     h = hashlib.sha256()
@@ -86,7 +69,6 @@ def compute_file_hash(filepath: str) -> str:
         for chunk in iter(lambda: f.read(8192), b""):
             h.update(chunk)
     return f"sha256:{h.hexdigest()[:16]}"
-
 
 def load_annotations() -> dict:
     """Load existing annotations from disk."""
@@ -98,14 +80,12 @@ def load_annotations() -> dict:
             print(f"  ⚠ Could not load existing annotations: {e}")
     return {}
 
-
 def save_annotations(annotations: dict):
     """Save annotations to disk with pretty formatting."""
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     with open(ANNOTATIONS_FILE, "w", encoding="utf-8") as f:
         json.dump(annotations, f, indent=2, ensure_ascii=False)
     print(f"  💾 Saved to {ANNOTATIONS_FILE}")
-
 
 def find_card_images() -> dict:
     """Discover all TAT card images in the data directory.
@@ -117,19 +97,17 @@ def find_card_images() -> dict:
 
     for f in sorted(CARDS_DIR.iterdir()):
         if f.suffix.lower() in IMAGE_EXTENSIONS:
-            card_id = f.stem  # e.g., "Card_6"
-            # Don't overwrite if we already found a higher-priority extension
+            card_id = f.stem
+
             if card_id not in cards:
                 cards[card_id] = str(f)
 
     return cards
 
-
 def image_to_base64(image_path: str) -> str:
     """Read image and encode as base64 string."""
     with open(image_path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
-
 
 def call_ollama_vlm(image_path: str, model: str = "llava:7b", timeout: int = 300) -> dict:
     """Send image + prompt to Ollama VLM and parse JSON response."""
@@ -149,7 +127,7 @@ def call_ollama_vlm(image_path: str, model: str = "llava:7b", timeout: int = 300
         ],
         "stream": False,
         "options": {
-            "temperature": 0.1,  # Low temperature for consistent factual output
+            "temperature": 0.1,
             "num_predict": 2048,
         }
     }).encode("utf-8")
@@ -170,27 +148,25 @@ def call_ollama_vlm(image_path: str, model: str = "llava:7b", timeout: int = 300
             f"Is Ollama running? Error: {e}"
         )
 
-    # Extract the response text
     content = result.get("message", {}).get("content", "")
     if not content:
         raise ValueError("Ollama returned empty response")
 
-    # Parse JSON from response (handle markdown fences if present)
     json_text = content.strip()
     if json_text.startswith("```"):
-        # Strip markdown code fences
+
         lines = json_text.split("\n")
         start = next((i for i, l in enumerate(lines) if l.strip().startswith("{")), 0)
         end = next((i for i in range(len(lines) - 1, -1, -1) if l.strip().startswith("}")), len(lines))
-        # Actually, let's be smarter about this
+
         json_text = "\n".join(lines)
-        # Remove ```json and ``` markers
+
         json_text = json_text.replace("```json", "").replace("```", "").strip()
 
     try:
         parsed = json.loads(json_text)
     except json.JSONDecodeError:
-        # Try to extract JSON object from the text
+
         brace_start = json_text.find("{")
         brace_end = json_text.rfind("}") + 1
         if brace_start >= 0 and brace_end > brace_start:
@@ -204,13 +180,11 @@ def call_ollama_vlm(image_path: str, model: str = "llava:7b", timeout: int = 300
 
     return parsed
 
-
 def annotate_card(card_id: str, image_path: str, model: str, annotations: dict,
                   force: bool = False) -> bool:
     """Annotate a single card. Returns True if annotation was updated."""
     file_hash = compute_file_hash(image_path)
 
-    # Check if annotation exists and hash matches
     existing = annotations.get(card_id)
     if existing and not force:
         if existing.get("file_hash") == file_hash:
@@ -228,14 +202,13 @@ def annotate_card(card_id: str, image_path: str, model: str, annotations: dict,
 
     elapsed = time.time() - start
 
-    # Build the annotation entry
     annotation = {
         "file_hash": file_hash,
         "image_path": str(image_path),
         "annotated_at": datetime.now().isoformat(),
         "model_used": model,
         "annotation_time_seconds": round(elapsed, 1),
-        # VLM-extracted fields
+
         "people": vlm_result.get("people", []),
         "people_count": vlm_result.get("people_count", len(vlm_result.get("people", []))),
         "objects": vlm_result.get("objects", []),
@@ -243,7 +216,7 @@ def annotate_card(card_id: str, image_path: str, model: str, annotations: dict,
         "interactions": vlm_result.get("interactions", []),
         "spatial_layout": vlm_result.get("spatial_layout", ""),
         "key_visual_elements": vlm_result.get("key_visual_elements", []),
-        # Compatibility fields for existing engine
+
         "detected_entities": _build_detected_entities(vlm_result),
         "has_vision_data": True,
         "raw_detections": (
@@ -261,12 +234,10 @@ def annotate_card(card_id: str, image_path: str, model: str, annotations: dict,
           f"{len(annotation['objects'])} objects")
     return True
 
-
 def _build_detected_entities(vlm_result: dict) -> list:
     """Convert VLM output to the detected_entities format the engine expects."""
     entities = []
 
-    # People
     for p in vlm_result.get("people", []):
         entities.append({
             "entity": "person",
@@ -280,7 +251,6 @@ def _build_detected_entities(vlm_result: dict) -> list:
             "position": p.get("position_in_scene", ""),
         })
 
-    # Objects
     for o in vlm_result.get("objects", []):
         entities.append({
             "entity": o.get("name", "unknown"),
@@ -292,7 +262,6 @@ def _build_detected_entities(vlm_result: dict) -> list:
         })
 
     return entities
-
 
 def main():
     parser = argparse.ArgumentParser(description="Annotate TAT cards with VLM")
@@ -308,14 +277,12 @@ def main():
     print("TAT Card Visual Annotation — VLM Pipeline")
     print("=" * 60)
 
-    # Discover card images
     cards = find_card_images()
     if not cards:
         print("❌ No card images found. Exiting.")
         sys.exit(1)
     print(f"\n📁 Found {len(cards)} card images in {CARDS_DIR}")
 
-    # Filter to single card if requested
     if args.card:
         if args.card in cards:
             cards = {args.card: cards[args.card]}
@@ -323,25 +290,22 @@ def main():
             print(f"❌ Card '{args.card}' not found. Available: {list(cards.keys())}")
             sys.exit(1)
 
-    # Load existing annotations
     annotations = load_annotations()
     print(f"📋 Existing annotations: {len(annotations)} cards\n")
 
-    # Process each card
     updated = 0
     total = len(cards)
     for i, (card_id, image_path) in enumerate(cards.items(), 1):
         print(f"[{i}/{total}] Processing {card_id}...")
         if annotate_card(card_id, image_path, args.model, annotations, force=args.force):
             updated += 1
-            # Save after each successful annotation (crash-safe)
+
             save_annotations(annotations)
 
     print(f"\n{'=' * 60}")
     print(f"✅ Complete: {updated} cards annotated, {total - updated} skipped (unchanged)")
     print(f"📄 Annotations file: {ANNOTATIONS_FILE}")
     print(f"{'=' * 60}")
-
 
 if __name__ == "__main__":
     main()

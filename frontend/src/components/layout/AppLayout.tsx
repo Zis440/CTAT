@@ -1,6 +1,4 @@
-// src/components/layout/AppLayout.tsx
-// The primary authenticated application shell.
-// Wraps all protected routes with sidebar + top bar.
+
 import { Outlet } from "react-router-dom";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "./Sidebar";
@@ -19,17 +17,13 @@ export function AppLayout() {
   const { setBalance } = useWalletStore();
   const profileSyncRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // ── Periodic profile sync ───────────────────────────────────────────────
-  // Re-fetch the user profile every 30 s so that changes made by the admin
-  // (e.g. verification_status approve / reject) are reflected in the UI
-  // without requiring the individual user to log out and back in.
   useEffect(() => {
     if (!user) return;
 
     const syncProfile = async () => {
       try {
         const fresh = await getMe();
-        // Only update store if something actually changed to avoid re-renders
+
         if (
           fresh.verification_status !== user.verification_status ||
           fresh.is_active !== user.is_active ||
@@ -42,21 +36,18 @@ export function AppLayout() {
           setUser(fresh);
         }
       } catch {
-        // Silently fail — token may have expired, network issue, etc.
+
       }
     };
 
-    // Initial sync on mount
     syncProfile();
 
-    // Then every 30 seconds
     profileSyncRef.current = setInterval(syncProfile, 30_000);
     return () => {
       if (profileSyncRef.current) clearInterval(profileSyncRef.current);
     };
-  }, [user?.id]); // Only re-setup when user identity changes, not on every field update
+  }, [user?.id]);
 
-  // Fetch wallet balance on mount and every 30s
   useEffect(() => {
     const perms = user?.module_permissions;
     const isStaff = user?.role === "org_staff" || user?.role === "clinic_staff";
@@ -67,7 +58,7 @@ export function AppLayout() {
         .then(setBalance)
         .catch(() => {});
 
-    fetchBalance(); // always refresh on mount
+    fetchBalance();
     const interval = setInterval(fetchBalance, 30_000);
     return () => clearInterval(interval);
   }, [user?.id, user?.module_permissions?.can_view_wallet_history]);

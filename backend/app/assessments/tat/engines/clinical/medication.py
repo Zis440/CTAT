@@ -1,12 +1,5 @@
-# ============================================================================
-# MEDICATION & OLLAMA INTEGRATION
-# ============================================================================
 
-# Module-level cache to avoid re-running the same Ollama inference
-# (e.g., when /api/aggregate and /api/report both call this function
-#  with identical data in the same session).
 _medication_result_cache = {}
-
 
 def _build_cache_key(card_analyses):
     """Build a deterministic cache key from card IDs + story lengths."""
@@ -16,11 +9,9 @@ def _build_cache_key(card_analyses):
         parts.append(f"{k}:{len(story or '')}")
     return "|".join(parts)
 
-
 def clear_medication_cache():
     """Clear the medication result cache (call between sessions)."""
     _medication_result_cache.clear()
-
 
 def get_medication_and_humanize(card_analyses, aggregated_analysis,
                                 medication_engine, ollama_humanizer,
@@ -39,7 +30,7 @@ def get_medication_and_humanize(card_analyses, aggregated_analysis,
         combined prompt. When provided, the result dict will also contain a
         'clinical_conclusion' key with the AI clinical conclusion text.
     """
-    # --- Cache check (prevents duplicate Ollama calls in API aggregate+report flow) ---
+
     cache_key = _build_cache_key(card_analyses)
     if cache_key in _medication_result_cache:
         print(f"\n{'='*80}")
@@ -53,9 +44,6 @@ def get_medication_and_humanize(card_analyses, aggregated_analysis,
     print("MEDICATION REASONING & HUMANIZATION")
     print(f"{'='*80}\n")
 
-    # ----------------------------------------------------------------------
-    # 1️⃣ EXTRACT THEMES & EMOTIONS
-    # ----------------------------------------------------------------------
     all_themes = []
     all_emotions = []
     all_cultural_factors = []
@@ -79,7 +67,7 @@ def get_medication_and_humanize(card_analyses, aggregated_analysis,
             if e.get('emotion'):
                 all_emotions.append(e['emotion'])
         all_themes.extend(_extract_theme_labels(analysis.get('themes', [])))
-        # Extract cultural context
+
         all_cultural_factors.extend(analysis.get('indian_context_factors', []))
         all_cultural_notes.extend(analysis.get('cultural_normalization_notes', []))
 
@@ -92,9 +80,6 @@ def get_medication_and_humanize(card_analyses, aggregated_analysis,
     all_cultural_factors = list(set(filter(None, all_cultural_factors)))
     all_cultural_notes = list(set(filter(None, all_cultural_notes)))
 
-    # ----------------------------------------------------------------------
-    # 2️⃣ MATCH MEDICATION CONDITIONS
-    # ----------------------------------------------------------------------
     print("💊 Matching conditions to MEDICATION.csv...")
     matches = []
 
@@ -118,9 +103,6 @@ def get_medication_and_humanize(card_analyses, aggregated_analysis,
         print("  ⚠ Medication engine not available")
         matches = []
 
-    # ----------------------------------------------------------------------
-    # 3️⃣ PREPARE STRUCTURED DATA FOR OLLAMA
-    # ----------------------------------------------------------------------
     import re
     def _strip_murray_prefix(s: str) -> str:
         s = re.sub(r'^[NnPp]([A-Z][a-z])', lambda m: m.group(1), str(s).strip())
@@ -139,7 +121,6 @@ def get_medication_and_humanize(card_analyses, aggregated_analysis,
         top_needs.extend([_strip_murray_prefix(n) for n, _ in aggregated_analysis.get('murray', {}).get('needs', [])[:3]])
         top_presses.extend([_strip_murray_prefix(p) for p, _ in aggregated_analysis.get('murray', {}).get('presses', [])[:3]])
 
-    # Extract patient age + gender from any card analysis
     patient_age = None
     age_context = {}
     patient_gender = None
@@ -160,11 +141,10 @@ def get_medication_and_humanize(card_analyses, aggregated_analysis,
         if patient_age is not None and patient_gender is not None and patient_environment and patient_notes:
             break
 
-    # --- Retrieve remedy-specific KB context ---
     remedy_kb_context = ""
     if rag_engine and hasattr(rag_engine, 'retrieve_for_domain'):
         try:
-            # Build remedy-focused query from matched conditions + themes
+
             matched_conditions = [
                 getattr(m, "mental_condition", "") for m in matches[:3]
             ]
@@ -175,10 +155,9 @@ def get_medication_and_humanize(card_analyses, aggregated_analysis,
         except Exception:
             remedy_kb_context = ""
 
-    # Build narrative excerpt from cards for Ollama prompt
     tat_story_excerpt = ""
     if clinical_formulation:
-        # When doing comprehensive mode, collect stories from ALL cards
+
         stories = []
         for card_key, analysis in card_analyses.items():
             story = analysis.get('story', analysis.get('story_text', analysis.get('narrative', '')))
@@ -192,7 +171,6 @@ def get_medication_and_humanize(card_analyses, aggregated_analysis,
                 tat_story_excerpt = story[:400]
                 break
 
-    # Build psych profile data
     psych_profile_data = {
         "patient_age": patient_age,
         "age_context": age_context.get("label", "Not provided"),
@@ -211,18 +189,16 @@ def get_medication_and_humanize(card_analyses, aggregated_analysis,
         "cultural_notes": all_cultural_notes,
     }
 
-    # Inject clinical formulation into psych_profile for the combined prompt
     if clinical_formulation:
         psych_profile_data["_clinical_formulation"] = clinical_formulation
 
-        # Also enrich with aggregated data for a richer clinical conclusion
         if aggregated_analysis:
             raw_defenses = aggregated_analysis.get('defenses', {})
             if isinstance(raw_defenses, dict):
-                # dict keyed by defense name (multicard) — just use the keys
+
                 psych_profile_data["defenses"] = list(raw_defenses.keys())[:6]
             else:
-                # list of defense dicts — extract the 'defense' name field
+
                 _def_names = []
                 for d in raw_defenses[:6]:
                     if isinstance(d, dict):
@@ -251,11 +227,6 @@ def get_medication_and_humanize(card_analyses, aggregated_analysis,
         "learned_concepts": all_themes[:10],
     }
 
-    # ----------------------------------------------------------------------
-    # 4️⃣ OLLAMA HUMANIZATION
-    # When clinical_formulation is provided, use comprehensive mode (1 call)
-    # Otherwise, use original therapy_recommendation mode (backward compat)
-    # ----------------------------------------------------------------------
     use_comprehensive = bool(clinical_formulation and ollama_humanizer)
     response_type = 'comprehensive_clinical_report' if use_comprehensive else 'therapy_recommendation'
 
@@ -280,7 +251,7 @@ def get_medication_and_humanize(card_analyses, aggregated_analysis,
                 humanized_summary = response_text + "\n\n(Note: Response unusually brief.)"
             else:
                 if use_comprehensive:
-                    # Split the comprehensive response into three sections
+
                     from app.services.ollama_humanizer import OllamaHumanizer
                     sections = OllamaHumanizer.split_comprehensive_response(response_text)
                     humanized_summary = sections['therapy_recommendation']
@@ -303,8 +274,6 @@ def get_medication_and_humanize(card_analyses, aggregated_analysis,
     if not humanized_summary or not str(humanized_summary).strip():
         humanized_summary = "Humanized summary unavailable — no valid Ollama output."
 
-    # --- PRODUCTION CORRECTION: §2 Final Medication Confidence Clamp ---
-    # Enforce 0-100% bounding at render layer to prevent overflow (e.g., 446%)
     for m in matches:
         if hasattr(m, 'match_score'):
             m.match_score = round(max(0.0, min(100.0, float(m.match_score))), 2)
@@ -317,13 +286,11 @@ def get_medication_and_humanize(card_analyses, aggregated_analysis,
         "ollama_interpretation": humanized_summary,
     }
 
-    # Include comprehensive sections when comprehensive mode was used
     if clinical_conclusion:
         result["clinical_conclusion"] = clinical_conclusion
     if meta_reasoning_text:
         result["meta_reasoning"] = meta_reasoning_text
 
-    # Cache the result
     _medication_result_cache[cache_key] = result
 
     return result

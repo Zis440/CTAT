@@ -30,11 +30,8 @@ from app.services.ocr.coordinator import coordinator
 
 router = APIRouter(prefix="/api/verification", tags=["verification"])
 
-# ── Constants ─────────────────────────────────────────────────────────────────
-MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024  # 5 MB
+MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024
 ALLOWED_MIME_TYPES = {"application/pdf", "image/jpeg", "image/png", "image/jpg"}
-
-# ── Response Schemas ──────────────────────────────────────────────────────────
 
 class DocumentRequirementOut(BaseModel):
     document_type: str
@@ -43,13 +40,11 @@ class DocumentRequirementOut(BaseModel):
     description: Optional[str] = None
     is_required: bool
 
-
 class RequirementsResponse(BaseModel):
     account_type: str
     clinic_subtype: Optional[str] = None
     required: List[DocumentRequirementOut]
     optional: List[DocumentRequirementOut]
-
 
 class UploadedDocumentOut(BaseModel):
     id: str
@@ -61,7 +56,6 @@ class UploadedDocumentOut(BaseModel):
     uploaded_at: Optional[str] = None
     verification_notes: Optional[str] = None
 
-
 class VerificationStatusResponse(BaseModel):
     documents: List[UploadedDocumentOut]
     can_submit_review: bool
@@ -69,14 +63,10 @@ class VerificationStatusResponse(BaseModel):
     required_count: int
     uploaded_required_count: int
 
-
 class DigiLockerCallback(BaseModel):
     ref_id: str
     txn_id: str
     target_document_type: str = "government_id"
-
-
-# ── GET /api/verification/digilocker/init ──────────────────────────────────────
 
 @router.get("/digilocker/init")
 def digilocker_init(
@@ -88,9 +78,6 @@ def digilocker_init(
         return result
     raise HTTPException(status_code=400, detail=result.get("reason", "Failed to initiate DigiLocker"))
 
-
-# ── POST /api/verification/digilocker/callback ─────────────────────────────────
-
 @router.post("/digilocker/callback")
 def digilocker_callback(
     payload: DigiLockerCallback,
@@ -98,7 +85,7 @@ def digilocker_callback(
     db: Session = Depends(get_db),
 ):
     """Callback for DigiLocker to fetch verified data."""
-    # Get the data from Nerotix
+
     result = neurofy_service.get_digilocker_data(
         ref_id=payload.ref_id,
         txn_id=payload.txn_id,
@@ -107,13 +94,12 @@ def digilocker_callback(
 
     if not result.get("success"):
         raise HTTPException(
-            status_code=400, 
+            status_code=400,
             detail=result.get("reason", "Failed to fetch DigiLocker data")
         )
 
     digi_data = result.get("data", {})
-    
-    # Check if doc requirement exists
+
     account_type = current_user.account_type.value
     clinic_subtype = current_user.clinic_subtype
 
@@ -138,8 +124,6 @@ def digilocker_callback(
             detail=f"Document type '{payload.target_document_type}' is not a valid requirement for your account.",
         )
 
-    # We discard the photo by simply not storing it. We just keep the text data.
-    # The data usually contains name, dob, gender, address.
     ocr_fields = {
         "name": digi_data.get("name"),
         "dob": digi_data.get("dob"),
@@ -147,7 +131,6 @@ def digilocker_callback(
         "address": digi_data.get("address")
     }
 
-    # Upsert UserVerificationDocument
     existing = db.query(UserVerificationDocument).filter(
         UserVerificationDocument.user_id == current_user.id,
         UserVerificationDocument.document_type == payload.target_document_type,
@@ -180,20 +163,19 @@ def digilocker_callback(
 
     db.commit()
 
-    # Auto-submit if all requirements are met
     if current_user.verification_status.value not in ("pending", "approved"):
         required_types = _get_effective_required_types(current_user, db)
         docs = db.query(UserVerificationDocument).filter(
             UserVerificationDocument.user_id == current_user.id,
         ).all()
         uploaded_map = {d.document_type: d for d in docs}
-        
+
         all_met = True
         for rt in required_types:
             if rt not in uploaded_map or uploaded_map[rt].status == "rejected":
                 all_met = False
                 break
-                
+
         if all_met:
             db_user = db.query(User).filter(User.id == current_user.id).first()
             if db_user:
@@ -222,9 +204,6 @@ def digilocker_callback(
         }
     }
 
-
-# ── GET /api/verification/neurofy-health ──────────────────────────────────────
-
 @router.get("/neurofy-health")
 async def neurofy_health_check(
     current_user: User = Depends(get_current_user),
@@ -237,9 +216,6 @@ async def neurofy_health_check(
     result = await asyncio.to_thread(neurofy_service.check_health_detailed)
     return result
 
-
-# ── GET /api/verification/requirements ────────────────────────────────────────
-
 @router.get("/requirements", response_model=RequirementsResponse)
 def get_requirements(
     current_user: User = Depends(get_current_user),
@@ -247,7 +223,7 @@ def get_requirements(
 ):
     """Fetch the list of required and optional documents for the authenticated user."""
     account_type = current_user.account_type.value
-    clinic_subtype = current_user.clinic_subtype  # normalized property
+    clinic_subtype = current_user.clinic_subtype
 
     query = db.query(VerificationDocumentRequirement).filter(
         VerificationDocumentRequirement.account_type == account_type,
@@ -265,7 +241,6 @@ def get_requirements(
 
     requirements = query.all()
 
-    # For individual psychologists without RCI, professional_license is optional
     is_individual_no_rci = (
         account_type == "individual"
         and not (current_user.rci_number and current_user.rci_number.strip())
@@ -279,7 +254,6 @@ def get_requirements(
         label = req.label
         description = req.description
 
-        # Downgrade professional_license to optional for non-RCI individuals
         if is_individual_no_rci and req.document_type == "professional_license":
             is_required = False
             label = "Professional License / Credential (Optional)"
@@ -320,9 +294,6 @@ def get_requirements(
         optional=optional,
     )
 
-
-# ── POST /api/verification/upload ─────────────────────────────────────────────
-
 @router.post("/upload")
 async def upload_document(
     document_type: str = Form(...),
@@ -332,14 +303,13 @@ async def upload_document(
     db: Session = Depends(get_db),
 ):
     """Upload a single verification document. Upserts if document_type already exists."""
-    # Validate MIME type
+
     if file.content_type not in ALLOWED_MIME_TYPES:
         raise HTTPException(
             status_code=415,
             detail=f"File type '{file.content_type}' not allowed. Use PDF, JPG, or PNG.",
         )
 
-    # Validate file size — read into memory to check
     contents = await file.read()
     if len(contents) > MAX_FILE_SIZE_BYTES:
         raise HTTPException(
@@ -347,7 +317,6 @@ async def upload_document(
             detail=f"File exceeds the {MAX_FILE_SIZE_BYTES // (1024*1024)}MB size limit.",
         )
 
-    # Validate category
     try:
         doc_category = DocumentCategory(category)
     except ValueError:
@@ -356,7 +325,6 @@ async def upload_document(
             detail=f"Invalid document category: '{category}'. Must be one of: professional, business, identity, compliance.",
         )
 
-    # Validate document_type is in the requirements for this user
     account_type = current_user.account_type.value
     clinic_subtype = current_user.clinic_subtype
 
@@ -388,11 +356,9 @@ async def upload_document(
             )
         is_required = requirement.is_required
 
-    # Save file to disk
     user_dir = DOCUMENTS_DIR / str(current_user.id)
     user_dir.mkdir(parents=True, exist_ok=True)
 
-    # Use document_type as prefix to avoid filename collisions
     ext = Path(file.filename).suffix if file.filename else ".pdf"
     safe_filename = f"{document_type}{ext}"
     dest = user_dir / safe_filename
@@ -402,7 +368,6 @@ async def upload_document(
 
     file_path = f"uploads/documents/{current_user.id}/{safe_filename}"
 
-    # Upsert: check if document already exists
     existing = db.query(UserVerificationDocument).filter(
         UserVerificationDocument.user_id == current_user.id,
         UserVerificationDocument.document_type == document_type,
@@ -441,27 +406,25 @@ async def upload_document(
             "document_status": doc.status,
         }
 
-    # ── Local OCR & API Validation Pipeline ───────────────────────────────────
     import asyncio
     import logging
     logger = logging.getLogger(__name__)
     neurofy_status = None
     try:
-        # Run OCR coordinator asynchronously so it doesn't block the main thread
+
         ocr_result = await asyncio.to_thread(
             coordinator.process_upload,
             expected_slot=document_type,
             file_path=str(dest),
             user_id=current_user.id
         )
-        
+
         doc.detected_document_type = ocr_result.get("detected_document_type")
         doc.ocr_fields = ocr_result.get("ocr_fields")
         doc.ocr_confidence = ocr_result.get("ocr_confidence")
         doc.verification_response = ocr_result.get("verification_response")
         doc.verification_status = ocr_result.get("verification_status")
-        
-        # Determine top-level review status
+
         if doc.verification_status == "verified":
             doc.status = "approved"
             neurofy_status = "verified"
@@ -469,9 +432,9 @@ async def upload_document(
             doc.status = "pending"
             neurofy_status = "rejected"
         else:
-            doc.status = "pending"  # Needs manual review
+            doc.status = "pending"
             neurofy_status = "manual_review"
-            
+
         logger.info(
             f"Verification pipeline for {document_type} (user {current_user.id}): "
             f"status={doc.verification_status}"
@@ -480,14 +443,12 @@ async def upload_document(
         logger.warning(f"Verification pipeline failed: {e}")
         doc.status = "pending"
         doc.verification_status = "error"
-        
-        # Strip HTTP status codes (e.g. "400: ") from error messages
+
         import re
         error_msg = getattr(e, "detail", str(e))
         clean_msg = re.sub(r'^\d{3}:\s*', '', str(error_msg))
-        
+
         doc.verification_response = {"error": clean_msg}
-    # ──────────────────────────────────────────────────────────────────────────
 
     db.commit()
 
@@ -508,9 +469,6 @@ async def upload_document(
             "filename": safe_filename,
         }
     }
-
-
-# ── Helper: effective required types ──────────────────────────────────────────
 
 def _get_effective_required_types(current_user: User, db: Session) -> set:
     """
@@ -537,7 +495,6 @@ def _get_effective_required_types(current_user: User, db: Session) -> set:
 
     required_types = {r.document_type for r in req_query.all()}
 
-    # Non-RCI individual psychologists: professional_license is not required
     is_individual_no_rci = (
         account_type == "individual"
         and not (current_user.rci_number and current_user.rci_number.strip())
@@ -547,16 +504,13 @@ def _get_effective_required_types(current_user: User, db: Session) -> set:
 
     return required_types
 
-
-# ── GET /api/verification/status ──────────────────────────────────────────────
-
 @router.get("/status", response_model=VerificationStatusResponse)
 def get_verification_status(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Return all uploaded documents for the user + whether they can submit for review."""
-    # Get all uploaded documents
+
     docs = db.query(UserVerificationDocument).filter(
         UserVerificationDocument.user_id == current_user.id,
     ).all()
@@ -564,10 +518,8 @@ def get_verification_status(
     required_types = _get_effective_required_types(current_user, db)
     required_count = len(required_types)
 
-    # Map uploaded docs
     uploaded_map = {d.document_type: d for d in docs}
 
-    # Count uploaded required docs (not rejected)
     uploaded_required = 0
     has_rejected = False
     for rt in required_types:
@@ -610,16 +562,13 @@ def get_verification_status(
         uploaded_required_count=uploaded_required,
     )
 
-
-# ── POST /api/verification/submit ─────────────────────────────────────────────
-
 @router.post("/submit")
 def submit_for_verification(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Submit all documents for admin review. Only allowed if can_submit_review is true."""
-    # Re-check eligibility (uses same helper as GET /status)
+
     required_types = _get_effective_required_types(current_user, db)
 
     docs = db.query(UserVerificationDocument).filter(
@@ -646,7 +595,6 @@ def submit_for_verification(
             detail=f"Verification is already '{current_user.verification_status.value}'. Cannot re-submit.",
         )
 
-    # Transition user to pending
     db_user = db.query(User).filter(User.id == current_user.id).first()
     db_user.verification_status = VerificationStatus.pending
     db.flush()
@@ -656,9 +604,6 @@ def submit_for_verification(
         "verification_status": "pending",
         "message": "Your documents have been submitted for review. Our team will review them within 1–2 business days.",
     }
-
-
-# ── DELETE /api/verification/document/{document_type} ─────────────────────────
 
 @router.delete("/document/{document_type}")
 def delete_document(
@@ -680,15 +625,6 @@ def delete_document(
 
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found.")
-
-    # We could also delete the physical file here if needed:
-    # try:
-    #     if doc.file_path:
-    #         file_path = DOCUMENTS_DIR.parent.parent / doc.file_path
-    #         if file_path.exists():
-    #             file_path.unlink()
-    # except Exception as e:
-    #     pass
 
     db.delete(doc)
 
@@ -716,11 +652,10 @@ def remove_rci_cv(
     if current_user.role.value != "individual_psychologist":
         raise HTTPException(status_code=403, detail="Only individual psychologists have an RCI profile.")
 
-    # Delete the physical file if it exists
     if current_user.cv_path:
         try:
             from app.database import DOCUMENTS_DIR
-            # cv_path is like "uploads/documents/{user_id}/cv.pdf"
+
             parts = current_user.cv_path.split("/")
             filename = parts[-1] if parts else None
             user_id_str = parts[-2] if len(parts) >= 2 else str(current_user.id)
@@ -729,7 +664,7 @@ def remove_rci_cv(
                 if file_path.exists():
                     file_path.unlink()
         except Exception:
-            pass  # Don't fail the request if file deletion fails
+            pass
 
     current_user.cv_path = None
     current_user.cv_original_filename = None
@@ -745,7 +680,6 @@ def remove_rci_cv(
 
     return {"status": "removed"}
 
-
 @router.get("/profile")
 def get_rci_profile(
     current_user: User = Depends(get_current_user),
@@ -753,7 +687,7 @@ def get_rci_profile(
 ):
     if current_user.role.value != "individual_psychologist":
         raise HTTPException(status_code=403, detail="Only individual psychologists have an RCI profile.")
-    
+
     cv_filename = None
     if current_user.cv_path:
         cv_filename = Path(current_user.cv_path).name
@@ -767,7 +701,7 @@ def get_rci_profile(
 
 @router.post("/profile")
 async def update_rci_profile(
-    bio: str = Form(""),  # empty string = clear bio; frontend always sends this field
+    bio: str = Form(""),
     cv: Optional[UploadFile] = File(None),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -776,15 +710,11 @@ async def update_rci_profile(
         raise HTTPException(status_code=403, detail="Only individual psychologists can update this profile.")
     if not current_user.rci_number:
         raise HTTPException(status_code=403, detail="RCI number is required to update this profile.")
-        
-    # Always update bio — frontend always sends this field.
-    # Empty/whitespace → clear it (store as NULL); non-empty → save trimmed value.
+
     clean_bio = bio.strip() if bio else None
     if clean_bio and len(clean_bio) > 1000:
         raise HTTPException(status_code=400, detail="Bio must be under 1000 characters.")
 
-    # Use a direct SQL UPDATE so SQLAlchemy always emits the statement,
-    # even when the value is NULL (ORM dirty-tracking can skip None assignments).
     from sqlalchemy import text as _text
     db.execute(
         _text("UPDATE users SET bio = :bio WHERE id = :uid"),
@@ -794,27 +724,26 @@ async def update_rci_profile(
     if cv is not None:
         if cv.content_type not in ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/msword"]:
             raise HTTPException(status_code=400, detail="CV must be a PDF or Word Document.")
-            
+
         file_bytes = await cv.read()
-        if len(file_bytes) > MAX_FILE_SIZE_BYTES * 2: # Allow up to 10MB
+        if len(file_bytes) > MAX_FILE_SIZE_BYTES * 2:
             raise HTTPException(status_code=400, detail="CV file size exceeds 10 MB limit.")
-            
+
         ext = Path(cv.filename).suffix.lower()
         user_doc_dir = DOCUMENTS_DIR / str(current_user.id)
         user_doc_dir.mkdir(parents=True, exist_ok=True)
-        
+
         cv_path = user_doc_dir / f"cv{ext}"
         with open(cv_path, "wb") as f:
             f.write(file_bytes)
-            
+
         current_user.cv_path = f"uploads/documents/{current_user.id}/cv{ext}"
-        current_user.cv_original_filename = cv.filename  # store the user's original filename
+        current_user.cv_original_filename = cv.filename
 
     current_user.verification_status = VerificationStatus.pending
     db.commit()
     db.refresh(current_user)
 
-    
     return {
         "status": "success",
         "cv_uploaded": bool(current_user.cv_path),

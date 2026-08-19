@@ -51,7 +51,6 @@ export function ClinicStaffPage() {
   };
   const basePath = getBasePath();
 
-  // Form state
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -437,7 +436,7 @@ export function ClinicStaffPage() {
                 }
 
                 const paginated = staffList.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-                
+
                 if (staffList.length === 0) {
                   return (
                     <TableRow className="max-md:block">
@@ -449,7 +448,7 @@ export function ClinicStaffPage() {
                     </TableRow>
                   );
                 }
-                
+
                 return paginated.map((staff: any) => (
                 <TableRow key={staff.id} className="max-md:block max-md:p-4 max-md:border-b max-md:relative">
                   {isSelectionMode && (
@@ -494,7 +493,7 @@ export function ClinicStaffPage() {
                   </TableCell>
                   <TableCell className="max-md:flex max-md:justify-between max-md:items-center max-md:p-1 max-md:border-none">
                     <span className="md:hidden font-semibold text-muted-foreground text-xs uppercase tracking-wider">Permission</span>
-                    {/* @ts-ignore - assuming can_assess was added to type */}
+
                     {staff.can_assess ? (
                       <div className="flex items-center gap-2">
                         <Shield className="h-4 w-4 text-primary" />
@@ -532,8 +531,6 @@ export function ClinicStaffPage() {
             </TableBody>
           </Table>
 
-
-        
         </CardContent>
       </Card>
 

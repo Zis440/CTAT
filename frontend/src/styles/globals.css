@@ -85,18 +85,14 @@
   }
 }
 
-/* ===========================
-   COLORS – Light mode
-   =========================== */
 :root {
-  /* Core brand colors (500 = base) */
+
   --text: #1b1408;
   --background: #ededed;
-  --primary: #5d6d1c;          /* ← new olive green */
+  --primary: #5d6d1c;
   --secondary: #277a24;
   --accent: #52cb7f;
 
-  /* Expanded palette – Text (warm brown-black) */
   --text-50: #f5efe4;
   --text-100: #e8dfcc;
   --text-200: #d2c5a7;
@@ -109,7 +105,6 @@
   --text-900: #070502;
   --text-950: #030201;
 
-  /* Background (neutral gray) */
   --background-50: #ffffff;
   --background-100: #f9f9f9;
   --background-200: #f2f2f2;
@@ -122,7 +117,6 @@
   --background-900: #2e2e2e;
   --background-950: #1c1c1c;
 
-  /* Primary (olive green) – regenerated */
   --primary-50: #f6f8f2;
   --primary-100: #ecf0db;
   --primary-200: #dee6bc;
@@ -135,7 +129,6 @@
   --primary-900: #3f471f;
   --primary-950: #252914;
 
-  /* Secondary (deep green) – unchanged */
   --secondary-50: #e6f3e4;
   --secondary-100: #c3e2bf;
   --secondary-200: #9bcf93;
@@ -148,7 +141,6 @@
   --secondary-900: #0c260c;
   --secondary-950: #051305;
 
-  /* Accent (fresh green) – unchanged */
   --accent-50: #e6f9ee;
   --accent-100: #c2f0d6;
   --accent-200: #94e5b8;
@@ -161,14 +153,13 @@
   --accent-900: #133a25;
   --accent-950: #071d10;
 
-  /* Shadcn UI semantic tokens – light (updated primary tokens) */
   --radius: 0.625rem;
   --foreground: #1b1408;
   --card: #ffffff;
   --card-foreground: #1b1408;
   --popover: #ffffff;
   --popover-foreground: #1b1408;
-  --primary-foreground: #ffffff;          /* white text on olive for contrast */
+  --primary-foreground: #ffffff;
   --secondary-foreground: #ffffff;
   --muted: #f5f5f4;
   --muted-foreground: #78716c;
@@ -176,7 +167,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: #d6d3d1;
   --input: #d6d3d1;
-  --ring: #5d6d1c;                        /* match primary */
+  --ring: #5d6d1c;
   --chart-1: #5d6d1c;
   --chart-2: #277a24;
   --chart-3: #52cb7f;
@@ -185,24 +176,20 @@
   --sidebar: #faf8f5;
   --sidebar-foreground: #1b1408;
   --sidebar-primary: #5d6d1c;
-  --sidebar-primary-foreground: #ffffff;  /* contrast on olive */
+  --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #f0ede6;
   --sidebar-accent-foreground: #1b1408;
   --sidebar-border: #d6d3d1;
   --sidebar-ring: #5d6d1c;
 }
 
-/* ===========================
-   COLORS – Dark mode
-   =========================== */
 .dark {
   --text: #f7f0e4;
   --background: #121212;
-  --primary: #d3e392;          /* ← new lime green */
+  --primary: #d3e392;
   --secondary: #88db85;
   --accent: #34ad60;
 
-  /* Expanded palette – Text (light warm) */
   --text-50: #faf6ef;
   --text-100: #f2eadb;
   --text-200: #e4d6bb;
@@ -215,7 +202,6 @@
   --text-900: #6b5731;
   --text-950: #473617;
 
-  /* Background (deep dark) */
   --background-50: #2c2c2c;
   --background-100: #242424;
   --background-200: #1e1e1e;
@@ -228,7 +214,6 @@
   --background-900: #040404;
   --background-950: #020202;
 
-  /* Primary (lime green) – regenerated */
   --primary-50: #f6f8f2;
   --primary-100: #f0f4e1;
   --primary-200: #e5eec4;
@@ -241,7 +226,6 @@
   --primary-900: #464f22;
   --primary-950: #2b3017;
 
-  /* Secondary (lighter green) – unchanged */
   --secondary-50: #e8fae6;
   --secondary-100: #c8f2c4;
   --secondary-200: #a4e99d;
@@ -254,7 +238,6 @@
   --secondary-900: #1a3b1c;
   --secondary-950: #0b190c;
 
-  /* Accent (vibrant green) – unchanged */
   --accent-50: #e2f8ee;
   --accent-100: #bcefd5;
   --accent-200: #89e4b5;
@@ -267,13 +250,12 @@
   --accent-900: #10351c;
   --accent-950: #071a0c;
 
-  /* Shadcn UI semantic tokens – dark (updated primary tokens) */
   --foreground: #f7f0e4;
   --card: #1e1e1e;
   --card-foreground: #f7f0e4;
   --popover: #1e1e1e;
   --popover-foreground: #f7f0e4;
-  --primary-foreground: #121212;         /* dark bg on light lime for contrast */
+  --primary-foreground: #121212;
   --secondary-foreground: #121212;
   --muted: #2a2a2a;
   --muted-foreground: #a1a1aa;
@@ -281,7 +263,7 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: rgba(255,255,255,0.1);
   --input: rgba(255,255,255,0.15);
-  --ring: #d3e392;                       /* match primary */
+  --ring: #d3e392;
   --chart-1: #d3e392;
   --chart-2: #88db85;
   --chart-3: #34ad60;
@@ -290,16 +272,13 @@
   --sidebar: #121212;
   --sidebar-foreground: #f7f0e4;
   --sidebar-primary: #d3e392;
-  --sidebar-primary-foreground: #121212;  /* contrast on light lime */
+  --sidebar-primary-foreground: #121212;
   --sidebar-accent: #1e1e1e;
   --sidebar-accent-foreground: #f7f0e4;
   --sidebar-border: rgba(255,255,255,0.1);
   --sidebar-ring: #d3e392;
 }
 
-/* ===========================
-   Base layer & utilities
-   =========================== */
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -308,7 +287,7 @@
     @apply bg-background text-foreground;
     font-family: "Helvetica", "Arial", sans-serif;
   }
-  /* Hide number input spinners */
+
   input[type="number"]::-webkit-inner-spin-button,
   input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
@@ -317,13 +296,11 @@
   input[type="number"] {
     -moz-appearance: textfield;
   }
-  
-  /* Fix invisible typing caret in dark mode */
+
   input, textarea, select {
     caret-color: currentColor;
   }
 
-  /* Fix Chrome/Edge autofill background in dark mode */
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus,
@@ -334,7 +311,6 @@
     transition: background-color 5000s ease-in-out 0s;
   }
 
-  /* Custom Scrollbar */
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -353,22 +329,13 @@
     border: 3px solid var(--background);
     background-clip: padding-box;
   }
-  
-  /* For Firefox */
+
   * {
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
   }
 }
 
-/* ===========================
-   Sonner Toast Progress Bar
-   =========================== */
-
-/* 
-  Use [data-content]::after to avoid conflicting with Sonner's built-in ::before/::after 
-  which it uses for hover bridges and swiping animations.
-*/
 [data-sonner-toast] [data-content]::after {
   content: "";
   position: absolute;
@@ -381,11 +348,10 @@
   border-bottom-right-radius: var(--radius);
   transform-origin: left;
   z-index: 10;
-  /* The default duration in sonner is 4000ms */
+
   animation: toast-progress 4000ms linear forwards;
 }
 
-/* Pause animation when hovering over the toaster container (matches Sonner's behavior) */
 [data-sonner-toaster]:hover [data-sonner-toast] [data-content]::after,
 [data-sonner-toast]:hover [data-content]::after {
   animation-play-state: paused;

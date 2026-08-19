@@ -12,8 +12,6 @@ export function LandingNavbar() {
   const { resolvedTheme, toggleTheme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-
-  // Lock body scroll when mobile menu is open
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = "hidden";
@@ -42,15 +40,6 @@ export function LandingNavbar() {
 
           <div className="flex items-center gap-4 ml-auto">
             <div className="hidden md:flex rounded-full items-center justify-center gap-2">
-              {/* <Button asChild variant="ghost" className={location.pathname === "/about" ? "text-secondary font-bold" : ""} size="sm">
-                <Link to="/about">About</Link>
-              </Button>
-              <Button asChild variant="ghost" className={location.pathname === "/how-to-use" ? "text-secondary font-bold" : ""} size="sm">
-                <Link to="/how-to-use">How To Use?</Link>
-              </Button>
-              <Button asChild variant="secondary" size="sm">
-                <Link to="/auth">Login</Link>
-              </Button> */}
 
               {!(location.pathname === "/login" || location.pathname === "/sign-up" || location.pathname.includes("/auth") || location.pathname.includes("/reset-password")) && (
                 <NavigationMenu>
@@ -100,11 +89,10 @@ export function LandingNavbar() {
         </div>
       </header>
 
-      {/* Mobile Navigation Overlay */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <>
-            {/* Subtle Blur Backdrop */}
+
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -114,7 +102,6 @@ export function LandingNavbar() {
               onClick={() => setIsMobileMenuOpen(false)}
             />
 
-            {/* Sliding Sidebar */}
             <motion.div
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
@@ -123,7 +110,7 @@ export function LandingNavbar() {
               className="md:hidden fixed right-0 top-[64px] bottom-0 w-[80%] max-w-sm z-50 bg-background/95 backdrop-blur-xl border-l border-border/50 shadow-2xl"
             >
               <div className="flex flex-col h-full">
-                {/* Internal Sidebar Header Bar */}
+
                 <div className="flex items-center justify-between px-6 h-14 border-b border-border/10 bg-background/40 backdrop-blur-md">
                   <span className="text-xs font-bold uppercase tracking-widest text-text/50">Navigation</span>
                   <Button

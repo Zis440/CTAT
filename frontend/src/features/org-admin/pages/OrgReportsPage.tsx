@@ -118,7 +118,7 @@ export function OrgReportsPage() {
       setIsLoading(true);
       try {
         const data = await fetchPastSessions();
-        // Since backend doesn't paginate this endpoint yet, handle manually or just show all
+
         setReports(data);
       } catch (err) {
         toast.error("Failed to load reports");
@@ -129,7 +129,7 @@ export function OrgReportsPage() {
     loadReports();
   }, []);
 
-  const filteredReports = reports.filter(r => 
+  const filteredReports = reports.filter(r =>
     !patientFilter || r.patient_name?.toLowerCase().includes(patientFilter.toLowerCase())
   );
   const totalPages = Math.ceil(filteredReports.length / PAGE_SIZE) || 1;
@@ -193,9 +193,9 @@ export function OrgReportsPage() {
               <div className="flex w-full max-w-sm items-center space-x-2">
                 <div className="relative w-full">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    defaultValue={patientFilter || ""} 
-                    placeholder="Candidate Name" 
+                  <Input
+                    defaultValue={patientFilter || ""}
+                    placeholder="Candidate Name"
                     className="pl-8 bg-background/50 w-full"
                     onChange={(e) => {
                         const val = e.target.value;
@@ -394,8 +394,7 @@ export function OrgReportsPage() {
           </Table>
         </CardContent>
       </Card>
-      
-      {/* Pagination */}
+
       {totalPages >= 0 && !isLoading && (
         <div className="pt-6 pb-10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground w-full sm:w-auto text-center sm:text-left">
@@ -443,7 +442,6 @@ export function OrgReportsPage() {
         </div>
       )}
 
-      {/* Verification Log Dialog */}
       <Dialog open={!!selectedLogReport} onOpenChange={(open) => !open && setSelectedLogReport(null)}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -510,7 +508,6 @@ export function OrgReportsPage() {
         </div>
       </div>
 
-      {/* Summary Section */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="border-primary/20 shadow-sm bg-primary/5">
           <CardHeader className="pb-3 border-b border-primary/10">
@@ -555,7 +552,6 @@ export function OrgReportsPage() {
         </Card>
       </div>
 
-      {/* Assessment Results Table */}
       <Card className="border-primary/10 bg-background/50 backdrop-blur-sm">
         <CardHeader>
           <CardTitle>Assessment Results (Pre adolescent personality assessment intelligence)</CardTitle>
@@ -591,7 +587,6 @@ export function OrgReportsPage() {
         </CardContent>
       </Card>
 
-      {/* Criteria Sections */}
       <div className="grid gap-6 md:grid-cols-3">
         <Card className="col-span-1 border-primary/10">
           <CardHeader className="pb-3 border-b border-border/50 bg-muted/20">
@@ -671,7 +666,6 @@ export function OrgReportsPage() {
         </Card>
       </div>
 
-      {/* Interpretation */}
       <Card className="border-primary/10 bg-background/50 backdrop-blur-sm">
         <CardHeader className="pb-2">
           <CardTitle>Interpretation & Narrative Summary</CardTitle>
@@ -711,4 +705,3 @@ export function OrgReportsPage() {
     </div>
   );
 }
-

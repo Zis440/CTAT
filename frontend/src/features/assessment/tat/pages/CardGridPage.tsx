@@ -85,7 +85,6 @@ export function CardGrid({ version = "indianized" }: CardGridProps) {
       try {
         const { data } = await apiClient.get<TATCard[]>(`/cards?version=${version}`);
 
-        // Sort and map the data according to CARD_SEQUENCE
         const orderedCards: TATCard[] = [];
         CARD_SEQUENCE.forEach(seqItem => {
           const matchedCard = data.find(c => c.id === seqItem.id);
@@ -94,7 +93,6 @@ export function CardGrid({ version = "indianized" }: CardGridProps) {
           }
         });
 
-        // Append any cards that are in data but not in CARD_SEQUENCE at the end
         data.forEach(c => {
           if (!CARD_SEQUENCE.some(seq => seq.id === c.id)) {
             orderedCards.push(c);
@@ -197,4 +195,3 @@ export function CardGrid({ version = "indianized" }: CardGridProps) {
     </div>
   );
 }
-

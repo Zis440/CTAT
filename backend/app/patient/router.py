@@ -27,11 +27,8 @@ from app.services.email_service import email_service
 
 router = APIRouter(prefix="/api/patients", tags=["patients"])
 
-
-# ── Pydantic schemas ──────────────────────────────────────────────────────────
-
 class PatientCreate(BaseModel):
-    patient_type: str = "new"  # "new", "existing", "anonymous"
+    patient_type: str = "new"
     first_name: str = "Anonymous"
     last_name: Optional[str] = None
     email: Optional[str] = None
@@ -51,7 +48,6 @@ class PatientCreate(BaseModel):
     occupation: Optional[str] = None
     socioeconomic_status: Optional[str] = None
     notes: str = ""
-
 
 class PatientUpdate(BaseModel):
     first_name: Optional[str] = None
@@ -73,7 +69,6 @@ class PatientUpdate(BaseModel):
     occupation: Optional[str] = None
     socioeconomic_status: Optional[str] = None
     notes: Optional[str] = None
-
 
 class PatientOut(BaseModel):
     id: str
@@ -106,9 +101,6 @@ class PatientOut(BaseModel):
 
     model_config = {"from_attributes": True}
 
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
 def _patient_to_out(p: Patient) -> PatientOut:
     return PatientOut(
         id=p.id,
@@ -140,7 +132,6 @@ def _patient_to_out(p: Patient) -> PatientOut:
         created_at=p.created_at.isoformat() if p.created_at and hasattr(p.created_at, 'isoformat') else p.created_at,
     )
 
-
 def _visible_patients_query(user: User, db: DBSession):
     """
     Return a query scoped to the patients the current user is allowed to see.
@@ -160,11 +151,8 @@ def _visible_patients_query(user: User, db: DBSession):
         )
     else:
         query = db.query(Patient).filter(Patient.user_id == user.id)
-        
+
     return query.filter(Patient.patient_type != "self")
-
-
-# ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.post("", response_model=PatientOut, status_code=201)
 def create_patient(
@@ -183,7 +171,7 @@ def create_patient(
 
     patient = Patient(
         user_id=current_user.id,
-        clinic_id=current_user.clinic_id,  # auto-inherit clinic membership
+        clinic_id=current_user.clinic_id,
         patient_type=req.patient_type,
         first_name=req.first_name,
         last_name=req.last_name,
@@ -209,7 +197,6 @@ def create_patient(
     db.commit()
     db.refresh(patient)
 
-    # ── Send confirmation email to patient (if email provided) ────────────────
     if patient.email and patient.patient_type != "anonymous":
         patient_name = f"{patient.first_name or ''} {patient.last_name or ''}".strip() or "Patient"
         added_by_name = f"{current_user.first_name or ''} {current_user.last_name or ''}".strip()
@@ -219,10 +206,8 @@ def create_patient(
             clinic_name=current_user.clinic_name,
             added_by=added_by_name,
         )
-    # ──────────────────────────────────────────────────────────────────────────
 
     return _patient_to_out(patient)
-
 
 @router.get("", response_model=List[PatientOut])
 def list_patients(
@@ -236,7 +221,6 @@ def list_patients(
         .all()
     )
     return [_patient_to_out(p) for p in patients]
-
 
 @router.get("/{patient_id}", response_model=PatientOut)
 def get_patient(
@@ -253,7 +237,6 @@ def get_patient(
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
     return _patient_to_out(patient)
-
 
 @router.put("/{patient_id}", response_model=PatientOut)
 def update_patient(
@@ -277,7 +260,7 @@ def update_patient(
     update_data = req.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(patient, field, value)
-        
+
     if "date_of_birth" in update_data and patient.date_of_birth:
         today = date.today()
         patient.age = (
@@ -288,7 +271,6 @@ def update_patient(
     db.commit()
     db.refresh(patient)
     return _patient_to_out(patient)
-
 
 @router.delete("/{patient_id}")
 def delete_patient(
@@ -301,25 +283,25 @@ def delete_patient(
         raise HTTPException(status_code=403, detail="Staff members cannot delete patients")
 
     patient = db.query(Patient).filter(Patient.id == patient_id).first()
-    
+
     if not patient:
         raise HTTPException(
             status_code=404,
             detail="Patient not found",
         )
-        
+
     has_permission = False
     if patient.user_id == current_user.id or current_user.role == "super_admin":
         has_permission = True
     elif current_user.role in ("clinic_admin", "org_admin") and patient.clinic_id == current_user.clinic_id and current_user.clinic_id is not None:
         has_permission = True
-        
+
     if not has_permission:
         raise HTTPException(
             status_code=403,
             detail="You don't have permission to delete this patient",
         )
-        
+
     db.delete(patient)
     db.commit()
     return {"status": "deleted", "patient_id": patient_id}

@@ -1,5 +1,3 @@
-// src/features/admin/UserManagementPage.tsx
-// Full user management page for super admins.
 
 import { useState, useEffect, useCallback, type JSX } from "react";
 import { useSearchParams, useNavigate, useParams } from "react-router-dom";
@@ -62,7 +60,6 @@ import {
   type UserFilters,
 } from "@/features/super-admin/services/adminService";
 
-
 import { AddUserDialog } from "@/features/super-admin/components/AddUserDialog";
 import { UserAuditLogsSheet } from "@/features/super-admin/components/UserAuditLogsSheet";
 import { RoleBadge } from "@/components/common/RoleBadge";
@@ -77,9 +74,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-
-// ── Helpers ─────────────────────────────────────────────────────────────────
-
 
 function statusBadge(status: string) {
   const map: Record<string, { label: string; className: string; icon: JSX.Element }> = {
@@ -117,8 +111,6 @@ function getRowColorClass(_role: string): string {
   return "hover:bg-muted/50";
 }
 
-// ── Component ───────────────────────────────────────────────────────────────
-
 export function UserManagementPage() {
   const navigate = useNavigate();
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -132,7 +124,6 @@ export function UserManagementPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const filterParam = searchParams.get("filter");
 
-  // Filters
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -144,9 +135,6 @@ export function UserManagementPage() {
     else setAccountStatusFilter("all");
   }, [searchParams]);
 
-
-
-  // Delete dialog
   const [deletingUser, setDeletingUser] = useState<AdminUser | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isHardDeleting, setIsHardDeleting] = useState(false);
@@ -191,7 +179,6 @@ export function UserManagementPage() {
     loadUsers();
   }, [loadUsers]);
 
-  // Reset page to 1 on filter change
   useEffect(() => {
     if (page !== 1) {
       navigate('/admin/users');
@@ -223,7 +210,6 @@ export function UserManagementPage() {
         <title>User Management  | PsyicHub - Psychological Intelligence</title>
       </Helmet>
 
-      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
@@ -254,7 +240,6 @@ export function UserManagementPage() {
         </div>
       </div>
 
-      {/* Main Card with Filters + Table */}
       <Card className="border-primary/10 bg-background/50 backdrop-blur-sm relative overflow-hidden pb-0">
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
         {isSelectionMode ? (
@@ -286,7 +271,7 @@ export function UserManagementPage() {
         ) : (
           <CardHeader className="pb-3 border-b border-border/50">
             <div className="flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between">
-              {/* Search */}
+
               <div className="flex w-full max-w-sm items-center space-x-2">
                 <div className="relative w-full">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -299,7 +284,6 @@ export function UserManagementPage() {
                 </div>
               </div>
 
-              {/* Filter controls */}
               <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto overflow-y-hidden pb-1 md:pb-0">
                 <Popover>
                   <PopoverTrigger asChild>
@@ -558,7 +542,6 @@ export function UserManagementPage() {
         </CardContent>
       </Card>
 
-      {/* Pagination */}
       {totalPages >= 0 && !isLoading && !error && (
         <div className="pt-6 pb-10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground w-full sm:w-auto text-center sm:text-left">
@@ -612,9 +595,6 @@ export function UserManagementPage() {
         </div>
       )}
 
-
-
-      {/* Delete Confirmation */}
       <AlertDialog
         open={!!deletingUser}
         onOpenChange={(o) => !o && setDeletingUser(null)}
@@ -655,7 +635,6 @@ export function UserManagementPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Audit Logs Sheet */}
       <UserAuditLogsSheet
         userId={viewingLogsFor?.id || null}
         userName={viewingLogsFor ? [viewingLogsFor.first_name, viewingLogsFor.last_name].filter(Boolean).join(" ") : null}

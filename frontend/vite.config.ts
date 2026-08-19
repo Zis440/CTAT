@@ -5,7 +5,6 @@ import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
@@ -75,9 +74,9 @@ export default defineConfig({
     },
   },
   server: {
-    // Allow ngrok tunnels to connect (fixes "This host is not allowed")
+
     allowedHosts: [
-      '.ngrok-free.dev', // Allows all ngrok free domains
+      '.ngrok-free.dev',
       '.ngrok.app',
       '.ngrok.io',
     ],

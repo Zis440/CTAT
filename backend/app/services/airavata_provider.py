@@ -14,7 +14,6 @@ from typing import Dict, List, Optional, Any
 
 logger = logging.getLogger(__name__)
 
-
 class AiravataProvider:
     """
     Airavata LLM provider that uses Ollama as the backend.
@@ -56,14 +55,12 @@ class AiravataProvider:
         """
         import ollama
 
-        # Build the structured prompt
         full_prompt = self._build_structured_prompt(
             user_prompt=user_prompt,
             rag_context=rag_context,
             narrative=narrative,
         )
 
-        # Hard prompt limit to avoid truncation
         safe_prompt = full_prompt[:4000]
 
         try:
@@ -95,7 +92,7 @@ class AiravataProvider:
 
         if rag_context:
             parts.append(rag_context)
-            parts.append("")  # blank line separator
+            parts.append("")
 
         if narrative:
             parts.append("PATIENT NARRATIVE:")

@@ -55,7 +55,7 @@ def refresh_access_token(body: schemas.TokenRefresh, db: Session = Depends(get_d
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    
+
     user = db.query(models.ScreeningUser).filter(models.ScreeningUser.email == email).first()
     if user is None:
         raise credentials_exception

@@ -27,9 +27,6 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/signup-verify", tags=["signup-verification"])
 
-
-# ── Schemas ───────────────────────────────────────────────────────────────────
-
 class RCIDetailsRequest(BaseModel):
     rci_number: str
 
@@ -41,7 +38,6 @@ class RCIDetailsRequest(BaseModel):
             raise ValueError("RCI number must be 'A' followed by 4-6 digits")
         return v
 
-
 class RCIDetailsResponse(BaseModel):
     found: bool
     practitioner_name: Optional[str] = None
@@ -52,7 +48,6 @@ class RCIDetailsResponse(BaseModel):
     qualification: Optional[str] = None
     message: Optional[str] = None
 
-
 class RCICrossCheckRequest(BaseModel):
     """Cross-check user-entered details against RCI record."""
     rci_number: str
@@ -60,19 +55,17 @@ class RCICrossCheckRequest(BaseModel):
     user_email: str
     user_address: Optional[str] = None
 
-
 class RCICrossCheckResponse(BaseModel):
     matches_found: bool
     phone_match: bool = False
     email_match: bool = False
     address_match: bool = False
-    rci_phone: Optional[str] = None  # Masked version for display
+    rci_phone: Optional[str] = None
     message: Optional[str] = None
-
 
 class AadhaarVerifyRequest(BaseModel):
     aadhaar_number: str
-    address: str  # User's entered address to match against
+    address: str
 
     @field_validator("aadhaar_number")
     @classmethod
@@ -82,17 +75,15 @@ class AadhaarVerifyRequest(BaseModel):
             raise ValueError("Aadhaar number must be exactly 12 digits")
         return v
 
-
 class AadhaarVerifyResponse(BaseModel):
     verified: bool
     address_match: bool = False
     message: Optional[str] = None
 
-
 class BankVerifyRequest(BaseModel):
     account_number: str
     ifsc_code: str
-    beneficiary_name: str  # Should match the clinic name
+    beneficiary_name: str
 
     @field_validator("ifsc_code")
     @classmethod
@@ -102,12 +93,10 @@ class BankVerifyRequest(BaseModel):
             raise ValueError("Invalid IFSC code format")
         return v
 
-
 class BankVerifyResponse(BaseModel):
     verified: bool
     account_holder_name: Optional[str] = None
     message: Optional[str] = None
-
 
 class PANVerifyRequest(BaseModel):
     pan_number: str
@@ -121,14 +110,10 @@ class PANVerifyRequest(BaseModel):
             raise ValueError("Invalid PAN format")
         return v
 
-
 class PANVerifyResponse(BaseModel):
     verified: bool
     name_match: bool = False
     message: Optional[str] = None
-
-
-# ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.post("/rci-details", response_model=RCIDetailsResponse)
 def fetch_rci_details(req: RCIDetailsRequest):
@@ -139,7 +124,7 @@ def fetch_rci_details(req: RCIDetailsRequest):
     details = neurofy_service.fetch_rci_details(req.rci_number)
 
     if not details:
-        # Neurofy didn't return data — fall back to the existing web scraper
+
         return RCIDetailsResponse(
             found=False,
             message=(
@@ -157,7 +142,6 @@ def fetch_rci_details(req: RCIDetailsRequest):
         state=details.get("state"),
         qualification=details.get("qualification"),
     )
-
 
 @router.post("/rci-crosscheck", response_model=RCICrossCheckResponse)
 def crosscheck_rci(req: RCICrossCheckRequest):
@@ -196,7 +180,6 @@ def crosscheck_rci(req: RCICrossCheckRequest):
         ),
     )
 
-
 @router.post("/aadhaar", response_model=AadhaarVerifyResponse)
 def verify_aadhaar(req: AadhaarVerifyRequest):
     """
@@ -218,7 +201,6 @@ def verify_aadhaar(req: AadhaarVerifyRequest):
         message=result.get("reason", "Aadhaar verification failed."),
     )
 
-
 @router.post("/bank", response_model=BankVerifyResponse)
 def verify_bank_account(req: BankVerifyRequest):
     """
@@ -236,7 +218,6 @@ def verify_bank_account(req: BankVerifyRequest):
         account_holder_name=result.account_holder_name,
         message=result.message,
     )
-
 
 @router.post("/pan", response_model=PANVerifyResponse)
 def verify_pan(req: PANVerifyRequest):
@@ -262,15 +243,11 @@ def verify_pan(req: PANVerifyRequest):
         message=result.get("reason", "PAN verification failed."),
     )
 
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
 def _mask_phone(phone: Optional[str]) -> Optional[str]:
     """Mask a phone number for display: +91XXXXX4321 → +91XXXXX4321"""
     if not phone or len(phone) < 6:
         return phone
     return phone[:3] + "X" * (len(phone) - 7) + phone[-4:]
-
 
 def _mask_email(email: Optional[str]) -> Optional[str]:
     """Mask an email for display: john.doe@gmail.com → j***e@gmail.com"""
@@ -283,12 +260,10 @@ def _mask_email(email: Optional[str]) -> Optional[str]:
         masked = local[0] + "***" + local[-1]
     return f"{masked}@{domain}"
 
-
 def _normalize_phone(phone: str) -> str:
     """Strip a phone number to just digits, last 10."""
     digits = "".join(c for c in phone if c.isdigit())
     return digits[-10:] if len(digits) >= 10 else digits
-
 
 def _fuzzy_address_match(user_addr: Optional[str], rci_addr: Optional[str]) -> bool:
     """Simple fuzzy address comparison — check if key words overlap."""
@@ -296,13 +271,13 @@ def _fuzzy_address_match(user_addr: Optional[str], rci_addr: Optional[str]) -> b
         return False
     user_words = set(user_addr.lower().split())
     rci_words = set(rci_addr.lower().split())
-    # Remove common filler words
+
     fillers = {"and", "the", "of", "at", "in", "to", "no", "nr", ",", ".", "-"}
     user_words -= fillers
     rci_words -= fillers
     if not user_words or not rci_words:
         return False
     overlap = user_words & rci_words
-    # If more than 40% of the smaller set overlaps, consider it a match
+
     min_len = min(len(user_words), len(rci_words))
     return len(overlap) / min_len >= 0.4

@@ -41,12 +41,9 @@ export function OrgCandidatesPage() {
   const { pageId } = useParams();
   const page = parseInt(pageId as string, 10) || 1;
 
-
-  // API Data state
   const [patientList, setPatientList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Form state
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
@@ -63,7 +60,6 @@ export function OrgCandidatesPage() {
   const [socioeconomicStatus, setSocioeconomicStatus] = useState("");
   const [clinicalNotes, setClinicalNotes] = useState("");
 
-  // Search & Filter state
   const [searchQuery, setSearchQuery] = useState("");
   const [genderFilter, setGenderFilter] = useState("all");
 
@@ -124,7 +120,6 @@ export function OrgCandidatesPage() {
       setIsAddOpen(false);
       loadPatients();
 
-      // Reset form
       setName("");
       setLastName("");
       setPhone("");
@@ -156,8 +151,6 @@ export function OrgCandidatesPage() {
       toast.error(err?.response?.data?.detail || "Failed to remove candidate");
     }
   };
-
-
 
   return (
     <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -325,7 +318,6 @@ export function OrgCandidatesPage() {
           )}
         </div>
 
-
       </div>
 
       <Card className="border-primary/10 bg-background/50 backdrop-blur-sm relative overflow-hidden pb-0">
@@ -457,17 +449,17 @@ export function OrgCandidatesPage() {
                   ));
                 }
                 const filtered = patientList.filter(patient => {
-                const matchesSearch = !searchQuery.trim() || 
+                const matchesSearch = !searchQuery.trim() ||
                   `${patient?.first_name || ""} ${patient?.last_name || ""}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
                   (patient?.id || "").toString().toLowerCase().includes(searchQuery.toLowerCase()) ||
                   (patient?.phone_number || "").toString().toLowerCase().includes(searchQuery.toLowerCase()) ||
                   (patient?.email || "").toString().toLowerCase().includes(searchQuery.toLowerCase());
-                
+
                 const matchesGender = genderFilter === "all" || (patient?.gender && patient.gender.toString().toLowerCase() === genderFilter.toLowerCase());
-                
+
                 return matchesSearch && matchesGender;
               });
-              
+
               if (filtered.length === 0) {
                 return (
                   <TableRow className="max-md:block">
@@ -479,7 +471,7 @@ export function OrgCandidatesPage() {
                   </TableRow>
                 );
               }
-              
+
               return filtered.map((patient) => {
                 const displayName = [patient.first_name, patient.last_name].filter(Boolean).join(" ") || patient.id;
                 return (
@@ -549,7 +541,7 @@ export function OrgCandidatesPage() {
           {(() => {
             if (isLoading) return "Loading...";
             const filtered = patientList.filter(p => {
-              const matchesSearch = !searchQuery.trim() || 
+              const matchesSearch = !searchQuery.trim() ||
                 `${p?.first_name || ""} ${p?.last_name || ""}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (p?.id || "").toString().toLowerCase().includes(searchQuery.toLowerCase());
               const matchesGender = genderFilter === "all" || (p?.gender && p.gender.toString().toLowerCase() === genderFilter.toLowerCase());
@@ -565,7 +557,7 @@ export function OrgCandidatesPage() {
         </p>
         {(() => {
             const filtered = patientList.filter(p => {
-              const matchesSearch = !searchQuery.trim() || 
+              const matchesSearch = !searchQuery.trim() ||
                 `${p?.first_name || ""} ${p?.last_name || ""}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (p?.id || "").toString().toLowerCase().includes(searchQuery.toLowerCase());
               const matchesGender = genderFilter === "all" || (p?.gender && p.gender.toString().toLowerCase() === genderFilter.toLowerCase());
@@ -608,4 +600,3 @@ export function OrgCandidatesPage() {
     </div>
   );
 }
-

@@ -28,17 +28,14 @@ def get_pending_counts(
     """
     account_verifications = 0
     report_verifications = 0
-    
+
     role = current_user.role.value if hasattr(current_user.role, 'value') else current_user.role
 
-    # Account verifications are only relevant for super admins
     if role == "super_admin":
         account_verifications = db.query(User).filter(
             User.verification_status == "pending"
         ).count()
 
-    # Report verifications (TAT sessions + Screening reports)
-    # Accessible to anyone who has access to the verification queue
     if role in ("individual_psychologist", "super_admin", "clinic_admin", "org_admin"):
         from app.models.verification_request import VerificationRequest, VerificationRequestStatus
         if role == "individual_psychologist":
@@ -59,7 +56,7 @@ def get_pending_counts(
             ).filter(ScreeningReport.status.in_(["pending", "Under Verification", "Assigned"]))
             tat_pending_count = tat_query.count()
             screening_pending_count = screening_query.count()
-        
+
         report_verifications = tat_pending_count + screening_pending_count
 
     total = account_verifications + report_verifications
@@ -85,21 +82,20 @@ def get_notifications_list(
     current_user: User = Depends(get_current_user)
 ):
     notifications = []
-    
+
     role = current_user.role.value if hasattr(current_user.role, 'value') else current_user.role
 
-    # 1. Verification Tasks (Urgent/Important)
     if role == "super_admin":
         latest_pending_user = db.query(User).filter(User.verification_status == "pending").order_by(desc(User.created_at)).first()
         if latest_pending_user:
             pending_accs = db.query(User).filter(User.verification_status == "pending").count()
-            
+
             dt_str = datetime.now(timezone.utc).isoformat()
             if latest_pending_user.updated_at:
                 dt_str = latest_pending_user.updated_at.isoformat()
             elif latest_pending_user.created_at:
                 dt_str = latest_pending_user.created_at.isoformat()
-                
+
             notifications.append(NotificationItem(
                 id="acc_verif",
                 title="Account Verifications Pending",
@@ -116,34 +112,34 @@ def get_notifications_list(
             VerificationRequest.assigned_psychologist_id == current_user.id,
             VerificationRequest.status == VerificationRequestStatus.ASSIGNED
         ).count()
-        
+
         screening_pending = db.query(ScreeningReport).join(
             ScreeningLevel1Session, ScreeningReport.assessment_id == ScreeningLevel1Session.id
         ).filter(
             ScreeningReport.status.in_(["pending", "Under Verification", "Assigned"]),
             ScreeningReport.verified_by_id == current_user.id
         ).count()
-        
+
         total_reports = tat_pending + screening_pending
         if total_reports > 0:
             latest_req = db.query(VerificationRequest).filter(
                 VerificationRequest.assigned_psychologist_id == current_user.id,
                 VerificationRequest.status == VerificationRequestStatus.ASSIGNED
             ).order_by(desc(VerificationRequest.created_at)).first()
-            
+
             latest_scr = db.query(ScreeningReport).filter(
                 ScreeningReport.verified_by_id == current_user.id,
                 ScreeningReport.status.in_(["pending", "Under Verification", "Assigned"])
             ).order_by(desc(ScreeningReport.created_at)).first()
-            
+
             timestamps = []
             if latest_req and hasattr(latest_req, 'created_at') and latest_req.created_at:
                 timestamps.append(latest_req.created_at)
             if latest_scr and hasattr(latest_scr, 'created_at') and latest_scr.created_at:
                 timestamps.append(latest_scr.created_at)
-                
+
             dt_str = max(timestamps).isoformat() if timestamps else datetime.now(timezone.utc).isoformat()
-            
+
             notifications.append(NotificationItem(
                 id="rep_verif",
                 title="Urgent: Verify Reports",
@@ -154,13 +150,12 @@ def get_notifications_list(
                 priority="urgent"
             ))
 
-    # 2. Wallet Transactions
     wallet = db.query(Wallet).filter(Wallet.user_id == current_user.id).first()
     if wallet:
         recent_txs = db.query(WalletTransaction).filter(
             WalletTransaction.wallet_id == wallet.id
         ).order_by(desc(WalletTransaction.created_at)).limit(5).all()
-        
+
         for tx in recent_txs:
             dt_str = tx.created_at.isoformat() if tx.created_at else datetime.now(timezone.utc).isoformat()
             if tx.type == "credit":
@@ -184,11 +179,10 @@ def get_notifications_list(
                     link="/wallet"
                 ))
 
-    # 3. Recent Sessions
     recent_sessions = db.query(Session).filter(
         Session.user_id == current_user.id
     ).order_by(desc(Session.created_at)).limit(5).all()
-    
+
     for sess in recent_sessions:
         dt_str = sess.created_at.isoformat() if sess.created_at else datetime.now(timezone.utc).isoformat()
         notifications.append(NotificationItem(
@@ -201,9 +195,8 @@ def get_notifications_list(
             link="/sessions"
         ))
 
-    # Sort notifications by timestamp descending
     notifications.sort(key=lambda x: x.timestamp, reverse=True)
-    
+
     if len(notifications) == 0:
         dt_str = current_user.created_at.isoformat() if current_user.created_at else datetime.now(timezone.utc).isoformat()
         notifications.append(NotificationItem(

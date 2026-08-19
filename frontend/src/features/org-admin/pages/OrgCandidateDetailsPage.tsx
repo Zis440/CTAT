@@ -57,7 +57,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// ── Types ────────────────────────────────────────────────────────────────────
 interface PatientData {
   id: string;
   user_id: string;
@@ -96,7 +95,6 @@ interface EditableFields {
 import { getSessionHistoryRoute } from "@/lib/routeUtils";
 import { useAuthStore } from "@/store/useAuthStore";
 
-// ── Component ────────────────────────────────────────────────────────────────
 export function OrgCandidateDetailsPage() {
   const { id: patientId } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -110,7 +108,6 @@ export function OrgCandidateDetailsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Editable form state
   const [form, setForm] = useState<EditableFields>({
     first_name: "",
     last_name: "",
@@ -123,12 +120,10 @@ export function OrgCandidateDetailsPage() {
     notes: "",
   });
 
-  // Auto-compute age from DOB
   const computedAge = form.date_of_birth
     ? Math.floor((Date.now() - new Date(form.date_of_birth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
     : null;
 
-  // ── Fetch patient ──────────────────────────────────────────────────────────
   const fetchPatient = useCallback(async () => {
     if (!patientId) return;
     setIsLoading(true);
@@ -153,7 +148,6 @@ export function OrgCandidateDetailsPage() {
     fetchPatient();
   }, [fetchPatient]);
 
-  // ── Sync form from patient data ────────────────────────────────────────────
   function syncFormFromPatient(p: PatientData) {
     setForm({
       first_name: p.first_name || "",
@@ -168,16 +162,14 @@ export function OrgCandidateDetailsPage() {
     });
   }
 
-  // ── Toggle edit mode ───────────────────────────────────────────────────────
   function handleToggleEdit(checked: boolean) {
     if (!checked && patient) {
-      // Turning off edit mode — discard changes
+
       syncFormFromPatient(patient);
     }
     setIsEditing(checked);
   }
 
-  // ── Save changes ───────────────────────────────────────────────────────────
   async function handleSave() {
     if (!patientId) return;
     setIsSaving(true);
@@ -214,14 +206,12 @@ export function OrgCandidateDetailsPage() {
     }
   }
 
-  // ── Cancel editing ─────────────────────────────────────────────────────────
   function handleCancel() {
     if (patient) syncFormFromPatient(patient);
     setIsEditing(false);
     toast.info("Changes discarded.");
   }
 
-  // ── Delete patient ─────────────────────────────────────────────────────────
   async function handleDelete() {
     if (!patientId) return;
     try {
@@ -233,14 +223,12 @@ export function OrgCandidateDetailsPage() {
     }
   }
 
-  // ── Export functions ───────────────────────────────────────────────────────
   const exportToPDF = async () => {
     if (!patient) return;
     const doc = new jsPDF();
-    
+
     let currentY = 20;
 
-    // Fetch and add logo
     try {
       const response = await fetch('/psyichub-report-logo.png');
       const blob = await response.blob();
@@ -249,21 +237,21 @@ export function OrgCandidateDetailsPage() {
         reader.onloadend = () => resolve(reader.result as string);
         reader.readAsDataURL(blob);
       });
-      // The report logo is rectangular
-      doc.addImage(base64Data, 'PNG', 14, 12, 32, 17); 
-      // Skip the "Psyichub" text since the logo already contains the full brand text
+
+      doc.addImage(base64Data, 'PNG', 14, 12, 32, 17);
+
       currentY = 38;
     } catch (e) {
       console.warn("Failed to load logo for PDF", e);
     }
 
     const displayName = patient.first_name ? `${patient.first_name} ${patient.last_name || ""}`.trim() : patient.id;
-    
+
     doc.setFontSize(18);
     doc.setTextColor(0, 0, 0);
     doc.text(`Candidate Data: ${displayName}`, 14, currentY);
     currentY += 8;
-    
+
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text(`Generated on ${format(new Date(), "PPpp")}`, 14, currentY);
@@ -317,8 +305,7 @@ export function OrgCandidateDetailsPage() {
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Candidate Data");
-    
-    // Auto-size columns loosely
+
     const wscols = Object.keys(exportData[0]).map(() => ({ wch: 20 }));
     worksheet["!cols"] = wscols;
 
@@ -326,7 +313,6 @@ export function OrgCandidateDetailsPage() {
     toast.success("Excel Exported Successfully");
   };
 
-  // ── Loading ────────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
       <div className="w-full relative min-h-full isolate">
@@ -394,7 +380,6 @@ export function OrgCandidateDetailsPage() {
 
   if (!patient) return null;
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
   const displayName = patient.first_name
     ? `${patient.first_name} ${patient.last_name || ""}`.trim()
     : patient.id;
@@ -407,7 +392,6 @@ export function OrgCandidateDetailsPage() {
   const patientTypeBadgeVariant =
     patient.patient_type === "anonymous" ? "outline" as const : "default" as const;
 
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="w-full relative min-h-full isolate">
       <Helmet>
@@ -415,10 +399,9 @@ export function OrgCandidateDetailsPage() {
       </Helmet>
 
       <div className="w-full max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        {/* ── Top bar: Actions & Edit Switch ── */}
+
         <div className="flex items-center justify-end">
 
-          {/* Action Group */}
           <div className="flex items-center gap-3">
             {allowExport && patient && (
               <DropdownMenu>
@@ -441,7 +424,6 @@ export function OrgCandidateDetailsPage() {
               </DropdownMenu>
             )}
 
-            {/* Edit Mode Switch */}
             <motion.div
               initial={{ opacity: 0, x: 12 }}
               animate={{ opacity: 1, x: 0 }}
@@ -464,23 +446,21 @@ export function OrgCandidateDetailsPage() {
           </div>
         </div>
 
-        {/* ── Candidate Identity Card ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
           <Card className="border-primary/10 bg-background/80 backdrop-blur-sm overflow-hidden">
-            {/* Gradient accent strip */}
+
             <div className="h-1 bg-gradient-to-r from-primary/60 via-primary to-primary/60" />
             <CardContent className="pt-6">
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-                {/* Avatar */}
+
                 <div className="h-16 w-16 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center shrink-0">
                   <span className="text-xl font-bold text-primary">{initial}</span>
                 </div>
 
-                {/* Name + meta */}
                 <div className="flex-1 text-center sm:text-left space-y-3">
                   {isEditing ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg">
@@ -518,7 +498,6 @@ export function OrgCandidateDetailsPage() {
                     )}
                   </div>
 
-                  {/* Contact Info */}
                   <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 pt-2 border-t border-primary/10">
                     <div className="space-y-1">
                       <Label className="text-muted-foreground font-bold text-[10px] uppercase tracking-wider">Email</Label>
@@ -550,7 +529,6 @@ export function OrgCandidateDetailsPage() {
                   </div>
                 </div>
 
-                {/* Session stats */}
                 <div className="text-center sm:text-right space-y-1 shrink-0">
                   <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                     <Activity className="h-4 w-4" />
@@ -571,7 +549,6 @@ export function OrgCandidateDetailsPage() {
           </Card>
         </motion.div>
 
-        {/* ── Demographics ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -589,7 +566,7 @@ export function OrgCandidateDetailsPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                {/* Date of Birth */}
+
                 <div className="space-y-2">
                   <Label className="text-muted-foreground font-bold text-xs uppercase tracking-wider">
                     Date of Birth {computedAge !== null && <span className="normal-case font-normal">({computedAge} years)</span>}
@@ -631,7 +608,6 @@ export function OrgCandidateDetailsPage() {
                   )}
                 </div>
 
-                {/* Gender */}
                 <div className="space-y-2">
                   <Label className="text-muted-foreground font-bold text-xs uppercase tracking-wider">
                     Gender
@@ -657,7 +633,6 @@ export function OrgCandidateDetailsPage() {
           </Card>
         </motion.div>
 
-        {/* ── Socio-Cultural Context ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -674,7 +649,7 @@ export function OrgCandidateDetailsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
-              {/* Background */}
+
               <div className="space-y-2">
                 <Label className="text-muted-foreground font-bold text-xs uppercase tracking-wider">
                   Background
@@ -695,7 +670,6 @@ export function OrgCandidateDetailsPage() {
 
               <Separator className="bg-primary/5" />
 
-              {/* Environment */}
               <div className="space-y-2">
                 <Label className="text-muted-foreground font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
                   <Home className="h-3.5 w-3.5" />
@@ -718,7 +692,6 @@ export function OrgCandidateDetailsPage() {
           </Card>
         </motion.div>
 
-        {/* ── Clinical Notes ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -751,7 +724,6 @@ export function OrgCandidateDetailsPage() {
           </Card>
         </motion.div>
 
-        {/* ── Session History Summary ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -797,7 +769,6 @@ export function OrgCandidateDetailsPage() {
           </Card>
         </motion.div>
 
-        {/* ── Action Bar (visible in edit mode) ── */}
         {isEditing && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -880,7 +851,6 @@ export function OrgCandidateDetailsPage() {
           </motion.div>
         )}
 
-        {/* Bottom spacer */}
         <div className="h-8" />
       </div>
     </div>

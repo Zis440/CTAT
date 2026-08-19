@@ -36,7 +36,6 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
-// Sub-component for rendering table per tab
 function SessionTable({
   sessions,
   isLoading,
@@ -406,7 +405,6 @@ export function AdminSessionHistoryPage() {
     }
   };
 
-  // Filter by search
   const filteredSessions = searchQuery.trim()
     ? pastSessions.filter((s) => {
       const q = searchQuery.toLowerCase();
@@ -419,7 +417,6 @@ export function AdminSessionHistoryPage() {
     })
     : pastSessions;
 
-  // Split by account_type
   const individualSessions = filteredSessions.filter(s => s.account_type === "individual" || !s.account_type);
   const clinicSessions = filteredSessions.filter(s => s.account_type === "clinic");
   const orgSessions = filteredSessions.filter(s => s.account_type === "organization");
@@ -431,7 +428,7 @@ export function AdminSessionHistoryPage() {
       </Helmet>
 
       <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-        {/* Header */}
+
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">

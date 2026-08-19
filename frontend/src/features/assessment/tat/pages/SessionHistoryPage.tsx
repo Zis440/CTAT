@@ -179,7 +179,6 @@ export function SessionHistoryPage() {
     }
   };
 
-  // Filter sessions by search query
   const filteredSessions = searchQuery.trim()
     ? pastSessions.filter((s) => {
       const q = searchQuery.toLowerCase();
@@ -285,15 +284,13 @@ export function SessionHistoryPage() {
 
   return (
     <div className="w-full relative min-h-full isolate">
-      {/* <SkewedLines /> */}
+
       <Helmet>
         <title>Session History | PsyicHub - Psychological Intelligence</title>
       </Helmet>
 
-
-
       <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-        {/* Header */}
+
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
@@ -323,7 +320,6 @@ export function SessionHistoryPage() {
           </div>
         </div>
 
-        {/* Main Grid */}
         <Card className="border-primary/10 bg-background/50 backdrop-blur-sm relative overflow-hidden pb-0">
           <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
           {isSelectionMode ? (
@@ -427,7 +423,6 @@ export function SessionHistoryPage() {
                 </div>
               </div>
 
-              {/* Results summary when searching */}
               {searchQuery.trim() && (
                 <p className="text-sm text-muted-foreground mt-2">
                   Showing {filteredSessions.length} of {pastSessions.length} session{pastSessions.length !== 1 ? "s" : ""}
@@ -656,8 +651,7 @@ export function SessionHistoryPage() {
                 />
               </PaginationItem>
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                // Show ellipsis logic if needed, but for now simple rendering
-                // Only show pages around current page
+
                 if (
                   totalPages > 7 &&
                   (page < currentPage - 2 || page > currentPage + 2) &&
@@ -706,9 +700,6 @@ export function SessionHistoryPage() {
   );
 }
 
-/* ====================================================================
-   PATIENT SEARCH INPUT — Inline search bar for filtering sessions
-   ==================================================================== */
 function PatientSearchInput({ query, onChange }: { query: string; onChange: (q: string) => void }) {
   const { user } = useAuthStore();
   const isOrg = user?.role === "org_admin" || user?.role === "org_staff";

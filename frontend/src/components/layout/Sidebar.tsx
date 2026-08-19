@@ -1,5 +1,3 @@
-// src/components/layout/Sidebar.tsx
-// Role-aware sidebar router that selects the appropriate sidebar component.
 
 import { useAuthStore } from "@/store/useAuthStore";
 import { IndividualPsychologistSidebar } from "@/features/individual/layout/IndividualPsychologistSidebar";
@@ -9,16 +7,6 @@ import { SuperAdminSidebar } from "@/features/super-admin/layout/SuperAdminSideb
 import { OrgStaffSidebar } from "@/features/org-staff/layout/OrgStaffSidebar";
 import { ClinicStaffSidebar } from "@/features/clinic-staff/layout/ClinicStaffSidebar";
 
-/**
- * AppSidebar - Main sidebar router component
- * Selects the appropriate sidebar based on the authenticated user's role.
- * - individual_psychologist -> IndividualPsychologistSidebar
- * - clinic_staff -> ClinicStaffSidebar
- * - clinic_admin -> ClinicAdminSidebar
- * - org_admin -> OrgAdminSidebar
- * - org_staff -> OrgStaffSidebar
- * - super_admin -> SuperAdminSidebar
- */
 export function AppSidebar() {
   const { user } = useAuthStore();
 
@@ -46,6 +34,5 @@ export function AppSidebar() {
     return <ClinicStaffSidebar />;
   }
 
-  // Default to Individual Psychologist sidebar for individual_psychologist
   return <IndividualPsychologistSidebar />;
 }

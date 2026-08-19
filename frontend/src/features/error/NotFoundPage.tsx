@@ -14,9 +14,8 @@ export function NotFoundPage() {
         <title>404 - Page Not Found | PsyicHub - Psychological Intelligence</title>
       </Helmet>
 
-      {/* Subtle grid background */}
-      <div 
-        className="absolute inset-0 z-0 opacity-10" 
+      <div
+        className="absolute inset-0 z-0 opacity-10"
         style={{
           backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)',
           backgroundSize: '40px 40px'
@@ -25,7 +24,7 @@ export function NotFoundPage() {
 
       <div className="relative z-10 w-full max-w-lg">
         <div className="border border-zinc-800/60 bg-[#111111]/80 backdrop-blur-sm rounded-xl p-8 shadow-2xl flex flex-col items-center text-center">
-          
+
           <div className="w-16 h-16 bg-zinc-800/80 rounded-2xl flex items-center justify-center mb-6 border border-zinc-700/50 shadow-inner">
             <AlertCircle className="w-8 h-8 text-zinc-300" strokeWidth={1.5} />
           </div>

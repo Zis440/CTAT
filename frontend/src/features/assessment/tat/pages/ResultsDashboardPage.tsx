@@ -35,7 +35,6 @@ export function AnalysisDashboard() {
   const isDetailsRoute = location.pathname.includes('/details');
   const isResultRoute = location.pathname.includes('/session-history/result') || isDetailsRoute || location.pathname.includes('/synthesizing') || location.pathname.includes('/report/');
 
-  // get the assessment name
   const testDef = TEST_REGISTRY.find((t: any) => t.slug === testType) || { name: "Assessment" };
 
   const [pastSessions, setPastSessions] = useState<any[]>([]);
@@ -86,7 +85,6 @@ export function AnalysisDashboard() {
     }
   }, [viewedTestType]);
 
-  // Check if navigated from session-history with a past session to view
   useEffect(() => {
     async function loadPastSession() {
       if (location.state?.report) {
@@ -121,7 +119,7 @@ export function AnalysisDashboard() {
           setViewingPast(true);
 
           if (cached.sessionId || cached.validationStatus) {
-            // Force it into the report so the validation button can pick it up
+
             if (!cached.report._db_metadata) {
               cached.report._db_metadata = {};
             }
@@ -165,8 +163,6 @@ export function AnalysisDashboard() {
         return;
       }
 
-      // Scenario A: Active Session just completed — generate report then redirect
-      // Skip if we're viewing a past session (indicated by ?view=past) or if we are on the generic /dashboard
       if (isResultRoute && activePatientId && selectedCards.length > 0) {
         if (isAggregatingRef.current) return;
         isAggregatingRef.current = true;
@@ -176,14 +172,13 @@ export function AnalysisDashboard() {
           for (const card of selectedCards) {
             const data = queryClient.getQueryData(['analysis', activePatientId, card]);
             if (data) {
-              // eslint-disable-next-line security/detect-object-injection
+
               cardResults[card] = data;
             }
           }
 
           if (Object.keys(cardResults).length === 0) {
-            // No analysis data in cache — stale session state from back-navigation.
-            // Reset and fall through to the history view.
+
             useSessionStore.getState().resetSession();
             try {
               const [sessRes, patRes, statsRes] = await Promise.allSettled([
@@ -200,7 +195,6 @@ export function AnalysisDashboard() {
             return;
           }
 
-          // Aggregate results and display the report on the dashboard
           const aggResult = await aggregateCardResults(activePatientId, cardResults, testDef.name, requestPsychologistValidation);
 
           useSessionStore.getState().resetSession();
@@ -230,14 +224,13 @@ export function AnalysisDashboard() {
           setReport(aggResult);
           setIsLoading(false);
 
-          // Fallback if no reportId, generate PDF here
           if (!hasGeneratedRef.current) {
             hasGeneratedRef.current = true;
             generatePdfReport(activePatientId, cardResults, testDef.name, requestPsychologistValidation)
               .then((url) => {
                 setPdfUrl(url);
                 toast.success("PDF Report generated!");
-                // Fetch and update the balance immediately after deduction
+
                 getWalletBalance()
                   .then((b) => {
                     useWalletStore.getState().setBalance(b);
@@ -255,13 +248,12 @@ export function AnalysisDashboard() {
           console.error("Aggregation failed:", detail, err);
           toast.error(`Analysis error: ${detail}`, { duration: 8000 });
 
-          // Fallback: load the most-recent full session from disk via /sessions/{id}
           try {
             const sessions = await fetchPastSessions();
             setPastSessions(sessions);
             if (sessions.length > 0) {
               const latest = sessions[0];
-              // Fetch full detail which contains report_summary
+
               const { data: detail } = await apiClient.get<any>(`/sessions/${latest.id}`);
               const reportSummary = detail?.report_summary;
               if (reportSummary) {
@@ -273,17 +265,17 @@ export function AnalysisDashboard() {
               }
             }
           } catch {
-            // absolute last resort — blank history view is shown
+
           } finally {
             isAggregatingRef.current = false;
             setIsLoading(false);
           }
         }
       }
-      // Scenario B: No active session, show history
+
       else {
         setIsLoading(true);
-        // Safety timeout — force-clear loading after 5 s regardless of API state
+
         const safetyTimer = setTimeout(() => setIsLoading(false), 5000);
         try {
           const [sessionsResult, patientsResult, statsResult] = await Promise.allSettled([
@@ -365,7 +357,6 @@ export function AnalysisDashboard() {
     );
   }
 
-  // If we are not explicitly on the result route, show the Dashboard Overview
   if (!isResultRoute) {
     const recentSessions = pastSessions.slice(0, 7);
     const recentPatients = [...patientsList]
@@ -383,9 +374,9 @@ export function AnalysisDashboard() {
 
     const numCards = [
       hasWalletPerm,
-      true, // Total Patients
+      true,
       canAssess,
-      !isOrg // Upcoming Appointments
+      !isOrg
     ].filter(Boolean).length;
 
     const gridColsClass =
@@ -395,15 +386,13 @@ export function AnalysisDashboard() {
 
     return (
       <div className="w-full relative min-h-full isolate">
-        {/* <SkewedLines /> */}
+
         <Helmet>
           <title>Dashboard | PsyicHub - Psychological Intelligence</title>
         </Helmet>
 
-
-
         <div className="w-full max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {/* Header */}
+
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <h2 className="text-3xl font-bold tracking-tight">
@@ -423,7 +412,6 @@ export function AnalysisDashboard() {
             )}
           </div>
 
-          {/* Verification Banner */}
           {user?.account_type === "individual" && user?.professional_domain === "Clinical Psychologist" && user?.rci_number && user?.verification_status !== "approved" && (
             <Card className="border-primary/20 bg-primary/5 cursor-pointer hover:bg-primary/10 transition-colors" onClick={() => navigate("/verification")}>
               <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -451,7 +439,6 @@ export function AnalysisDashboard() {
             </Card>
           )}
 
-          {/* Stat Cards */}
           <div className={`grid gap-4 md:grid-cols-2 ${gridColsClass}`}>
             {hasWalletPerm && (
               <BorderGlow className="hover:border-primary/30 transition-colors h-full">
@@ -516,9 +503,8 @@ export function AnalysisDashboard() {
             )}
           </div>
 
-          {/* Recent Activity Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Recent Sessions List */}
+
             <Card className="border-primary/10 bg-background/50 backdrop-blur-sm flex flex-col h-full overflow-hidden relative">
               <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
               <CardHeader className="pb-3">
@@ -587,7 +573,6 @@ export function AnalysisDashboard() {
               </CardContent>
             </Card>
 
-            {/* Newly Added Patients */}
             <Card className="border-primary/10 bg-background/50 backdrop-blur-sm flex flex-col h-full overflow-hidden relative">
               <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
               <CardHeader className="pb-3">
@@ -678,7 +663,6 @@ export function AnalysisDashboard() {
     );
   }
 
-
   const formatName = (name: string) => {
     if (!name) return name;
     const s = name;
@@ -720,7 +704,6 @@ export function AnalysisDashboard() {
                         toast.promise(promise, { loading: 'Opening PDF...', success: 'PDF opened successfully!', error: 'Failed to open PDF.' });
                         return;
                       }
-                      // Fallback just in case
                       toast.promise(
                         openPdfReport(pdfName),
                         {
@@ -819,7 +802,7 @@ export function AnalysisDashboard() {
       }
       rightFooterActions={
         <>
-          {/* If the user is a fully verified clinical psychologist, they don't need to pay to verify. They can just review/verify it themselves via a different flow or it's implicitly verified. Hide the button. */}
+
           {!((user?.rci_number || user?.roc_number) && user?.verification_status === "approved") && (
             <>
               {(!report?._db_metadata?.validation_status || report?._db_metadata?.validation_status === "AI Generated" || report?._db_metadata?.validation_status === "Generated" || report?._db_metadata?.validation_status === "System Generated") ? (
@@ -881,7 +864,6 @@ export function AnalysisDashboard() {
       <div className="bg-background p-6 md:p-10 mx-auto max-w-5xl my-6 print:shadow-none print:border-none print:m-0 print:max-w-full">
         <div className="grid grid-cols-1 gap-6">
 
-          {/* HISTORICAL PROGRESSION */}
           {report?.historical_comparison?.metrics && report.historical_comparison.metrics.length > 0 && (
             <div className="mb-8">
               <SectionHeader title="1. Historical Progression" />
@@ -934,13 +916,12 @@ export function AnalysisDashboard() {
               <ColorBandBar label="Interpersonal Conflict" value={report.conflict_interpersonal || 0} />
             </div>
           </div>
-          {/* RECURRENT DOMINANT THEMES — junk labels filtered backend + frontend */}
+
           {(() => {
-            // Reject: too short, too long, slash-separated, all stopwords
             const STOPS = new Set(['it', 'do', 'i', 'a', 'an', 'the', 'and', 'or', 'to', 'of', 'in', 'is', 'was', 'he', 'she', 'they', 'we', 'you', 'be', 'are', 'for', 'on', 'at', 'by', 'as', 'so', 'no', 'my']);
             const validThemes = (report.themes || []).filter((t: string) => {
               if (!t || t.length < 4) return false;
-              if (t.includes('/')) return false; // slash-separated garbage
+              if (t.includes('/')) return false;
               const words = t.toLowerCase().split(/\s+/).filter(Boolean);
               if (words.length > 6) return false;
               const meaningfulWords = words.filter(w => w.length >= 4 && !STOPS.has(w));
@@ -1005,7 +986,6 @@ export function AnalysisDashboard() {
             </div>
           </div>
 
-          {/* CONFLICT ANALYSIS */}
           {report.aggregated_conflicts && report.aggregated_conflicts.length > 0 && (
             <div className="mb-8" style={{ pageBreakInside: 'avoid' }}>
               <SectionHeader title="5. Conflict Analysis" />
@@ -1051,7 +1031,6 @@ export function AnalysisDashboard() {
             </div>
           )}
 
-          {/* ENVIRONMENT CLASSIFICATION */}
           {report.aggregated_environment && report.aggregated_environment.dominant_type && report.aggregated_environment.dominant_type !== 'N/A' && (
             <div className="mb-8" style={{ pageBreakInside: 'avoid' }}>
               <SectionHeader title="6. Environment Classification" />
@@ -1090,7 +1069,6 @@ export function AnalysisDashboard() {
             </div>
           )}
 
-          {/* DEFENSE MECHANISMS */}
           {report.aggregated_defenses && report.aggregated_defenses.length > 0 && (
             <div className="mb-8" style={{ pageBreakInside: 'avoid' }}>
               <SectionHeader title="7. Defense Mechanisms" />
@@ -1115,7 +1093,6 @@ export function AnalysisDashboard() {
             </div>
           )}
 
-          {/* COPING MECHANISMS — names only, no narration */}
           {report.aggregated_coping && report.aggregated_coping.filter((c: any) => {
             const name = typeof c === 'string' ? c : (c?.mechanism || '');
             return name && name.length <= 40 && name.split(' ').length <= 5;
@@ -1143,12 +1120,10 @@ export function AnalysisDashboard() {
               </div>
             )}
 
-          {/* PER-CARD BREAKDOWN */}
           {report.per_card_summaries && report.per_card_summaries.length > 0 && (
             <PerCardBreakdown cards={report.per_card_summaries} formatName={formatName} />
           )}
 
-          {/* CLINICAL FORMULATION */}
           {report.clinical_formulation && (
             <div className="mb-8">
               <SectionHeader title="9. Clinical Formulation (Auto-Generated)" />
@@ -1160,7 +1135,6 @@ export function AnalysisDashboard() {
 
         </div>
 
-        {/* FOOTER */}
         <div className="mt-16 pt-8 border-t border-border flex flex-col gap-2 text-[10px] text-muted-foreground text-center print:text-left print:flex-row print:justify-between">
           <p className="font-medium text-amber-700 max-w-4xl mx-auto print:mx-0 print:max-w-[70%]">
             Disclaimer: This report is generated for informational and educational purposes only and is not a substitute for professional clinical diagnosis or treatment.
@@ -1175,9 +1149,6 @@ export function AnalysisDashboard() {
   );
 }
 
-/* ====================================================================
-   PER-CARD BREAKDOWN — Collapsible accordion showing each card's data
-   ==================================================================== */
 function PerCardBreakdown({ cards, formatName }: { cards: any[], formatName: (n: string) => string }) {
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
 
@@ -1216,7 +1187,7 @@ function PerCardBreakdown({ cards, formatName }: { cards: any[], formatName: (n:
               {isExpanded && (
                 <div className="px-4 pb-4 space-y-4 border-t bg-muted/20 animate-in slide-in-from-top-1 duration-200">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-                    {/* Card Needs */}
+
                     <div>
                       <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Needs</h5>
                       {card.needs && card.needs.length > 0 ? (
@@ -1233,7 +1204,7 @@ function PerCardBreakdown({ cards, formatName }: { cards: any[], formatName: (n:
                         </div>
                       ) : <span className="text-xs text-muted-foreground">None</span>}
                     </div>
-                    {/* Card Presses */}
+
                     <div>
                       <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Presses</h5>
                       {card.presses && card.presses.length > 0 ? (
@@ -1250,7 +1221,7 @@ function PerCardBreakdown({ cards, formatName }: { cards: any[], formatName: (n:
                         </div>
                       ) : <span className="text-xs text-muted-foreground">None</span>}
                     </div>
-                    {/* Card Conflicts */}
+
                     <div>
                       <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Conflicts</h5>
                       {card.conflicts && card.conflicts.length > 0 ? (
@@ -1266,7 +1237,7 @@ function PerCardBreakdown({ cards, formatName }: { cards: any[], formatName: (n:
                         </div>
                       ) : <span className="text-xs text-muted-foreground">None</span>}
                     </div>
-                    {/* Card Defenses & Environment */}
+
                     <div className="space-y-4">
                       <div>
                         <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Defenses</h5>
@@ -1311,4 +1282,3 @@ function PerCardBreakdown({ cards, formatName }: { cards: any[], formatName: (n:
     </div>
   );
 }
-

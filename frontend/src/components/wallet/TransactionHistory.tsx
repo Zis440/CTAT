@@ -1,5 +1,3 @@
-// ─── TransactionHistory ─────────────────────────────────────────────────────
-// Displays all past wallet transactions with timestamps and running balances.
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -94,7 +92,7 @@ export default function TransactionHistory({
                   transactions.map((tx) => {
                     let testName = "-";
                     let performedBy = "-";
-                    
+
                     if (tx.description.includes(" - ")) {
                       const parts = tx.description.split(" - ");
                       testName = parts[0].replace(" Session", "");
@@ -104,11 +102,11 @@ export default function TransactionHistory({
                     } else {
                       testName = tx.description;
                     }
-                    
+
                     if ((tx as any).created_by_name) {
                       performedBy = (tx as any).created_by_name;
                     }
-                    
+
                     return (
                       <TableRow key={tx.id} className="hover:bg-primary/5 transition-colors group">
                         <TableCell className="font-medium text-muted-foreground">
@@ -150,9 +148,9 @@ export default function TransactionHistory({
                         </TableCell>
                         <TableCell className="text-right">
                           {tx.type === "credit" && (
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               title="Download Invoice"
                               className="h-8 w-8 text-muted-foreground hover:text-primary"
                               onClick={async () => {

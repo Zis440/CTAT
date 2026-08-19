@@ -7,10 +7,10 @@ export function AdminPatientDetailsPage() {
   if (!id) return null;
 
   return (
-    <SharedPatientDetails 
-      patientId={id} 
-      apiBasePath="/admin/patients" 
-      backUrl="/admin/patients" 
+    <SharedPatientDetails
+      patientId={id}
+      apiBasePath="/admin/patients"
+      backUrl="/admin/patients"
       allowExport={true}
     />
   );

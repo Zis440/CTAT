@@ -33,7 +33,7 @@ export function AdminReportVerificationMonitorPage() {
     refetchInterval: 10_000,
   });
 
-  const filteredQueue = queue?.filter(req => 
+  const filteredQueue = queue?.filter(req =>
     req.request_id.toLowerCase().includes(search.toLowerCase()) ||
     (req.psychologist_name && req.psychologist_name.toLowerCase().includes(search.toLowerCase()))
   );
@@ -100,10 +100,10 @@ export function AdminReportVerificationMonitorPage() {
 
       <Card className="border-primary/10 bg-background/50 backdrop-blur-sm relative overflow-hidden pb-0">
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
-        
+
         <CardHeader className="pb-3 border-b border-border/50">
           <div className="flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between">
-            {/* Search */}
+
             <div className="flex w-full max-w-sm items-center space-x-2">
               <div className="relative w-full">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -111,7 +111,6 @@ export function AdminReportVerificationMonitorPage() {
               </div>
             </div>
 
-            {/* Filter controls */}
             <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto overflow-y-hidden pb-1 md:pb-0">
               <Popover>
                 <PopoverTrigger asChild>

@@ -12,14 +12,13 @@ from dataclasses import dataclass
 from sentence_transformers import SentenceTransformer
 from app.assessments.tat.engines.nlp.enhanced_nlp import EnhancedNLPProcessor
 
-# Prototype sentences for each need (expanded to 18 needs)
 NEED_PROTOTYPES = {
     "nAchievement": [
         "The person strives to accomplish something difficult.",
         "They want to overcome obstacles and succeed.",
         "Aiming to excel and reach a high standard.",
         "Desire to master a skill or task.",
-        # Collectivist variants
+
         "The person works hard to bring honor to their family through success.",
         "They study diligently to fulfill their parents' expectations.",
     ],
@@ -28,7 +27,7 @@ NEED_PROTOTYPES = {
         "They want to belong to a group or community.",
         "Desire to share and cooperate with companions.",
         "Need to feel accepted and liked.",
-        # Collectivist variants
+
         "The person feels complete being surrounded by their family.",
         "They find meaning through community and shared rituals.",
         "Duty toward the family brings them inner peace.",
@@ -38,7 +37,7 @@ NEED_PROTOTYPES = {
         "They resist influence or coercion from others.",
         "Desire to act according to own wishes.",
         "Need to be self-sufficient and not rely on others.",
-        # Collectivist nuance
+
         "They want to make their own career choice despite family expectations.",
         "The person seeks to balance personal goals with family obligations.",
     ],
@@ -53,7 +52,7 @@ NEED_PROTOTYPES = {
         "They provide support and comfort.",
         "Desire to be compassionate and nurturing.",
         "Need to take care of someone vulnerable.",
-        # Collectivist variants
+
         "They feel it is their duty to care for aging parents.",
         "The person sacrifices their own needs for the family's wellbeing.",
     ],
@@ -62,7 +61,7 @@ NEED_PROTOTYPES = {
         "They want to be taken care of.",
         "Desire for support when in trouble.",
         "Need to depend on someone.",
-        # Collectivist variants
+
         "The person turns to their family elders for guidance and comfort.",
         "They seek the community's support during difficult times.",
     ],
@@ -83,7 +82,7 @@ NEED_PROTOTYPES = {
         "They are cautious and fearful of harm.",
         "Desire to stay safe and secure.",
         "Need to prevent injury or threat.",
-        # Collectivist variants
+
         "The person avoids actions that might bring shame upon the family.",
     ],
     "nAbasement": [
@@ -91,7 +90,7 @@ NEED_PROTOTYPES = {
         "They feel guilty or inferior.",
         "Desire to atone for mistakes.",
         "Need to be humble and compliant.",
-        # Collectivist variants
+
         "The person shows deference to elders as a sign of respect, not weakness.",
     ],
     "nPlay": [
@@ -219,7 +218,6 @@ PRESS_PROTOTYPES = {
     ]
 }
 
-# Opposing need pairs for need-need conflict detection
 OPPOSING_NEED_PAIRS = [
     ("nAutonomy", "nDominance"),
     ("nNurturance", "nAggression"),
@@ -235,7 +233,6 @@ OPPOSING_NEED_PAIRS = [
     ("nDefendance", "nAbasement")
 ]
 
-# Opposing need-press pairs (existing)
 OPPOSING_NEED_PRESS_PAIRS = [
     ("nAutonomy", "pDominance"),
     ("nNurturance", "pRejection"),
@@ -254,8 +251,6 @@ class MurrayInferenceEngine:
     and need-need conflicts.
     """
 
-    # Gender-bias corrections: multipliers that counteract known SBERT biases
-    # These boost needs that are systematically under-detected for each gender
     GENDER_BIAS_CORRECTIONS = {
         "male": {"nNurturance": 1.15, "nAffiliation": 1.10, "nAbasement": 1.10, "nSuccorance": 1.08},
         "female": {"nDominance": 1.15, "nAggression": 1.10, "nAchievement": 1.05, "nAutonomy": 1.08},
@@ -264,7 +259,7 @@ class MurrayInferenceEngine:
     def __init__(self, nlp_processor: EnhancedNLPProcessor, rag_engine=None):
         self.processor = nlp_processor
         self.rag_engine = rag_engine
-        # Pre-compute embeddings for prototypes
+
         self.need_proto_embs = {}
         self.press_proto_embs = {}
         self._compute_prototype_embeddings()
@@ -283,7 +278,7 @@ class MurrayInferenceEngine:
         patient_gender: optional, 'male' or 'female' for gender-bias correction
         Returns dictionary with needs, presses, conflicts, and full profiles.
         """
-        # Collect all event texts
+
         texts = [e['text'] for e in events]
         if not texts:
             return {
@@ -298,10 +293,8 @@ class MurrayInferenceEngine:
                 "knowledge_base_context": {}
             }
 
-        # Compute embeddings for all event texts
         event_embs = self.processor.get_embeddings(texts)
 
-        # For each need, compute average similarity across events
         need_scores = {}
         for need, proto_embs in self.need_proto_embs.items():
             sim_matrix = np.dot(proto_embs, event_embs.T) / (
@@ -320,42 +313,30 @@ class MurrayInferenceEngine:
             avg_sim = np.mean(max_sim_per_event)
             press_scores[press] = avg_sim
 
-        # Normalize scores to probabilities via temperature-scaled softmax
-        # Temperature < 1 sharpens gradients, preventing over-smoothing
         need_probs = self._softmax(need_scores, temperature=0.3)
         press_probs = self._softmax(press_scores, temperature=0.3)
 
-        # Apply gender-bias correction if patient_gender is provided
         if patient_gender:
             need_probs = self._apply_gender_normalization(need_probs, patient_gender)
 
-        # Helper to normalize labels (Keep internal IDs intact if needed, but here we strip directly)
-        # Reverting to return full internal ID so Knowledge Graph preserves integrity.
-        # We will strip prefixes at the presentation layer instead.
         def _identity(label: str) -> str:
             return label
 
-        # Full profile: list of (need, probability), normalized labels disabled internally
         needs_full_profile = sorted([(_identity(k), v) for k, v in need_probs.items()], key=lambda x: -x[1])
 
-        # Dominant needs: top 3 with prob > 0.1
         dominant_needs = [(n, p) for n, p in needs_full_profile if p > 0.1][:3]
-        # Latent needs: prob between 0.05 and 0.1
+
         latent_needs = [(n, p) for n, p in needs_full_profile if 0.05 <= p <= 0.1]
-        # Suppressed needs: prob < 0.05
+
         suppressed_needs = [(n, p) for n, p in needs_full_profile if p < 0.05]
 
-        # Top 5 needs/presses for backward compatibility
         top_needs = needs_full_profile[:5]
         top_presses = sorted([(_identity(k), v) for k, v in press_probs.items()], key=lambda x: -x[1])[:5]
 
-        # Need-need conflicts
         need_conflicts = self._detect_need_conflicts(need_probs, _identity)
 
-        # Need-press conflicts (existing)
         need_press_conflicts = self._detect_need_press_conflicts(need_probs, press_probs, _identity)
 
-        # --- KB augmentation (additive, no scoring changes) ---
         kb_context = {}
         active_rag = rag_engine or self.rag_engine
         if active_rag and hasattr(active_rag, 'retrieve_for_domain'):
@@ -370,7 +351,7 @@ class MurrayInferenceEngine:
                     elif passages:
                         kb_context["needs_presses_evidence"] = active_rag.format_context(passages, max_chars=800)
             except Exception:
-                pass  # KB augmentation is best-effort
+                pass
 
         return {
             "needs": top_needs,
@@ -386,7 +367,7 @@ class MurrayInferenceEngine:
     def _softmax(self, scores: Dict[str, float], temperature: float = 1.0) -> Dict[str, float]:
         """Convert raw scores to probabilities. Temperature < 1.0 makes distribution sharper."""
         values = np.array(list(scores.values())) / temperature
-        exp_values = np.exp(values - np.max(values))  # for numerical stability
+        exp_values = np.exp(values - np.max(values))
         probs = exp_values / exp_values.sum()
         return dict(zip(scores.keys(), probs))
 
@@ -406,7 +387,6 @@ class MurrayInferenceEngine:
             if need in adjusted:
                 adjusted[need] *= multiplier
 
-        # Re-normalize to sum to 1
         total = sum(adjusted.values())
         if total > 0:
             adjusted = {k: v / total for k, v in adjusted.items()}
@@ -418,12 +398,12 @@ class MurrayInferenceEngine:
         for need_a, need_b in OPPOSING_NEED_PAIRS:
             if need_a in need_probs and need_b in need_probs:
                 strength = need_probs[need_a] * need_probs[need_b]
-                if strength > 0.05:  # threshold
+                if strength > 0.05:
                     conflicts.append({
                         "need_a": strip_fn(need_a),
                         "need_b": strip_fn(need_b),
                         "conflict_strength": float(strength),
-                        "conflict_type": "approach-avoidance",  # placeholder type
+                        "conflict_type": "approach-avoidance",
                         "evidence": "Co-occurrence of opposing needs in narrative"
                     })
         return conflicts

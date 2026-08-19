@@ -33,7 +33,6 @@ import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import type { NavItem } from "@/components/layout/sidebarConfig";
 
-
 import { usePendingCounts } from "@/hooks/usePendingCounts";
 
 export function SuperAdminSidebar() {

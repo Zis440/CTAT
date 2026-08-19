@@ -14,18 +14,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-// import { Separator } from "@/components/ui/separator";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LandingNavbar } from "../landing/components/LandingNavbar";
 import { Footer } from "../landing/components/FooterSection";
 
 type AccountTypeOption = "individual" | "clinic" | "organization";
-
-// ── Helper components defined at MODULE SCOPE ────────────────────────────────
-// CRITICAL: Never define React components inside another component's render
-// function. Doing so creates a brand-new component reference on every parent
-// re-render (every keystroke), causing React to unmount+remount the child,
-// which drops input focus after each character typed.
 
 interface PasswordInputProps {
   id: string;
@@ -80,8 +74,6 @@ function FieldLabel({
   );
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-
 export function SignupPage() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((s: { setAuth: any; }) => s.setAuth);
@@ -91,7 +83,6 @@ export function SignupPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [accountType, setAccountType] = useState<AccountTypeOption>("individual");
 
-  // ── Individual registration state ──────────────────────────────────────────
   const [indDesignation, setIndDesignation] = useState("");
   const [indFirstName, setIndFirstName] = useState("");
   const [indLastName, setIndLastName] = useState("");
@@ -107,14 +98,12 @@ export function SignupPage() {
   const [indGender, setIndGender] = useState("");
   const [indProfessionalDomain, setIndProfessionalDomain] = useState("");
 
-  // Ensure RCI is mandatory for Clinical Psychologist
   useEffect(() => {
     if (indProfessionalDomain === "Clinical Psychologist" && indNoRci) {
       setIndNoRci(false);
     }
   }, [indProfessionalDomain, indNoRci]);
 
-  // ── Clinic registration state ───────────────────────────────────────────────
   const [clinicDesignation, setClinicDesignation] = useState("");
   const [clinicFirstName, setClinicFirstName] = useState("");
   const [clinicLastName, setClinicLastName] = useState("");
@@ -128,14 +117,11 @@ export function SignupPage() {
   const [clinicDob, setClinicDob] = useState<Date | undefined>(undefined);
   const [clinicGender, setClinicGender] = useState("");
 
-
-  // ── Terms & Conditions ─────────────────────────────────────────────────────
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [aiDisclaimerAccepted, setAiDisclaimerAccepted] = useState(false);
   const [refundAccepted, setRefundAccepted] = useState(false);
   const [professionalResponsibilityAccepted, setProfessionalResponsibilityAccepted] = useState(false);
 
-  // ── Phone OTP verification state (shared between both account types) ───────
   const [otpSending, setOtpSending] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState("");
@@ -145,14 +131,12 @@ export function SignupPage() {
   const [otpCountdown, setOtpCountdown] = useState(0);
   const [otpError, setOtpError] = useState<string | null>(null);
 
-  // Countdown timer for OTP resend
   useEffect(() => {
     if (otpCountdown <= 0) return;
     const timer = setInterval(() => setOtpCountdown((c) => c - 1), 1000);
     return () => clearInterval(timer);
   }, [otpCountdown]);
 
-  // Reset OTP state when phone changes
   const resetOtpState = useCallback(() => {
     setOtpSent(false);
     setOtpCode("");
@@ -161,7 +145,6 @@ export function SignupPage() {
     setOtpError(null);
   }, []);
 
-  // ── OTP handlers ───────────────────────────────────────────────────────────
   const handleSendOTP = async () => {
     const phone = accountType === "individual" ? indPhone : clinicPhone;
     if (!phone || phone.length < 10) {
@@ -192,7 +175,7 @@ export function SignupPage() {
     setOtpError(null);
     try {
       const token = await verifyOTP(otpCode);
-      // Cross-verify with backend
+
       const phone = accountType === "individual" ? indPhone : clinicPhone;
       await verifyPhoneWithBackend(token, phone);
       setOtpToken(token);
@@ -206,10 +189,8 @@ export function SignupPage() {
     }
   };
 
-  // ── Advanced Verification State ────────────────────────────────────────────
   const [indAddress, setIndAddress] = useState("");
 
-  // Clinic: Bank verification
   const [clinicBankAccount, setClinicBankAccount] = useState("");
   const [clinicIfsc, setClinicIfsc] = useState("");
   const [bankVerifying, setBankVerifying] = useState(false);
@@ -217,16 +198,12 @@ export function SignupPage() {
   const [bankHolderName, setBankHolderName] = useState<string | null>(null);
   const [bankError, setBankError] = useState<string | null>(null);
 
-  // Clinic: PAN verification (Fallback)
   const [clinicPan, setClinicPan] = useState("");
   const [panVerifying, setPanVerifying] = useState(false);
   const [panVerified, setPanVerified] = useState(false);
   const [panError, setPanError] = useState<string | null>(null);
   const [needsPanFallback, setNeedsPanFallback] = useState(false);
 
-
-
-  // ── Bank Verification Handler ──────────────────────────────────────────────
   const handleBankVerify = async () => {
     if (!clinicBankAccount || !clinicIfsc || !clinicName) {
       toast.error("Please fill in bank account, IFSC, and clinic name.");
@@ -259,7 +236,6 @@ export function SignupPage() {
     }
   };
 
-  // ── PAN Verification Handler ───────────────────────────────────────────────
   const handlePanVerify = async () => {
     if (!clinicPan || clinicPan.length !== 10) {
       toast.error("Please enter a valid 10-character PAN number.");
@@ -314,13 +290,11 @@ export function SignupPage() {
       }
     }
 
-    // Phone OTP verification check
     if (!otpVerified || !otpToken) {
       toast.error("Please verify your phone number via OTP before registering.");
       return;
     }
 
-    // Terms & Conditions check
     if (!termsAccepted || !aiDisclaimerAccepted || !refundAccepted || !professionalResponsibilityAccepted) {
       toast.error("You must agree to all terms, policies, and agreements to create an account.");
       return;
@@ -382,7 +356,7 @@ export function SignupPage() {
           address: clinicAddress || undefined,
           date_of_birth: clinicDob ? new Date(clinicDob.getTime() - clinicDob.getTimezoneOffset() * 60000).toISOString().split('T')[0] : undefined,
           gender: clinicGender || undefined,
-          // Bank verification
+
           bank_account_number: clinicBankAccount || undefined,
           bank_ifsc_code: clinicIfsc.trim().toUpperCase() || undefined,
           bank_verified: bankVerified || undefined,
@@ -416,7 +390,6 @@ export function SignupPage() {
         />
       </Helmet>
 
-      {/* ── Ambient background blobs ── */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/4 -left-32 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-1/4 -right-32 w-80 h-80 bg-accent/10 rounded-full blur-3xl animate-pulse [animation-delay:1s]" />
@@ -424,7 +397,6 @@ export function SignupPage() {
 
       <LandingNavbar />
 
-      {/* ── Centred form layout ── */}
       <main className="flex-1 flex items-center justify-center px-4 py-12 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -443,7 +415,7 @@ export function SignupPage() {
             </CardHeader>
 
             <CardContent className="pt-2">
-              {/* Account type picker */}
+
               <div className="grid grid-cols-3 gap-3 mb-6">
                 {(["individual", "clinic", "organization"] as const).map((type) => (
                   <button
@@ -546,7 +518,7 @@ export function SignupPage() {
                             className="h-11 bg-background/50 border border-primary/20 focus:border-2 focus:border-primary/50 focus-visible:ring-0 transition-all"
                           />
                         </div>
-                        {/* ── Address Field ── */}
+
                         <div className="space-y-2 col-span-2">
                           <FieldLabel htmlFor="ind-address">
                             Address
@@ -591,14 +563,14 @@ export function SignupPage() {
                               </Button>
                             )}
                           </div>
-                          {/* OTP verified badge */}
+
                           {otpVerified && (
                             <div className="flex items-center gap-1.5 text-xs text-green-600 font-semibold mt-1">
                               <ShieldCheck className="h-3.5 w-3.5" />
                               <span>Phone verified via OTP</span>
                             </div>
                           )}
-                          {/* OTP input field */}
+
                           {otpSent && !otpVerified && (
                             <div className="mt-2 space-y-2">
                               <div className="flex gap-2">
@@ -663,7 +635,7 @@ export function SignupPage() {
                                   const resp = await fetch(`${getApiBaseUrl()}/verify-rci`, {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ 
+                                    body: JSON.stringify({
                                       rci_number: indRci.trim().toUpperCase(),
                                       user_name: fullName,
                                       user_phone: indPhone,
@@ -727,9 +699,9 @@ export function SignupPage() {
                             </label>
                           )}
                         </div>
-                        {/* DOB & Gender row */}
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 col-span-2">
-                          {/* Date of Birth */}
+
                           <div className="space-y-2">
                             <FieldLabel htmlFor="ind-dob">
                               Date of Birth <span className="text-muted-foreground normal-case">(optional)</span>
@@ -744,7 +716,6 @@ export function SignupPage() {
                             />
                           </div>
 
-                          {/* Gender */}
                           <div className="space-y-2">
                             <FieldLabel htmlFor="ind-gender">
                               Gender <span className="text-muted-foreground normal-case">(optional)</span>
@@ -865,14 +836,14 @@ export function SignupPage() {
                               </Button>
                             )}
                           </div>
-                          {/* OTP verified badge */}
+
                           {otpVerified && (
                             <div className="flex items-center gap-1.5 text-xs text-green-600 font-semibold mt-1">
                               <ShieldCheck className="h-3.5 w-3.5" />
                               <span>Phone verified via OTP</span>
                             </div>
                           )}
-                          {/* OTP input field */}
+
                           {otpSent && !otpVerified && (
                             <div className="mt-2 space-y-2">
                               <div className="flex gap-2">
@@ -966,9 +937,6 @@ export function SignupPage() {
                           />
                         </div>
 
-
-
-                        {/* ── Bank Account Verification (Razorpay) ── */}
                         <div className="col-span-2 rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3">
                           <div className="flex items-center gap-2 text-sm font-semibold text-primary">
                             <CreditCard className="h-4 w-4" />
@@ -1044,7 +1012,6 @@ export function SignupPage() {
                             </p>
                           )}
 
-                          {/* ── PAN Fallback ── */}
                           {needsPanFallback && (
                             <div className="mt-4 pt-4 border-t border-primary/10 space-y-3">
                               <div className="flex items-center gap-2 text-sm font-semibold text-orange-500">
@@ -1104,9 +1071,8 @@ export function SignupPage() {
                           )}
                         </div>
 
-                        {/* DOB & Gender row */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 col-span-2">
-                          {/* Date of Birth */}
+
                           <div className="space-y-2">
                             <FieldLabel htmlFor="clinic-dob">
                               Date of Birth <span className="text-muted-foreground normal-case">(optional)</span>
@@ -1121,7 +1087,6 @@ export function SignupPage() {
                             />
                           </div>
 
-                          {/* Gender */}
                           <div className="space-y-2">
                             <FieldLabel htmlFor="clinic-gender">
                               Gender <span className="text-muted-foreground normal-case">(optional)</span>
@@ -1170,7 +1135,7 @@ export function SignupPage() {
                 </AnimatePresence>
 
                 <div className="space-y-3 mt-4">
-                  {/* ── Terms & Conditions Checkbox ── */}
+
                   <label className="flex items-start gap-3 cursor-pointer group">
                     <input
                       type="checkbox"
@@ -1203,7 +1168,6 @@ export function SignupPage() {
                     </span>
                   </label>
 
-                  {/* ── AI & Professional Disclaimer Checkbox ── */}
                   <label className="flex items-start gap-3 cursor-pointer group">
                     <input
                       type="checkbox"
@@ -1224,7 +1188,6 @@ export function SignupPage() {
                     </span>
                   </label>
 
-                  {/* ── Refund & Cancellation Checkbox ── */}
                   <label className="flex items-start gap-3 cursor-pointer group">
                     <input
                       type="checkbox"
@@ -1245,7 +1208,6 @@ export function SignupPage() {
                     </span>
                   </label>
 
-                  {/* ── Professional Responsibility Agreement Checkbox ── */}
                   <label className="flex items-start gap-3 cursor-pointer group">
                     <input
                       type="checkbox"
@@ -1267,7 +1229,6 @@ export function SignupPage() {
                   </label>
                 </div>
 
-                {/* Invisible reCAPTCHA container for Firebase */}
                 <div id="recaptcha-container"></div>
 
                 <Button
@@ -1292,57 +1253,8 @@ export function SignupPage() {
                   </p>
                 )}
 
-                {/* OAuth buttons — temporarily disabled
-                <div className="relative my-6">
-                  <Separator className="bg-primary/10" />
-                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-3 text-xs text-text/40 font-bold uppercase tracking-wider">
-                    or join with
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    variant="outline"
-                    type="button"
-                    className="h-11 border-primary/10 hover:border-primary/30 hover:bg-primary/5 font-bold text-sm bg-background/40 transition-all hover:scale-[1.02]"
-                    asChild
-                  >
-                    <a href={`${getApiBaseUrl()}/auth/oauth/google`} className="flex items-center justify-center w-full">
-                      <svg className="h-4 w-4 mr-2 shrink-0" viewBox="0 0 24 24">
-                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
-                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-                      </svg>
-                      <span className="text-text">Google</span>
-                    </a>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    type="button"
-                    className="h-11 border-primary/10 hover:border-primary/30 hover:bg-primary/5 font-bold text-sm bg-background/40 transition-all hover:scale-[1.02]"
-                    asChild
-                  >
-                    <a href={`${getApiBaseUrl()}/auth/oauth/microsoft`} className="flex items-center justify-center w-full">
-                      <svg className="h-4 w-4 mr-2 shrink-0" viewBox="0 0 129 129">
-                        <path fill="#F25022" d="M0,0h61.3v61.3H0V0z" />
-                        <path fill="#7FBA00" d="M67.7,0H129v61.3H67.7V0z" />
-                        <path fill="#00A4EF" d="M0,67.7h61.3V129H0V67.7z" />
-                        <path fill="#FFB900" d="M67.7,67.7H129V129H67.7V67.7z" />
-                      </svg>
-                      <span className="text-text">Microsoft</span>
-                    </a>
-                  </Button>
-                </div>
-
-                <p className="text-[11px] text-text/30 text-center leading-relaxed mt-2">
-                  OAuth sign-up creates an <span className="font-semibold text-text/40">Individual Psychologist</span> account.
-                  For Clinic accounts, please use the form above.
-                </p>
-                */}
               </form>
 
-              {/* Login CTA */}
               <p className="text-center text-sm text-text/50 mt-6">
                 Already have an account?{" "}
                 <Link

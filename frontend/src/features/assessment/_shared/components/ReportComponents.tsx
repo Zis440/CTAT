@@ -19,7 +19,7 @@ export const RiskBar: React.FC<{ label: string; level: string }> = ({ label, lev
     levelText = `${levelText} (${riskScore}/100)`;
   }
 
-  let color = '#238b40'; // Low
+  let color = '#238b40';
   if (levelText.includes('MODERATE')) color = '#3b82f6';
   else if (levelText.includes('HIGH') || levelText.includes('ELEVATED')) color = '#f59e0b';
   else if (levelText.includes('CRITICAL') || levelText.includes('SEVERE')) color = '#ef4444';

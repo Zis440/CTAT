@@ -1,5 +1,3 @@
-// src/features/admin/AdminDashboardPage.tsx
-// Super Admin dashboard — platform overview with key stats & quick actions.
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -48,7 +46,6 @@ import { getVerificationQueue } from "@/services/authService";
 import { apiClient } from "@/services/apiClient";
 import type { VerificationUser } from "@/types/auth";
 
-// ── Component ────────────────────────────────────────────────────────────────
 export function AdminDashboardPage() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
@@ -61,11 +58,10 @@ export function AdminDashboardPage() {
       setIsLoading(true);
       setError(null);
       try {
-        // Fetch verification queue — this gives us pending users
+
         const queueData = await getVerificationQueue();
         setPendingQueue(queueData);
 
-        // Fetch dashboard stats
         const { data: statsData } = await apiClient.get("/admin/dashboard-stats");
         setStats(statsData);
       } catch (err: any) {
@@ -130,13 +126,12 @@ export function AdminDashboardPage() {
     );
   }
 
-  // Derive stats from available data
   const pendingCount = pendingQueue.length;
   const currentYear = new Date().getFullYear();
 
   const pieData = [
-    { name: 'Clinics', value: stats?.clinics || 0, color: '#d3e392' }, // primary lime
-    { name: 'Individuals', value: stats?.individuals || 0, color: '#88db85' } // secondary green
+    { name: 'Clinics', value: stats?.clinics || 0, color: '#d3e392' },
+    { name: 'Individuals', value: stats?.individuals || 0, color: '#88db85' }
   ].filter(d => d.value > 0);
 
   return (
@@ -145,7 +140,6 @@ export function AdminDashboardPage() {
         <title>Dashboard  | PsyicHub - Psychological Intelligence</title>
       </Helmet>
 
-      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight">
@@ -182,7 +176,6 @@ export function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* KPI Stat Cards (Top Row) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <BorderGlow className="hover:border-primary/30 transition-colors h-full">
           <Card className="border-0 bg-transparent shadow-none w-full h-full">
@@ -237,9 +230,8 @@ export function AdminDashboardPage() {
         </BorderGlow>
       </div>
 
-      {/* Charts (Middle Row) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Platform Growth */}
+
         <Card className="border-primary/10 bg-background/50 backdrop-blur-sm flex flex-col h-full overflow-hidden relative">
           <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
           <CardHeader className="pb-3">
@@ -302,7 +294,6 @@ export function AdminDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* User Distribution Pie Chart */}
         <Card className="border-primary/10 bg-background/50 backdrop-blur-sm flex flex-col h-full overflow-hidden relative">
           <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-secondary/40 via-secondary/20 to-transparent" />
           <CardHeader className="pb-3">
@@ -351,10 +342,8 @@ export function AdminDashboardPage() {
         </Card>
       </div>
 
-      {/* Lists (Bottom Row) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        {/* Pending Verifications */}
         <Card className="border-primary/10 bg-background/50 backdrop-blur-sm flex flex-col h-full relative overflow-hidden">
           <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-destructive/40 via-destructive/20 to-transparent" />
           <CardHeader className="pb-3">
@@ -406,7 +395,6 @@ export function AdminDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Latest Registrations */}
         <Card className="border-primary/10 bg-background/50 backdrop-blur-sm flex flex-col h-full relative overflow-hidden">
           <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500/40 via-blue-500/20 to-transparent" />
           <CardHeader className="pb-3">

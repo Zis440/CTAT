@@ -56,21 +56,10 @@ export function Footer() {
                 <p>A PRODUCT BY</p>
                 <p>TECHGEN CYBER SOLUTION PVT. LTD © {new Date().getFullYear()}</p>
               </div>
-              {/* <div className="flex gap-4 mt-4 text-text/50">
-                <a href="#" className="hover:text-primary transition-colors">
-                  <Twitter className="h-5 w-5" />
-                </a>
-                <a href="#" className="hover:text-primary transition-colors">
-                  <Linkedin className="h-5 w-5" />
-                </a>
-                <a href="#" className="hover:text-primary transition-colors">
-                  <Instagram className="h-5 w-5" />
-                </a>
-              </div> */}
+
             </div>
           </div>
 
-          {/* Right section with columns */}
           <div className="lg:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-8">
             {footerColumns.map((col, colIndex) => (
               <div key={colIndex} className="flex flex-col gap-10">

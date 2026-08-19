@@ -57,7 +57,6 @@ import {
   type AdminUpdateUserPayload,
 } from "@/features/super-admin/services/adminService";
 
-// ── Constants ────────────────────────────────────────────────────────────────
 const STAFF_ROLES = [
   { value: "clinic_admin", label: "Clinic Admin (Full Access)" },
   { value: "clinic_staff_assess", label: "Psychologist (Assessment)" },
@@ -127,7 +126,6 @@ function VerificationBadge({ status }: { status: string }) {
   );
 }
 
-// ── Loading skeleton ─────────────────────────────────────────────────────────
 function LoadingSkeleton() {
   return (
     <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -178,7 +176,6 @@ function LoadingSkeleton() {
   );
 }
 
-// ── Component ────────────────────────────────────────────────────────────────
 export function AdminStaffDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -188,7 +185,6 @@ export function AdminStaffDetailsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Form fields
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -197,7 +193,6 @@ export function AdminStaffDetailsPage() {
   const [verificationStatus, setVerificationStatus] = useState("not_submitted");
   const [isActive, setIsActive] = useState(true);
 
-  // ── Load ──────────────────────────────────────────────────────────────────
   const loadData = async () => {
     if (!id) return;
     setIsLoading(true);
@@ -215,7 +210,7 @@ export function AdminStaffDetailsPage() {
 
   useEffect(() => {
     loadData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [id]);
 
   const syncForm = (data: AdminUser) => {
@@ -223,7 +218,7 @@ export function AdminStaffDetailsPage() {
     setLastName(data.last_name ?? "");
     setEmail(data.email ?? "");
     setPhone(data.phone ?? "");
-    
+
     let currentRole = data.role ?? "clinic_staff";
     if ((currentRole === "clinic_staff" || currentRole === "org_staff") && data.can_assess) {
       currentRole = `${currentRole}_assess`;
@@ -238,7 +233,6 @@ export function AdminStaffDetailsPage() {
     setIsEditing(checked);
   };
 
-  // ── Save ──────────────────────────────────────────────────────────────────
   const handleSave = async () => {
     if (!staff) return;
     setIsSaving(true);
@@ -298,7 +292,6 @@ export function AdminStaffDetailsPage() {
         <title>{displayName} — Staff Details  | PsyicHub - Psychological Intelligence</title>
       </Helmet>
 
-      {/* Top bar */}
       <div className="flex items-center justify-end">
 
         <motion.div
@@ -322,7 +315,6 @@ export function AdminStaffDetailsPage() {
         </motion.div>
       </div>
 
-      {/* Identity card */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -332,12 +324,11 @@ export function AdminStaffDetailsPage() {
           <div className="h-1 bg-gradient-to-r from-primary/60 via-primary to-primary/60" />
           <CardContent className="pt-6">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-              {/* Avatar */}
+
               <div className="h-16 w-16 rounded-2xl border-2 border-primary/20 bg-primary/10 shrink-0 flex items-center justify-center text-2xl font-bold text-primary shadow-inner">
                 {initial}
               </div>
 
-              {/* Name + badges */}
               <div className="flex-1 text-center sm:text-left space-y-3 w-full">
                 {isEditing ? (
                   <div className="flex gap-2 max-w-lg">
@@ -387,9 +378,8 @@ export function AdminStaffDetailsPage() {
         </Card>
       </motion.div>
 
-      {/* Info grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Contact details */}
+
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -404,7 +394,7 @@ export function AdminStaffDetailsPage() {
               <CardDescription>Email address and phone number on record.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Email */}
+
               <div className="space-y-1.5">
                 <Label className="text-muted-foreground font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
                   <Mail className="h-3.5 w-3.5" /> Email
@@ -423,7 +413,6 @@ export function AdminStaffDetailsPage() {
                 )}
               </div>
 
-              {/* Phone */}
               <div className="space-y-1.5">
                 <Label className="text-muted-foreground font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
                   <Phone className="h-3.5 w-3.5" /> Phone
@@ -442,7 +431,6 @@ export function AdminStaffDetailsPage() {
                 )}
               </div>
 
-              {/* Clinic */}
               <div className="space-y-1.5">
                 <Label className="text-muted-foreground font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
                   <Building2 className="h-3.5 w-3.5" /> Clinic
@@ -457,7 +445,6 @@ export function AdminStaffDetailsPage() {
           </Card>
         </motion.div>
 
-        {/* Role & verification */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -472,7 +459,7 @@ export function AdminStaffDetailsPage() {
               <CardDescription>Role assignment and verification record.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Role */}
+
               <div className="space-y-1.5">
                 <Label className="text-muted-foreground font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
                   <Users className="h-3.5 w-3.5" /> Role / Permission
@@ -498,7 +485,6 @@ export function AdminStaffDetailsPage() {
                 )}
               </div>
 
-              {/* Verification status */}
               <div className="space-y-1.5">
                 <Label className="text-muted-foreground font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
                   <Activity className="h-3.5 w-3.5" /> Verification Status
@@ -525,7 +511,6 @@ export function AdminStaffDetailsPage() {
         </motion.div>
       </div>
 
-      {/* Account active status */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -561,7 +546,6 @@ export function AdminStaffDetailsPage() {
         </Card>
       </motion.div>
 
-      {/* Save / Discard bar — only visible in edit mode */}
       {isEditing && (
         <motion.div
           initial={{ opacity: 0, y: 12 }}

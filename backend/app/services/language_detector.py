@@ -10,10 +10,6 @@ Gracefully degrades if langdetect is not installed.
 
 from typing import Dict, Any, Optional
 
-# ============================================================================
-# LANGUAGE DETECTION (graceful degradation)
-# ============================================================================
-
 try:
     from langdetect import detect, detect_langs
     from langdetect.lang_detect_exception import LangDetectException
@@ -21,17 +17,14 @@ try:
 except ImportError:
     _LANGDETECT_AVAILABLE = False
 
-# Supported languages for TAT analysis
 SUPPORTED_LANGUAGES = {
     "en": "English",
     "hi": "Hindi",
     "bn": "Bengali",
 }
 
-# Unicode script ranges for fallback detection
-_DEVANAGARI_RANGE = range(0x0900, 0x097F + 1)  # Hindi
-_BENGALI_RANGE = range(0x0980, 0x09FF + 1)      # Bengali
-
+_DEVANAGARI_RANGE = range(0x0900, 0x097F + 1)
+_BENGALI_RANGE = range(0x0980, 0x09FF + 1)
 
 def _script_fallback(text: str) -> Dict[str, Any]:
     """Fallback script detection using Unicode ranges.
@@ -54,11 +47,10 @@ def _script_fallback(text: str) -> Dict[str, Any]:
         conf = ascii_count / max(total, 1)
         return {"language": "en", "language_name": "English", "confidence": round(conf, 3), "method": "unicode_script"}
 
-
 def detect_language(text: str) -> Dict[str, Any]:
     """
     Detect the language of the given text.
-    
+
     Returns:
         {
             "language": "en" | "hi" | "bn",
@@ -79,7 +71,6 @@ def detect_language(text: str) -> Dict[str, Any]:
             "is_supported": True,
         }
 
-    # Try langdetect first
     if _LANGDETECT_AVAILABLE:
         try:
             detected_langs = detect_langs(text)
@@ -88,7 +79,6 @@ def detect_language(text: str) -> Dict[str, Any]:
                 for dl in detected_langs
             ]
 
-            # Find the best supported language
             best_lang = None
             best_prob = 0.0
             for dl in detected_langs:
@@ -97,7 +87,6 @@ def detect_language(text: str) -> Dict[str, Any]:
                     best_lang = lang_code
                     best_prob = float(dl.prob)
 
-            # If no supported language found, default to top detection
             if best_lang is None:
                 top = detected_langs[0]
                 best_lang = str(top.lang)
@@ -117,21 +106,14 @@ def detect_language(text: str) -> Dict[str, Any]:
         except (LangDetectException, Exception) as e:
             print(f"⚠ langdetect failed: {e}, using Unicode script fallback")
 
-    # Fallback to Unicode script detection
     result = _script_fallback(text)
     result["all_detected"] = [{"lang": result["language"], "prob": result["confidence"]}]
     result["is_supported"] = result["language"] in SUPPORTED_LANGUAGES
     return result
 
-
 def get_language_label(lang_code: str) -> str:
     """Get human-readable language name from code."""
     return SUPPORTED_LANGUAGES.get(lang_code, lang_code.title())
-
-
-# ============================================================================
-# SCRIPT-LEVEL DETECTION UTILITIES (v10.0 — used by multilingual transcriber)
-# ============================================================================
 
 def detect_script(char: str) -> str:
     """
@@ -146,7 +128,6 @@ def detect_script(char: str) -> str:
     elif char.isascii() and char.isalpha():
         return "en"
     return "other"
-
 
 def detect_segment_languages(text: str) -> list:
     """
@@ -167,12 +148,11 @@ def detect_segment_languages(text: str) -> list:
 
     results = []
     for word in text.split():
-        # Count characters per script
+
         bn_count = sum(1 for c in word if ord(c) in _BENGALI_RANGE)
         hi_count = sum(1 for c in word if ord(c) in _DEVANAGARI_RANGE)
         latin_count = sum(1 for c in word if c.isascii() and c.isalpha())
 
-        # Classify by dominant script
         if bn_count > hi_count and bn_count > latin_count:
             lang = "bn"
         elif hi_count > bn_count and hi_count > latin_count:
@@ -180,7 +160,7 @@ def detect_segment_languages(text: str) -> list:
         elif latin_count > 0:
             lang = "en"
         else:
-            # Punctuation-only or numbers — inherit from context
+
             lang = "en"
 
         results.append((word, lang))

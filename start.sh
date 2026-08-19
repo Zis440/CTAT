@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Psyichub — Start Script (macOS / Linux)
-# Starts Ollama, backend, and frontend servers.
 
 set -e
 
@@ -11,12 +9,10 @@ echo "  Psyichub : Starting Application"
 echo "============================================"
 echo ""
 
-# ── Ollama Server ─────────────────────────────
 echo "[1/3] Starting Ollama Server..."
 
 OLLAMA_MODEL="hf.co/therandomuser03/Airavata-Q4_K_M-GGUF:Q4_K_M"
 
-# Check if llama3 is available locally
 if command -v ollama &>/dev/null; then
     if ollama list 2>/dev/null | grep -qi "llama3"; then
         OLLAMA_MODEL="llama3"
@@ -38,7 +34,6 @@ fi
 
 echo ""
 
-# ── Backend ───────────────────────────────────
 echo "[2/3] Starting Backend..."
 cd "$SCRIPT_DIR/backend"
 source venv/bin/activate
@@ -47,7 +42,6 @@ BACKEND_PID=$!
 echo "  Backend started (PID: $BACKEND_PID)"
 echo ""
 
-# ── Frontend ──────────────────────────────────
 echo "[3/3] Starting Frontend..."
 cd "$SCRIPT_DIR/frontend"
 npm run dev &
@@ -65,7 +59,6 @@ echo "  Press Ctrl+C to stop all servers."
 echo "============================================"
 echo ""
 
-# ── Graceful shutdown ─────────────────────────
 cleanup() {
     echo ""
     echo "Shutting down..."
@@ -78,5 +71,4 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM
 
-# Wait for all background processes
 wait

@@ -22,7 +22,7 @@ export function NotificationsPage() {
       setIsLoading(true);
       try {
         const { data } = await apiClient.get<NotificationItem[]>("/notifications/list");
-        
+
         try {
           const localReadStr = localStorage.getItem("local_read_notifications") || "{}";
           const localRead = JSON.parse(localReadStr);

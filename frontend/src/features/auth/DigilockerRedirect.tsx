@@ -6,7 +6,7 @@ export function DigilockerRedirect() {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    // The Nerotix DigiLocker redirect page usually passes ref_id and status in the query params.
+
     const ref_id = searchParams.get("ref_id");
     const status = searchParams.get("status");
     const error = searchParams.get("error");
@@ -17,8 +17,7 @@ export function DigilockerRedirect() {
       } else {
         window.opener.postMessage({ type: "DIGILOCKER_ERROR", error }, "*");
       }
-      
-      // Close the window after sending the message
+
       setTimeout(() => {
         window.close();
       }, 500);

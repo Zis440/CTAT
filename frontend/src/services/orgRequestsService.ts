@@ -6,7 +6,7 @@ export interface OrgAssessmentRequest {
   patient_id: string;
   assessment_id: number;
   assigned_psychologist_id: string | null;
-  status: string; // pending, assigned, completed, expired
+  status: string;
   created_at: string;
   sla_deadline: string;
 }

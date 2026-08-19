@@ -1,4 +1,4 @@
-// src/features/landing/DocsPage.tsx
+
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
@@ -50,7 +50,6 @@ export function DocsPage() {
         </div>
       </div>
 
-      {/* MAIN CONTENT */}
       <main className="flex-1 px-6 py-12 md:py-20 lg:px-10 w-full flex justify-center">
         <div className="max-w-4xl w-full">
           {renderContent()}

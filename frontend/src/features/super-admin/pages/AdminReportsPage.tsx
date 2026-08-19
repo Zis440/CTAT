@@ -157,7 +157,7 @@ export function AdminReportsPage() {
       setIsLoading(true);
       try {
         const data = await fetchPastSessions();
-        // Since backend doesn't paginate this endpoint yet, handle manually or just show all
+
         setReports(data);
       } catch (err) {
         toast.error("Failed to load reports");
@@ -168,7 +168,7 @@ export function AdminReportsPage() {
     loadReports();
   }, []);
 
-  const filteredReports = reports.filter(r => 
+  const filteredReports = reports.filter(r =>
     !patientFilter || r.patient_name?.toLowerCase().includes(patientFilter.toLowerCase())
   );
   const totalPages = Math.ceil(filteredReports.length / PAGE_SIZE) || 1;
@@ -443,8 +443,7 @@ export function AdminReportsPage() {
           </Table>
         </CardContent>
       </Card>
-      
-      {/* Pagination */}
+
       {totalPages >= 0 && !isLoading && (
         <div className="pt-6 pb-10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground w-full sm:w-auto text-center sm:text-left">
@@ -491,7 +490,7 @@ export function AdminReportsPage() {
           </Pagination>
         </div>
       )}
-      
+
       <AssessmentAuditLogsSheet
         assessmentId={selectedAssessmentForLogs}
         open={isLogsSheetOpen}
@@ -517,7 +516,6 @@ export function AdminReportsPage() {
         </Button>
       </div>
 
-      {/* Summary Section */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="border-primary/20 shadow-sm bg-primary/5">
           <CardHeader className="pb-3 border-b border-primary/10">
@@ -562,7 +560,6 @@ export function AdminReportsPage() {
         </Card>
       </div>
 
-      {/* Assessment Results Table */}
       <Card className="border-primary/10 bg-background/50 backdrop-blur-sm">
         <CardHeader>
           <CardTitle>Assessment Results (Pre adolescent personality assessment intelligence)</CardTitle>
@@ -598,7 +595,6 @@ export function AdminReportsPage() {
         </CardContent>
       </Card>
 
-      {/* Criteria Sections */}
       <div className="grid gap-6 md:grid-cols-3">
         <Card className="col-span-1 border-primary/10">
           <CardHeader className="pb-3 border-b border-border/50 bg-muted/20">
@@ -678,7 +674,6 @@ export function AdminReportsPage() {
         </Card>
       </div>
 
-      {/* Interpretation */}
       <Card className="border-primary/10 bg-background/50 backdrop-blur-sm">
         <CardHeader className="pb-2">
           <CardTitle>Interpretation & Narrative Summary</CardTitle>
@@ -707,4 +702,3 @@ export function AdminReportsPage() {
     </div>
   );
 }
-

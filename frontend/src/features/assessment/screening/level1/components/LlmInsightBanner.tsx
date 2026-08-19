@@ -60,18 +60,17 @@ const LlmInsightBanner: React.FC<LlmInsightBannerProps> = ({
     const fetchInsight = async (_isManualCall = false) => {
         setIsLoading(true);
         try {
-            // Randomly select one of the 15 insights
+
             const randomIndex = Math.floor(Math.random() * HARDCODED_INSIGHTS.length);
             const data = HARDCODED_INSIGHTS[randomIndex];
 
-            setIsVisible(false); // fade out
+            setIsVisible(false);
             setTimeout(() => {
                 setInsight(data);
-                setIsVisible(true); // fade in with new content
+                setIsVisible(true);
 
-                // Play the corresponding pre-generated ElevenLabs MP3
                 try {
-                    // +1 because array is 0-indexed but files are insight_1.mp3
+
                     globalAudioPlayer.play(`/audio/screening/insight_${randomIndex + 1}.mp3`);
                 } catch (err) {
                     console.debug("Audio play failed:", err);
@@ -85,18 +84,16 @@ const LlmInsightBanner: React.FC<LlmInsightBannerProps> = ({
         }
     };
 
-    // Keep ref updated with latest function
     useEffect(() => {
         fetchInsightRef.current = fetchInsight;
     });
 
     useEffect(() => {
-        // Fetch first insight after a 3-second delay (don't distract immediately)
+
         const initialDelay = setTimeout(() => {
             if (fetchInsightRef.current) fetchInsightRef.current(false);
         }, 3000);
 
-        // Then fetch periodically
         timerRef.current = setInterval(() => {
             if (fetchInsightRef.current) fetchInsightRef.current(false);
         }, intervalMs);
@@ -123,12 +120,11 @@ const LlmInsightBanner: React.FC<LlmInsightBannerProps> = ({
         border rounded-xl px-5 py-4 flex items-start gap-3
         shadow-sm backdrop-blur-sm
       `}>
-                {/* Animated sparkle icon */}
+
                 <div className="flex-shrink-0 mt-0.5">
                     <span className="text-xl animate-pulse">{style.icon}</span>
                 </div>
 
-                {/* Message */}
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                         <Sparkles size={14} className={style.accent} />
@@ -141,7 +137,6 @@ const LlmInsightBanner: React.FC<LlmInsightBannerProps> = ({
                     </p>
                 </div>
 
-                {/* Refresh button */}
                 <button
                     onClick={() => fetchInsight(true)}
                     disabled={isLoading}

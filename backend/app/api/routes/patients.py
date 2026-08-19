@@ -18,7 +18,6 @@ from app.models.patient import Patient
 
 router = APIRouter(prefix="/api/patient", tags=["patient"])
 
-
 @router.post("/intake")
 def patient_intake(
     req: PatientIntakeRequest,
@@ -42,7 +41,6 @@ def patient_intake(
         first_name = req.first_name or "Unknown"
         last_name = req.last_name
 
-    # Compute age from DOB if provided, fallback to direct age field
     computed_age = req.age
     if req.date_of_birth:
         today = date.today()
@@ -83,7 +81,6 @@ def patient_intake(
     )
 
     return _patient_to_dict(patient)
-
 
 def _patient_to_dict(p: Patient) -> dict:
     """Convert a Patient ORM object to the dict format expected by the frontend."""

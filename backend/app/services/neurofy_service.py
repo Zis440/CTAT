@@ -30,9 +30,6 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-
-# ── Status Codes (from Nerotix API docs) ─────────────────────────────────────
-
 class NerotixStatusCode(int, Enum):
     """API-level status codes returned in response JSON."""
     FAILED = 0
@@ -42,7 +39,6 @@ class NerotixStatusCode(int, Enum):
     NOT_FOUND = 4
     VERIFICATION_PENDING = 5
 
-
 class NeurofyStatus(str, Enum):
     """Internal statuses used by the application."""
     VERIFIED = "verified"
@@ -50,9 +46,6 @@ class NeurofyStatus(str, Enum):
     PENDING = "pending"
     UNAVAILABLE = "unavailable"
     MANUAL_REVIEW = "manual_review_required"
-
-
-# ── Result Models ────────────────────────────────────────────────────────────
 
 @dataclass
 class NeurofyVerificationResult:
@@ -62,24 +55,19 @@ class NeurofyVerificationResult:
     message: Optional[str] = None
     details: Optional[dict] = None
 
-
 @dataclass
 class NerotixResponse:
     """Raw parsed response from the Nerotix API."""
     success: bool = False
-    status_code: int = 0  # Nerotix statusCode (0-5)
+    status_code: int = 0
     message: str = ""
     data: dict = field(default_factory=dict)
     http_status: int = 0
     raw_body: str = ""
 
-
-# ── Service ──────────────────────────────────────────────────────────────────
-
 class NeurofyService:
     """Handles KYC verification via Nerotix (api.nerofy.in) API."""
 
-    # API endpoint paths
     PAN_VERIFY_PATH = "/api/v1/service/pancard/verify"
     PAN_360_PATH = "/api/v1/service/pan/360"
     AADHAAR_OTP_GENERATE_PATH = "/api/v1/service/aadhaar/otp/generate"
@@ -94,7 +82,7 @@ class NeurofyService:
             or os.getenv("NEUROFY_API_URL", "")
             or "https://api.nerofy.in"
         )
-        # Fix: if URL is the old neurofy.app, override to the correct one
+
         if "neurofy.app" in self.api_url:
             self.api_url = "https://api.nerofy.in"
             logger.info("Corrected API URL from neurofy.app to api.nerofy.in")
@@ -182,7 +170,7 @@ class NeurofyService:
 
         headers = {
             "Authorization": f"Bearer {self.api_token}",
-            # Don't set Content-Type for multipart — requests sets it with boundary
+
         }
 
         try:
@@ -206,8 +194,6 @@ class NeurofyService:
             logger.error(f"Nerotix multipart request error: {e}")
             return NerotixResponse(message=f"Request error: {e}")
 
-    # ── PAN Card Verification ────────────────────────────────────────────────
-
     def verify_pan(self, pan_number: str, expected_name: str = "") -> dict:
         """
         Verify a PAN card number via Nerotix API.
@@ -230,7 +216,6 @@ class NeurofyService:
             pan_status = data.get("pan_status", "")
             is_valid = "VALID" in pan_status.upper() and "INVALID" not in pan_status.upper()
 
-            # Name matching (case-insensitive, partial)
             name_match = False
             if expected_name and registered_name:
                 name_match = (
@@ -252,8 +237,6 @@ class NeurofyService:
             "verified": False,
             "reason": resp.message or "PAN verification failed",
         }
-
-    # ── PAN 360 (Detailed) ───────────────────────────────────────────────────
 
     def verify_pan_360(self, pan_number: str) -> dict:
         """
@@ -277,8 +260,6 @@ class NeurofyService:
             "verified": False,
             "reason": resp.message or "PAN 360 verification failed",
         }
-
-    # ── Aadhaar OTP Generation ───────────────────────────────────────────────
 
     def generate_aadhaar_otp(self, aadhaar_number: str) -> dict:
         """
@@ -307,27 +288,23 @@ class NeurofyService:
             "reason": resp.message or "Aadhaar OTP generation failed",
         }
 
-    # ── Aadhaar Masking (Deprecated) ─────────────────────────────────────────
-
     def mask_aadhaar(self, image_path: str) -> dict:
         """
         DEPRECATED: Aadhaar Masking is a privacy feature, not an Identity Verification (eKYC) feature.
         This endpoint should no longer be used for verifying users.
         Additionally, the Nerotix masking endpoint is currently returning 404 Not Found.
-        
+
         Args:
             image_path: Path to the Aadhaar card image file
         """
         import warnings
         warnings.warn("mask_aadhaar is deprecated. Use DigiLocker or OTP for Aadhaar KYC.", DeprecationWarning)
-        
+
         return {
             "success": False,
             "reason": "DEPRECATED: Masking API is disabled. Use proper eKYC verification routes.",
             "status": "API_DEPRECATED"
         }
-
-    # ── DigiLocker Verification (Consent Flow) ───────────────────────────────
 
     def verify_digilocker(
         self,
@@ -377,8 +354,6 @@ class NeurofyService:
             "reason": resp.message or "DigiLocker verification failed",
         }
 
-    # ── DigiLocker Get Data ──────────────────────────────────────────────────
-
     def get_digilocker_data(
         self,
         ref_id: str,
@@ -417,8 +392,6 @@ class NeurofyService:
             "reason": resp.message or "DigiLocker data fetch failed",
         }
 
-    # ── Legacy-compatible methods (used by existing routes) ──────────────────
-
     def verify_aadhaar(self, aadhaar_number: str, expected_address: str) -> dict:
         """
         Legacy-compatible Aadhaar verification.
@@ -433,7 +406,7 @@ class NeurofyService:
         if result.get("success"):
             return {
                 "verified": True,
-                "address_match": False,  # Cannot match address via OTP alone
+                "address_match": False,
                 "message": result.get("message", "Aadhaar OTP sent successfully"),
                 "ref_id": result.get("ref_id"),
             }
@@ -477,7 +450,6 @@ class NeurofyService:
 
         doc_type_lower = document_type.lower().replace("-", "_")
 
-        # ── PAN documents ────────────────────────────────────────────────
         if "pan" in doc_type_lower:
             logger.info(f"Document type '{document_type}' -> PAN verification not possible from file alone.")
             return NeurofyVerificationResult(
@@ -485,18 +457,12 @@ class NeurofyService:
                 message="PAN verification requires PAN number input, not file upload.",
             )
 
-        # ── Identity / Government ID documents ───────────────────────────
-        # These may be Aadhaar cards — try the masking service to validate.
-        # Matches: aadhaar, government_id, owner_aadhaar, owner_government_id,
-        #          partner_government_id, director_government_id, etc.
         identity_keywords = ("aadhaar", "government_id", "govt_id", "identity")
         is_identity_doc = any(kw in doc_type_lower for kw in identity_keywords)
 
         if is_identity_doc:
             return self._verify_identity_document(file_path, document_type)
 
-        # ── Professional / qualification / business documents ─────────────
-        # Nerotix has no endpoint for these — manual review is correct.
         return NeurofyVerificationResult(
             status=NeurofyStatus.MANUAL_REVIEW,
             message=f"Automated verification not available for '{document_type}'. Manual review required.",
@@ -534,8 +500,7 @@ class NeurofyService:
                         details=mask_result,
                     )
                 else:
-                    # "INVALID DOCUMENT" means it's not an Aadhaar card —
-                    # but it could be a valid Passport/DL, so don't reject it.
+
                     logger.info(
                         f"Document '{document_type}' is not an Aadhaar card "
                         f"(masking result: {aadhaar_status}). Sending to manual review."
@@ -594,7 +559,7 @@ class NeurofyService:
                 headers=self._headers,
                 timeout=5,
             )
-            # Any JSON response means the API is reachable
+
             return response.status_code in (200, 400, 401)
         except Exception:
             return False
@@ -642,12 +607,10 @@ class NeurofyService:
             result["api_message"] = data.get("message", "")
             result["api_status_code"] = data.get("statusCode")
 
-            # 401 = invalid/expired token
             if response.status_code == 401:
                 result["error"] = f"Authentication failed: {data.get('message', 'Unauthorized')}"
                 return result
 
-            # Check for known error messages
             msg = data.get("message", "").lower()
             if "token" in msg and ("mismatch" in msg or "invalid" in msg or "expired" in msg):
                 result["error"] = f"Token issue: {data.get('message')}"
@@ -657,10 +620,8 @@ class NeurofyService:
                 result["error"] = f"API key user not found: {data.get('message')}"
                 return result
 
-            # If we got here with a 200 or 400 with a known statusCode, the key works
             result["authenticated"] = True
 
-            # Check for balance/pricing issues (key works but account has issues)
             if "insufficient balance" in msg:
                 result["error"] = "API key valid but account has insufficient balance"
             elif "pricing not set" in msg:
@@ -689,6 +650,4 @@ class NeurofyService:
         }
         return mime_map.get(ext, "application/octet-stream")
 
-
-# Singleton instance — import as: from app.services.neurofy_service import neurofy_service
 neurofy_service = NeurofyService()

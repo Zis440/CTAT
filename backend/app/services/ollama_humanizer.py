@@ -12,8 +12,6 @@ from datetime import datetime
 
 import ollama
 
-
-# ---------------- LOGGING CONFIG ----------------
 import os
 LOG_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "..", "logs", "ollama_humanizer.log")
 os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
@@ -27,7 +25,6 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
-
 
 class OllamaHumanizer:
     """
@@ -48,14 +45,11 @@ class OllamaHumanizer:
         self.max_retries = max_retries
         self.base_retry_delay = base_retry_delay
 
-        # Airavata (fallback LLM) + RAG (optional, graceful fallback when None)
         self.rag_engine = rag_engine
         self.airavata_provider = airavata_provider
 
-        # Conversation memory
         self.conversation_history: List[Dict[str, Any]] = []
 
-        # Fallback templates
         self.templates = self._load_templates()
 
         logger.info(f"OllamaHumanizer initialized using model: {model_name}")
@@ -64,9 +58,6 @@ class OllamaHumanizer:
         if airavata_provider:
             logger.info("  Airavata provider attached")
 
-    # ------------------------------------------------------------------
-    # PUBLIC API
-    # ------------------------------------------------------------------
     def humanize_response(
         self,
         response_type: str,
@@ -81,7 +72,6 @@ class OllamaHumanizer:
         passages and injects them as REFERENCE MATERIAL.
         """
 
-        # --- RAG context retrieval (domain-targeted per response_type) ---
         rag_context = ""
         rag_metadata = {}
         if self.rag_engine:
@@ -92,7 +82,6 @@ class OllamaHumanizer:
                 tat_story = (data or {}).get("tat_story", "")
                 psych = (data or {}).get("psych_profile", {})
 
-                # Build domain-specific queries per response type
                 domain, rag_query = self._build_domain_query(
                     response_type, tat_story, psych, data
                 )
@@ -123,7 +112,6 @@ class OllamaHumanizer:
             rag_context=rag_context,
         )
 
-        # 🔐 HARD PROMPT LIMIT (raised for comprehensive clinical summaries)
         safe_prompt = prompt[:6000]
 
         for attempt in range(1, self.max_retries + 1):
@@ -151,7 +139,7 @@ class OllamaHumanizer:
                 return text
 
             except Exception as e:
-                # Fallback to Airavata on the final attempt
+
                 if attempt == self.max_retries and self.fallback_model_name:
                     logger.warning(f"Primary model {self.model_name} failed. Attempting fallback {self.fallback_model_name}...")
                     try:
@@ -174,13 +162,9 @@ class OllamaHumanizer:
                 logger.warning(f"Ollama error: {e} | retrying in {delay}s")
                 time.sleep(delay)
 
-        # 🔧 GUARANTEED FALLBACK
         logger.warning(f"Ollama failed. Falling back to templates.")
         return self._use_template(response_type)
 
-    # ------------------------------------------------------------------
-    # SAFE RESPONSE EXTRACTION (ALL OLLAMA FORMATS)
-    # ------------------------------------------------------------------
     def _extract_response_text(self, response: Any) -> str:
         """
         Extract text safely from Ollama response.
@@ -190,17 +174,15 @@ class OllamaHumanizer:
         text = ""
 
         try:
-            # Standard chat format
+
             if isinstance(response, dict):
 
                 if "message" in response and isinstance(response["message"], dict):
                     text = response["message"].get("content", "")
 
-                # Some models return direct response field
                 elif "response" in response:
                     text = response.get("response", "")
 
-            # Streaming generator (rare but possible)
             elif hasattr(response, "__iter__"):
                 collected = []
                 for chunk in response:
@@ -216,12 +198,6 @@ class OllamaHumanizer:
 
         return str(text).strip()
 
-    # ------------------------------------------------------------------
-    # PROMPT BUILDER (ENHANCED + PIPELINE-SAFE)
-    # ------------------------------------------------------------------
-    # ------------------------------------------------------------------
-    # DOMAIN-SPECIFIC RAG QUERY BUILDER
-    # ------------------------------------------------------------------
     def _build_domain_query(
         self,
         response_type: str,
@@ -278,9 +254,6 @@ class OllamaHumanizer:
         )
         return domain, query.strip()
 
-    # ------------------------------------------------------------------
-    # PROMPT BUILDER (DIFFERENTIATED PER RESPONSE TYPE)
-    # ------------------------------------------------------------------
     def _build_enhanced_prompt(
         self,
         response_type: str,
@@ -296,14 +269,13 @@ class OllamaHumanizer:
         recommended_remedies = data.get("recommended_remedies", [])
         tat_story = data.get("tat_story", "")
 
-        # Extract Gita insights for the prompt
         gita_insights = []
         for r in recommended_remedies:
             if isinstance(r, dict):
                 verse = r.get("gita_verse", "")
                 insight = r.get("gita_insight", "")
                 remedy_raw = r.get("gita_remedies", "")
-                
+
                 if verse and insight:
                     gita_insights.append(f"Verse: {verse}\nInsight: {insight}")
                 elif verse:
@@ -313,7 +285,6 @@ class OllamaHumanizer:
             elif isinstance(r, str):
                 gita_insights.append(f"Remedy: {r}")
 
-        # --- Common context blocks ---
         age_context_str = ""
         patient_age = psych_profile.get("patient_age")
         age_label = psych_profile.get("age_context", "")
@@ -323,7 +294,6 @@ class OllamaHumanizer:
             age_context_str += f"- Patient: {age_label}\n"
             age_context_str += f"- Developmental Guidance: {age_guidance}\n"
 
-        # --- Gender Context Block (v4.0) ---
         gender_context_str = ""
         patient_gender = psych_profile.get("patient_gender")
         gender_label = psych_profile.get("gender_context", "")
@@ -351,17 +321,12 @@ class OllamaHumanizer:
             except Exception:
                 history_block = ""
 
-        # ---- Dispatch to response-type-specific prompt ----
         builder = self._prompt_builders.get(response_type, self._prompt_clinical_summary)
         return builder(
             self, tat_story, psych_profile, learned_concepts,
             age_context_str, gender_context_str, cultural_context_str, reference_block,
             gita_block, history_block,
         )
-
-    # ------------------------------------------------------------------
-    # PER-TYPE PROMPT BUILDERS
-    # ------------------------------------------------------------------
 
     def _prompt_clinical_summary(
         self, tat_story, psych_profile, learned_concepts,
@@ -583,9 +548,9 @@ Write in plain English paragraphs. Do NOT reproduce raw data or dicts. Bridge qu
             """Strip Murray N-prefix (needs) and P-prefix (presses)."""
             import re
             s = str(name).strip()
-            # Remove leading N or P followed by a capital letter (e.g. Nblameavoidance, Pluck)
+
             s = re.sub(r'^[NnPp]([A-Z][a-z])', lambda m: m.group(1), s)
-            # Also handle all-lower versions: nblameavoidance -> Blameavoidance
+
             s = re.sub(r'^[np]([a-z])', lambda m: m.group(1).upper(), s)
             return s
 
@@ -623,7 +588,6 @@ Write in plain English paragraphs. Do NOT reproduce raw data or dicts. Bridge qu
                 return "; ".join(inner[:6]) or "Not specified"
             return str(val)
 
-        # Patient demographics
         if psych_profile.get('patient_age'):
             lines.append(f"Patient age: {psych_profile['patient_age']} ({psych_profile.get('age_context', '')})")
         if psych_profile.get('patient_gender'):
@@ -633,7 +597,6 @@ Write in plain English paragraphs. Do NOT reproduce raw data or dicts. Bridge qu
         if psych_profile.get('patient_notes'):
             lines.append(f"Clinical Notes/Observations: {psych_profile['patient_notes']}")
 
-        # Core psychological data — needs/presses get prefix-stripped
         need_press_keys = {'needs', 'presses'}
         simple_keys = [
             ('needs', 'Primary psychological needs'),
@@ -650,20 +613,18 @@ Write in plain English paragraphs. Do NOT reproduce raw data or dicts. Bridge qu
             if val:
                 lines.append(f"{label}: {_safe(val, is_need_press=(key in need_press_keys))}")
 
-        # Cultural notes
         notes = psych_profile.get('cultural_notes', [])
         if notes:
             lines.append(f"Cultural normalization notes: {'; '.join(str(n) for n in notes[:2])}")
 
         return "\n".join(lines) if lines else "No profile data available."
 
-
     def _prompt_comprehensive_clinical_report(
         self, tat_story, psych_profile, learned_concepts,
         age_ctx, gender_ctx, cultural_ctx, ref_block, gita_block, history_block,
     ) -> str:
         """Combined prompt: Generates a complete hospital-grade psychological assessment report."""
-        
+
         _profile_text = self._flatten_profile_for_prompt(psych_profile)
 
         return f"""
@@ -988,8 +949,6 @@ Before generating the final report verify:
 The final output must read like a complete hospital-grade psychological assessment report.
 """.strip()
 
-
-    # Dispatch table for prompt builders
     _prompt_builders = {
         "clinical_summary": _prompt_clinical_summary,
         "judgment_summary": _prompt_judgment_summary,
@@ -1000,9 +959,6 @@ The final output must read like a complete hospital-grade psychological assessme
         "comprehensive_clinical_report": _prompt_comprehensive_clinical_report,
     }
 
-    # ------------------------------------------------------------------
-    # SYSTEM GUARDRAILS
-    # ------------------------------------------------------------------
     def _system_guardrails(self) -> str:
         return """
 You are a clinical psychology assistant.
@@ -1024,9 +980,6 @@ Rules:
 - For male patients, apply normative calibration to achievement and autonomy themes before pathologizing
 """
 
-    # ------------------------------------------------------------------
-    # FALLBACK TEMPLATES
-    # ------------------------------------------------------------------
     def _load_templates(self) -> Dict[str, List[str]]:
         return {
             "clinical_summary": [
@@ -1059,9 +1012,6 @@ Rules:
         self._store_in_history(response_type, text)
         return text
 
-    # ------------------------------------------------------------------
-    # MEMORY
-    # ------------------------------------------------------------------
     def _store_in_history(self, response_type: str, response: str):
         self.conversation_history.append({
             "timestamp": datetime.now().isoformat(),
@@ -1076,9 +1026,6 @@ Rules:
     def clear_conversation_history(self):
         self.conversation_history.clear()
 
-    # ------------------------------------------------------------------
-    # RESPONSE SPLITTER — for comprehensive_clinical_report
-    # ------------------------------------------------------------------
     @staticmethod
     def split_comprehensive_response(response_text: str) -> dict:
         """
@@ -1088,7 +1035,7 @@ Rules:
         do not fail if they expect a dictionary.
         """
         text = response_text.strip()
-        
+
         return {
             "meta_reasoning": text,
             "therapy_recommendation": text,

@@ -82,7 +82,6 @@ export function AdminClinicDetailsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  // form state
   const [clinicName, setClinicName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -227,10 +226,9 @@ export function AdminClinicDetailsPage() {
       </Helmet>
 
       <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-        {/* Top bar: Edit Switch */}
+
         <div className="flex items-center justify-end">
 
-          {/* Edit Mode Switch */}
           <motion.div
             initial={{ opacity: 0, x: 12 }}
             animate={{ opacity: 1, x: 0 }}
@@ -252,7 +250,6 @@ export function AdminClinicDetailsPage() {
           </motion.div>
         </div>
 
-        {/* Identity Card */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -262,12 +259,11 @@ export function AdminClinicDetailsPage() {
             <div className="h-1 bg-gradient-to-r from-primary/60 via-primary to-primary/60" />
             <CardContent className="pt-6">
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-                {/* Clinic Initial Avatar */}
+
                 <div className="h-16 w-16 rounded-2xl border-2 border-primary/20 bg-primary/10 shrink-0 flex items-center justify-center text-2xl font-bold text-primary shadow-inner">
                   {initial}
                 </div>
 
-                {/* Name + metadata */}
                 <div className="flex-1 text-center sm:text-left space-y-3 w-full">
                   {isEditing ? (
                     <div className="max-w-lg">
@@ -295,7 +291,6 @@ export function AdminClinicDetailsPage() {
                     </Badge>
                   </div>
 
-                  {/* Creation info */}
                   <div className="text-xs text-muted-foreground font-medium border-t border-primary/5 pt-2">
                     Created on {formatDate(clinic.created_at)}
                   </div>
@@ -305,7 +300,6 @@ export function AdminClinicDetailsPage() {
           </Card>
         </motion.div>
 
-        {/* Live Metrics Grid */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -346,9 +340,8 @@ export function AdminClinicDetailsPage() {
           </Card>
         </motion.div>
 
-        {/* Basic & Legal Details */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Basic Details */}
+
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -423,7 +416,6 @@ export function AdminClinicDetailsPage() {
             </Card>
           </motion.div>
 
-          {/* Legal / Licensing Details */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -502,7 +494,6 @@ export function AdminClinicDetailsPage() {
           </motion.div>
         </div>
 
-        {/* System Active Status Switcher */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -536,7 +527,6 @@ export function AdminClinicDetailsPage() {
           </Card>
         </motion.div>
 
-        {/* Action Bar (visible in edit mode) */}
         {isEditing && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}

@@ -61,25 +61,18 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 
-// ── Authenticated document opener ─────────────────────────────────────────────
-// A direct <a href> in a new tab does NOT send the JWT — the browser makes a
-// plain navigation request with no Authorization header → 401.
-// Solution: fetch via axios (which attaches the token), wrap the binary in a
-// Blob URL, open that URL, then revoke it after 60 s to free memory.
 async function openDocument(apiPath: string, filename: string) {
   try {
     const res = await apiClient.get(apiPath, { responseType: "blob" });
     const blobUrl = URL.createObjectURL(res.data);
     const win = window.open(blobUrl, "_blank");
-    // Revoke after 60 s so the blob doesn't linger in memory
+
     setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
     if (!win) toast.error("Popup blocked — please allow popups for this site.");
   } catch (err: any) {
     toast.error(err?.response?.data?.detail || `Failed to open "${filename}".`);
   }
 }
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function InfoRow({ label, value }: { label: string; value?: string | null }) {
   if (!value) return null;
@@ -91,7 +84,6 @@ function InfoRow({ label, value }: { label: string; value?: string | null }) {
   );
 }
 
-// ── User Documents Section (fetches from new verification table) ──────────────
 function UserDocumentsSection({ userId, cvPath, cvOriginalFilename, bio }: { userId: string; cvPath?: string; cvOriginalFilename?: string; bio?: string }) {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-documents", userId],
@@ -120,7 +112,7 @@ function UserDocumentsSection({ userId, cvPath, cvOriginalFilename, bio }: { use
 
   return (
     <div className="space-y-3">
-      {/* Verification Type Badge */}
+
       {isRciApplication ? (
         <div className="flex items-center gap-2 p-2 rounded-md bg-violet-500/10 border border-violet-500/20">
           <ShieldCheck className="h-4 w-4 text-violet-400 shrink-0" />
@@ -133,7 +125,6 @@ function UserDocumentsSection({ userId, cvPath, cvOriginalFilename, bio }: { use
         </div>
       )}
 
-      {/* Normal Verification Docs */}
       {isLoading ? (
         <div className="rounded-lg bg-primary/5 border border-primary/10 p-3">
           <Skeleton className="h-4 w-32 mb-2" />
@@ -171,7 +162,6 @@ function UserDocumentsSection({ userId, cvPath, cvOriginalFilename, bio }: { use
         </div>
       )}
 
-      {/* RCI Reviewer Profile — CV & Bio */}
       {isRciApplication && (
         <div className="rounded-lg bg-violet-500/5 border border-violet-500/20 p-3 space-y-2">
           <p className="text-xs font-bold text-violet-400/80 uppercase tracking-wider">RCI Reviewer Profile</p>
@@ -221,8 +211,6 @@ function AccountBadge({ type }: { type: string }) {
   );
 }
 
-// ── Main Component ────────────────────────────────────────────────────────────
-
 export function VerificationQueuePage() {
   const queryClient = useQueryClient();
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -251,7 +239,7 @@ export function VerificationQueuePage() {
     queryKey: ["verification-queue"],
     queryFn: getVerificationQueue,
     staleTime: 0,
-    refetchInterval: 10_000, // auto-refresh every 10s
+    refetchInterval: 10_000,
   });
 
   const verifyMutation = useMutation({
@@ -307,7 +295,6 @@ export function VerificationQueuePage() {
   const toggleExpand = (id: string) =>
     setExpandedId((prev) => (prev === id ? null : id));
 
-  // ── Loading state ─────────────────────────────────────────────────────────
   if (isLoading) {
     return (
       <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -354,7 +341,6 @@ export function VerificationQueuePage() {
     );
   }
 
-  // ── Error state ───────────────────────────────────────────────────────────
   if (isError) {
     return (
       <div className="flex h-full min-h-[400px] items-center justify-center">
@@ -380,8 +366,6 @@ export function VerificationQueuePage() {
       </div>
     );
   }
-
-  // ── Main render ───────────────────────────────────────────────────────────
 
   const clinicOrgCount = (queue || []).filter(u => u.account_type === "clinic" || u.account_type === "organization").length;
   const individualCount = (queue || []).filter(u => u.account_type === "individual").length;
@@ -430,7 +414,6 @@ export function VerificationQueuePage() {
           <title>Account Verification Queue  | PsyicHub - Psychological Intelligence</title>
         </Helmet>
 
-        {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2">
@@ -482,7 +465,6 @@ export function VerificationQueuePage() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Empty state */}
           {queue?.length === 0 ? (
             <Card className="bg-background/40 border-dashed border-primary/20">
               <CardContent className="flex flex-col items-center justify-center py-16 gap-4">
@@ -685,10 +667,8 @@ export function VerificationQueuePage() {
                                         <InfoRow label="Specialization" value={user.specialization} />
                                       </div>
 
-                                      {/* Document links — fetched from new verification table */}
                                       <UserDocumentsSection userId={user.id} cvPath={user.cv_path} cvOriginalFilename={user.cv_original_filename} bio={user.bio} />
 
-                                      {/* Action area */}
                                       {isRejectMode ? (
                                         <div className="space-y-2">
                                           <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
@@ -829,7 +809,6 @@ export function VerificationQueuePage() {
         </div>
       </div>
 
-      {/* Approve User Confirmation */}
       <AlertDialog
         open={!!confirmingApprove}
         onOpenChange={(o) => !o && setConfirmingApprove(null)}
@@ -856,7 +835,6 @@ export function VerificationQueuePage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Reject User Final Confirmation */}
       <AlertDialog
         open={!!showFinalRejectConfirm}
         onOpenChange={(o) => !o && setShowFinalRejectConfirm(null)}

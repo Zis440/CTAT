@@ -18,7 +18,6 @@ interface Pattern {
   timeBonus: number;
 }
 
-
 const PATTERNS: Pattern[] = [
   { grid: 2, target: [0, 1, 1, 0], label: 'Pattern 1', timeBonus: 30 },
   { grid: 2, target: [1, 0, 0, 1], label: 'Pattern 2', timeBonus: 30 },
@@ -96,7 +95,7 @@ const BlockDesignGame: React.FC<BlockDesignGameProps> = ({ onComplete }) => {
       </p>
 
       <div className="flex gap-8 justify-center items-start">
-        {/* Target */}
+
         <div>
           <div className="text-xs font-bold text-blue-500 uppercase tracking-wider mb-2 text-center">Target</div>
           <div className="inline-grid gap-1 border-2 border-blue-300 p-2 rounded-xl bg-blue-50" style={{ gridTemplateColumns: `repeat(${gridSize}, 1fr)` }}>
@@ -106,7 +105,6 @@ const BlockDesignGame: React.FC<BlockDesignGameProps> = ({ onComplete }) => {
           </div>
         </div>
 
-        {/* User grid */}
         <div>
           <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-center">Your Design</div>
           <div className={`inline-grid gap-1 border-2 p-2 rounded-xl ${feedback === 'correct' ? 'border-green-400 bg-green-50' : feedback === 'wrong' ? 'border-red-400 bg-red-50' : 'border-slate-300 bg-slate-50'}`} style={{ gridTemplateColumns: `repeat(${gridSize}, 1fr)` }}>

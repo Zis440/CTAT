@@ -73,9 +73,9 @@ export function useBulkSelection<T extends { id: string }>() {
         reader.onloadend = () => resolve(reader.result as string);
         reader.readAsDataURL(blob);
       });
-      // The report logo is rectangular (approx 2.5:1.38 ratio)
-      doc.addImage(base64Data, 'PNG', 14, 12, 32, 17); 
-      // Skip the "Psyichub" text since the logo already contains the full brand text
+
+      doc.addImage(base64Data, 'PNG', 14, 12, 32, 17);
+
       currentY = 38;
     } catch (e) {
       console.warn("Failed to load logo for PDF", e);
@@ -90,15 +90,15 @@ export function useBulkSelection<T extends { id: string }>() {
     const headerText = config.pdfHeader || "Exported Data";
     doc.text(headerText, 14, currentY);
     currentY += 8;
-    
+
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text(`Generated on ${format(new Date(), "PPpp")}`, 14, currentY);
     currentY += 10;
 
     const head = [config.columns.map(c => c.label)];
-    const body = items.map(item => 
-      config.columns.map(col => 
+    const body = items.map(item =>
+      config.columns.map(col =>
         typeof col.key === "function" ? col.key(item) : String(item[col.key] ?? "")
       )
     );
@@ -134,7 +134,7 @@ export function useBulkSelection<T extends { id: string }>() {
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-    
+
     const wscols = config.columns.map(() => ({ wch: 20 }));
     worksheet["!cols"] = wscols;
 

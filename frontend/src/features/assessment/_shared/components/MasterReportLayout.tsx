@@ -31,8 +31,7 @@ export function MasterReportLayout({
   return (
     <div className="bg-background min-h-screen py-10 font-['Helvetica',sans-serif] print:py-0 print:bg-white text-foreground">
       <div id="pdf-content" className="w-full max-w-6xl mx-auto bg-transparent text-foreground px-12 py-16 print:shadow-none print:px-8 print:py-8">
-        
-        {/* HEADER SECTION */}
+
         <div className="flex flex-col items-center border-b-2 border-border pb-8 mb-10 relative">
           <div className="absolute top-[-2rem] left-0 right-0 flex justify-between items-start w-full">
             <div className="flex flex-col gap-3 items-start">
@@ -49,14 +48,14 @@ export function MasterReportLayout({
                 </div>
               )}
             </div>
-            
+
             <div className="text-right flex flex-col items-end gap-2">
               {rightHeaderActions}
               <div className="text-right">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Generated</p>
                 <p className="text-sm font-bold text-foreground">
-                  {generatedDate 
-                    ? formatDateTime(generatedDate) 
+                  {generatedDate
+                    ? formatDateTime(generatedDate)
                     : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                 </p>
               </div>
@@ -74,12 +73,10 @@ export function MasterReportLayout({
           </div>
         </div>
 
-        {/* CONTENT SECTION */}
         <div className="space-y-10">
           {children}
         </div>
 
-        {/* FOOTER ACTIONS SECTION */}
         {(leftFooterActions || rightFooterActions) && (
           <div className="mt-16 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-border pt-8 print:hidden px-4 sm:px-0">
             <div>

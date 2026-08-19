@@ -12,11 +12,6 @@ Returns multi-environment results with confidence scoring and mixed-environment 
 from typing import List, Dict, Any, Tuple, Optional
 import numpy as np
 
-
-# ============================================================================
-# EXPANDED PRESS → ENVIRONMENT MAPPING  (12 categories, 26 press tokens)
-# ============================================================================
-
 ENV_MAPPING = {
     "Supportive": ["pNurturance", "pAffiliation"],
     "Threatening": ["pAggression", "pPhysicalDanger"],
@@ -26,17 +21,12 @@ ENV_MAPPING = {
     "Competitive": ["pCompetition", "pRivalry"],
     "Chaotic": ["pLuck(Bad)", "pDisorder"],
     "Punitive": ["pPunishment", "pBlame"],
-    # --- New environment types ---
+
     "Nurturing": ["pNurturance", "pAffiliation", "pProtection"],
     "Achievement-Oriented": ["pCompetition", "pRecognition", "pExpectation"],
     "Isolating": ["pRejection", "pLoss", "pAbandonment"],
-    "Ambivalent": [],  # detected via mixed signals, not direct press mapping
+    "Ambivalent": [],
 }
-
-
-# ============================================================================
-# ENVIRONMENT PROTOTYPE SENTENCES (for embedding-based classification)
-# ============================================================================
 
 ENV_PROTOTYPES = {
     "Supportive": [
@@ -125,67 +115,59 @@ ENV_PROTOTYPES = {
     ],
 }
 
-
-# ============================================================================
-# NARRATIVE SETTING CUES (for spaCy-based cue extraction)
-# ============================================================================
-
-# Spatial/setting tokens mapped to environment bias
 SETTING_CUE_MAP = {
-    # Threatening/Chaotic
+
     "darkness": "Threatening", "dark": "Threatening", "alley": "Threatening",
     "prison": "Punitive", "jail": "Punitive", "battlefield": "Threatening",
     "war": "Chaotic", "ruin": "Chaotic", "destroyed": "Chaotic",
-    # Supportive/Nurturing
+
     "home": "Nurturing", "garden": "Supportive", "park": "Supportive",
     "warmth": "Nurturing", "sunshine": "Supportive", "hearth": "Nurturing",
-    # Isolating
+
     "desert": "Isolating", "wilderness": "Isolating", "alone": "Isolating",
     "empty": "Isolating", "abandoned": "Isolating", "deserted": "Isolating",
-    # Controlling
+
     "office": "Controlling", "courtroom": "Controlling", "institution": "Controlling",
     "barracks": "Controlling", "uniform": "Controlling",
-    # Achievement
+
     "school": "Achievement-Oriented", "classroom": "Achievement-Oriented",
     "exam": "Achievement-Oriented", "university": "Achievement-Oriented",
     "stage": "Achievement-Oriented", "competition": "Competitive",
-    # Depriving
+
     "poverty": "Depriving", "slum": "Depriving", "hunger": "Depriving",
     "drought": "Depriving", "famine": "Depriving",
-    # Punitive
+
     "punishment": "Punitive", "blame": "Punitive", "shame": "Punitive",
     "scolding": "Punitive", "beating": "Punitive",
 }
 
-# Mood adjectives that bias environment classification
 MOOD_CUE_MAP = {
-    # Threatening
+
     "hostile": "Threatening", "dangerous": "Threatening", "violent": "Threatening",
     "menacing": "Threatening", "frightening": "Threatening", "terrifying": "Threatening",
-    # Supportive/Nurturing
+
     "warm": "Supportive", "gentle": "Nurturing", "kind": "Supportive",
     "loving": "Nurturing", "caring": "Nurturing", "tender": "Nurturing",
     "safe": "Supportive", "comforting": "Nurturing",
-    # Controlling
+
     "strict": "Controlling", "oppressive": "Controlling", "rigid": "Controlling",
     "demanding": "Controlling", "authoritarian": "Controlling",
-    # Chaotic
+
     "chaotic": "Chaotic", "unpredictable": "Chaotic", "random": "Chaotic",
     "disorderly": "Chaotic", "turbulent": "Chaotic",
-    # Isolating
+
     "lonely": "Isolating", "isolated": "Isolating", "desolate": "Isolating",
     "solitary": "Isolating", "forlorn": "Isolating",
-    # Punitive
+
     "harsh": "Punitive", "cruel": "Punitive", "judgmental": "Punitive",
     "critical": "Punitive", "unkind": "Punitive",
-    # Competitive
+
     "competitive": "Competitive", "ambitious": "Achievement-Oriented",
     "driven": "Achievement-Oriented", "pressured": "Controlling",
-    # Ambivalent
+
     "conflicted": "Ambivalent", "torn": "Ambivalent", "confused": "Ambivalent",
     "uncertain": "Ambivalent", "mixed": "Ambivalent",
 }
-
 
 class EnvironmentClassifier:
     """
@@ -193,7 +175,6 @@ class EnvironmentClassifier:
     v2.0: Multi-signal fusion (press-based + NLP-based + cue-based).
     """
 
-    # All environment categories
     ALL_ENV_TYPES = list(ENV_MAPPING.keys())
 
     def __init__(self, nlp_processor=None):
@@ -211,10 +192,6 @@ class EnvironmentClassifier:
         """Pre-compute sentence embeddings for each environment prototype."""
         for env_type, sentences in ENV_PROTOTYPES.items():
             self.proto_embeddings[env_type] = self.nlp_processor.get_embeddings(sentences)
-
-    # ================================================================
-    # PUBLIC API
-    # ================================================================
 
     def classify(self, presses: List[Tuple[str, float]]) -> Dict[str, Any]:
         """
@@ -249,14 +226,12 @@ class EnvironmentClassifier:
         scores = {k: 0.0 for k in self.ALL_ENV_TYPES}
         evidence = []
 
-        # ---- Signal 1: Embedding similarity to environment prototypes ----
         embedding_scores = self._score_by_embedding(narrative_text)
         for env_type, sim in embedding_scores.items():
-            scores[env_type] += sim * 2.0  # weight embedding signal
+            scores[env_type] += sim * 2.0
             if sim > 0.3:
                 evidence.append(f"Embedding similarity -> {env_type} ({sim:.3f})")
 
-        # ---- Signal 2: Setting cue extraction (spaCy NER + token match) ----
         cue_scores = self._score_by_cues(narrative_text)
         for env_type, cue_score in cue_scores.items():
             scores[env_type] += cue_score
@@ -278,23 +253,19 @@ class EnvironmentClassifier:
         verb/adjective cue signals.
         v3.0: 3-signal fusion with spaCy-driven verb/adj extraction.
         """
-        # Get press-based scores
+
         press_result = self.classify(presses)
         press_scores = press_result.get("scores", {})
 
-        # Get embedding-based scores
         text_result = self.classify_from_text(narrative_text)
         text_scores = text_result.get("scores", {})
 
-        # Get verb/adj cue scores (spaCy-driven)
         cue_scores_raw = self._score_by_verb_actions(narrative_text)
 
-        # Normalize each score set to 0-1 range before fusion
         press_norm = self._normalize_scores(press_scores)
         text_norm = self._normalize_scores(text_scores)
         cue_norm = self._normalize_scores(cue_scores_raw)
 
-        # Fuse with 3 signals
         fused_scores = {}
         for env_type in self.ALL_ENV_TYPES:
             fused_scores[env_type] = (
@@ -303,25 +274,19 @@ class EnvironmentClassifier:
                 + cue_weight * cue_norm.get(env_type, 0.0)
             )
 
-        # Combine evidence
         combined_evidence = press_result.get("evidence", []) + text_result.get("evidence", [])
-        # Add verb cue evidence
+
         for env_type, score in sorted(cue_scores_raw.items(), key=lambda x: -x[1]):
             if score > 0.1:
                 combined_evidence.append(f"Verb/Adj cues -> {env_type} ({score:.2f})")
 
         return self._format_result(fused_scores, combined_evidence)
 
-    # ================================================================
-    # INTERNAL: Embedding-based scoring
-    # ================================================================
-
     def _score_by_embedding(self, narrative_text: str) -> Dict[str, float]:
         """Score each environment type by embedding similarity to prototypes."""
         if not self.proto_embeddings:
             return {k: 0.0 for k in self.ALL_ENV_TYPES}
 
-        # Split narrative into sentences, encode
         import re
         sentences = [s.strip() for s in re.split(r'[.!?]', narrative_text) if len(s.strip()) > 8]
         if not sentences:
@@ -331,21 +296,16 @@ class EnvironmentClassifier:
 
         scores = {}
         for env_type, proto_embs in self.proto_embeddings.items():
-            # Compute max similarity between each narrative sentence and prototype set
-            # Then take mean of max similarities
+
             sim_matrix = np.dot(proto_embs, sent_embeddings.T) / (
                 np.linalg.norm(proto_embs, axis=1, keepdims=True)
                 * np.linalg.norm(sent_embeddings, axis=1)
                 + 1e-8
             )
-            max_sim_per_sentence = np.max(sim_matrix, axis=0)  # best prototype match per sentence
+            max_sim_per_sentence = np.max(sim_matrix, axis=0)
             scores[env_type] = float(np.mean(max_sim_per_sentence))
 
         return scores
-
-    # ================================================================
-    # INTERNAL: Setting/mood cue scoring
-    # ================================================================
 
     def _score_by_cues(self, narrative_text: str) -> Dict[str, float]:
         """Score environments using spaCy POS-based adjective/setting extraction
@@ -354,21 +314,18 @@ class EnvironmentClassifier:
         scores = {k: 0.0 for k in self.ALL_ENV_TYPES}
         text_lower = narrative_text.lower()
 
-        # ---- Lexical setting cues (kept as supplementary signal) ----
         for cue, env_type in SETTING_CUE_MAP.items():
             if cue in text_lower:
                 scores[env_type] += 0.15
 
-        # ---- spaCy-driven adjective + NER extraction ----
         if self.nlp_processor:
             try:
                 doc = self.nlp_processor.nlp(narrative_text)
 
-                # NER for locations/facilities
                 for ent in doc.ents:
                     ent_lower = ent.text.lower()
                     if ent.label_ in ("GPE", "LOC", "FAC"):
-                        # Compare location entity against env prototypes via SBERT
+
                         if self.proto_embeddings:
                             loc_emb = self.nlp_processor.get_embeddings([ent.text])
                             for env_type, proto_embs in self.proto_embeddings.items():
@@ -379,22 +336,20 @@ class EnvironmentClassifier:
                                 if cos_sim > 0.3:
                                     scores[env_type] += cos_sim * 0.15
                         else:
-                            # Fallback to setting cue map
+
                             for cue, env_type in SETTING_CUE_MAP.items():
                                 if cue in ent_lower:
                                     scores[env_type] += 0.20
                                     break
 
-                # Extract mood-bearing adjectives via POS + match by SBERT similarity
                 adjectives = []
                 for token in doc:
                     if token.pos_ == "ADJ" and len(token.text) > 2:
                         adjectives.append(token.lemma_.lower())
-                        # Also check mood cue map as fallback
+
                         if token.lemma_.lower() in MOOD_CUE_MAP:
                             scores[MOOD_CUE_MAP[token.lemma_.lower()]] += 0.08
 
-                # If we have adjectives and proto embeddings, use SBERT similarity
                 if adjectives and self.proto_embeddings:
                     adj_text = ", ".join(set(adjectives))
                     adj_emb = self.nlp_processor.get_embeddings([adj_text])
@@ -423,11 +378,10 @@ class EnvironmentClassifier:
         try:
             doc = self.nlp_processor.nlp(narrative_text)
 
-            # Extract meaningful verb phrases
             verb_phrases = []
             for token in doc:
                 if token.pos_ == "VERB" and token.dep_ in ("ROOT", "advcl", "xcomp", "conj", "ccomp"):
-                    # Build verb phrase: verb + its direct objects/complements
+
                     children_text = [c.text for c in token.children
                                     if c.dep_ in ("dobj", "pobj", "attr", "acomp", "advmod")]
                     phrase = f"{token.lemma_} {' '.join(children_text)}".strip()
@@ -437,7 +391,6 @@ class EnvironmentClassifier:
             if not verb_phrases:
                 return scores
 
-            # Encode verb phrases and compare against each environment's prototypes
             vp_embeddings = self.nlp_processor.get_embeddings(verb_phrases)
             vp_centroid = np.mean(vp_embeddings, axis=0)
 
@@ -454,10 +407,6 @@ class EnvironmentClassifier:
 
         return scores
 
-    # ================================================================
-    # INTERNAL: Result formatting
-    # ================================================================
-
     @staticmethod
     def _normalize_scores(scores: Dict[str, float]) -> Dict[str, float]:
         """Normalize score dict to 0-1 range."""
@@ -473,28 +422,23 @@ class EnvironmentClassifier:
         """Format the final classification result with multi-environment support."""
         sorted_env = sorted(scores.items(), key=lambda x: -x[1])
 
-        # Primary
         primary_env = sorted_env[0][0] if sorted_env else "Ambiguous"
         primary_score = sorted_env[0][1] if sorted_env else 0.0
 
-        # Threshold check
         if primary_score < 0.05:
             primary_env = "Ambiguous"
 
-        # Secondary
         secondary_env = None
         secondary_score = 0.0
         if len(sorted_env) > 1 and sorted_env[1][1] > 0.05:
             secondary_env = sorted_env[1][0]
             secondary_score = sorted_env[1][1]
 
-        # Mixed-environment detection: if top-2 are within 25% of each other
         is_mixed = False
         if primary_score > 0.05 and secondary_score > 0.05:
             ratio = secondary_score / primary_score if primary_score > 0 else 0
             is_mixed = ratio > 0.75
 
-        # Confidence: how dominant the primary is vs others
         total = sum(scores.values())
         confidence = primary_score / total if total > 0 else 0.0
 

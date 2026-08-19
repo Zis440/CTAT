@@ -31,7 +31,7 @@ async function svgToPngDataUrl(svgString: string, width: number, height: number)
 }
 
 export async function downloadInvoice(tx: Transaction, user: any) {
-  // Only generate invoices for recharge (credit) transactions
+
   if (tx.type !== "credit" && !tx.description.toLowerCase().includes("recharge")) return;
 
   const doc = new jsPDF({
@@ -45,7 +45,6 @@ export async function downloadInvoice(tx: Transaction, user: any) {
 
   let currentY = 25;
 
-  // --- LOGO ---
   try {
     const response = await fetch('/psyichub-report-logo.png');
     const blob = await response.blob();
@@ -62,7 +61,6 @@ export async function downloadInvoice(tx: Transaction, user: any) {
     doc.text("LOGO", 14, 25);
   }
 
-  // --- INVOICE TEXT (Top Right) ---
   doc.setFontSize(32);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(0, 0, 0);
@@ -70,7 +68,6 @@ export async function downloadInvoice(tx: Transaction, user: any) {
 
   currentY = 55;
 
-  // --- BILL TO & DETAILS ---
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   doc.text("Invoice to:", 14, currentY);
@@ -82,7 +79,6 @@ export async function downloadInvoice(tx: Transaction, user: any) {
 
   currentY += 8;
 
-  // Invoice Recipient Logic based on account type
   let entityName = "Customer";
   if (user?.account_type === "clinic" || user?.account_type === "organization") {
     entityName = user.clinic_name || "Organization";
@@ -106,7 +102,6 @@ export async function downloadInvoice(tx: Transaction, user: any) {
   doc.setFont("helvetica", "normal");
   doc.setTextColor(80, 80, 80);
 
-  // Use address if available, otherwise fallback to a default string
   if (user?.address) {
     const splitAddress = doc.splitTextToSize(user.address, 70);
     doc.text(splitAddress, 14, currentY);
@@ -118,7 +113,6 @@ export async function downloadInvoice(tx: Transaction, user: any) {
 
   currentY += 20;
 
-  // --- TABLE ---
   let desc = tx.description;
   if (tx.description === "Razorpay recharge") {
     desc = "Wallet Recharge";
@@ -153,21 +147,21 @@ export async function downloadInvoice(tx: Transaction, user: any) {
       1: { cellWidth: 40, halign: 'right' }
     },
     didDrawPage: function () {
-      // Draw top and bottom borders for the header and body
+
     },
     willDrawCell: function (data) {
-      // Create horizontal lines like in the template
+
       const { doc, cell, row, section } = data;
       if (section === 'head') {
         doc.setLineWidth(0.5);
         doc.setDrawColor(0);
-        // Top line
+
         doc.line(14, cell.y, pageWidth - 14, cell.y);
-        // Bottom line of header
+
         doc.line(14, cell.y + cell.height, pageWidth - 14, cell.y + cell.height);
       }
       if (section === 'body' && row.index === 0) {
-        // Bottom line of body
+
         doc.setLineWidth(0.5);
         doc.setDrawColor(0);
         doc.line(14, cell.y + cell.height, pageWidth - 14, cell.y + cell.height);
@@ -175,36 +169,32 @@ export async function downloadInvoice(tx: Transaction, user: any) {
     }
   });
 
-  // @ts-ignore
-  let finalY = doc.lastAutoTable.finalY + 10;
+  let finalY = (doc as any).lastAutoTable.finalY + 10;
 
-  // --- SUBTOTAL, TAX, TOTAL ---
   doc.setFontSize(10);
   doc.setTextColor(0);
 
-  // Subtotal
   doc.setFont("helvetica", "normal");
   doc.text("Subtotal", pageWidth - 60, finalY);
   doc.text(amountStr, pageWidth - 14, finalY, { align: "right" });
 
   finalY += 8;
-  // Tax
+
   doc.text("Tax (0%)", pageWidth - 60, finalY);
   doc.text("Rs 0", pageWidth - 14, finalY, { align: "right" });
 
   finalY += 5;
-  // Total line
+
   doc.setLineWidth(0.5);
   doc.line(pageWidth - 65, finalY, pageWidth - 14, finalY);
 
   finalY += 8;
-  // Total
+
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
   doc.text("Total", pageWidth - 60, finalY);
   doc.text(amountStr, pageWidth - 14, finalY, { align: "right" });
 
-  // --- PAYMENT METHOD ---
   let bottomY = finalY + 20;
 
   doc.setFontSize(10);
@@ -228,13 +218,12 @@ export async function downloadInvoice(tx: Transaction, user: any) {
   doc.setFontSize(12);
   doc.text("Thank you for your business!", 14, bottomY);
 
-  // --- SIGNATURE (Bottom Right) ---
   const signY = pageHeight - 50;
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.text("This is a E-invoice. No sign needed.", pageWidth - 14, signY, { align: "right" });
 
-  doc.setDrawColor(0, 200, 83); // Green line
+  doc.setDrawColor(0, 200, 83);
   doc.setLineWidth(1);
   const signTextWidth = doc.getTextWidth("This is a E-invoice. No sign needed.");
   doc.line(pageWidth - 14 - signTextWidth - 5, signY + 3, pageWidth - 14 + 5, signY + 3);
@@ -243,8 +232,7 @@ export async function downloadInvoice(tx: Transaction, user: any) {
   doc.setFontSize(9);
   doc.text("Authorized Signed", pageWidth - 14 - (signTextWidth / 2), signY + 8, { align: "center" });
 
-  // --- FOOTER ---
-  doc.setFillColor(0, 200, 83); // Green bg #00C853
+  doc.setFillColor(0, 200, 83);
   doc.rect(0, pageHeight - 20, pageWidth, 20, 'F');
 
   doc.setTextColor(255, 255, 255);
@@ -266,13 +254,10 @@ export async function downloadInvoice(tx: Transaction, user: any) {
     console.warn("Failed to generate footer icons", e);
   }
 
-  // Phone
   doc.text("+91 7003798750", 40, pageHeight - 10);
 
-  // Address
   doc.text("27/1 Bidhan Nagar Road, kolkata- 700067", 110, pageHeight - 10);
 
-  // --- SAVE ---
   const fileDate = format(new Date(), "yyyy-MM-dd_HH-mm-ss");
   const userId = user?.id || "unknown";
   doc.save(`Invoice_${userId}_${fileDate}.pdf`);

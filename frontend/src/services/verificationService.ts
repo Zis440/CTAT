@@ -1,5 +1,3 @@
-// ─── Verification Service ───────────────────────────────────────────────────
-// API calls for the dynamic verification documents system.
 
 import { apiClient } from "./apiClient";
 import type {
@@ -7,16 +5,12 @@ import type {
   VerificationStatusResponse,
 } from "@/types/auth";
 
-// ── Fetch requirements ──────────────────────────────────────────────────────
-
 export async function getVerificationRequirements(): Promise<VerificationRequirementsResponse> {
   const { data } = await apiClient.get<VerificationRequirementsResponse>(
     "/verification/requirements"
   );
   return data;
 }
-
-// ── Upload a single document ────────────────────────────────────────────────
 
 export async function uploadVerificationDocument(
   documentType: string,
@@ -40,16 +34,12 @@ export async function uploadVerificationDocument(
   return data;
 }
 
-// ── Fetch upload status ─────────────────────────────────────────────────────
-
 export async function getVerificationStatus(): Promise<VerificationStatusResponse> {
   const { data } = await apiClient.get<VerificationStatusResponse>(
     "/verification/status"
   );
   return data;
 }
-
-// ── Submit for review ───────────────────────────────────────────────────────
 
 export async function submitForVerification(): Promise<{
   status: string;
@@ -60,14 +50,10 @@ export async function submitForVerification(): Promise<{
   return data;
 }
 
-// ── Delete a document ───────────────────────────────────────────────────────
-
 export async function deleteVerificationDocument(documentType: string): Promise<{ status: string }> {
   const { data } = await apiClient.delete(`/verification/document/${documentType}`);
   return data;
 }
-
-// ── DigiLocker Integration ──────────────────────────────────────────────────
 
 export async function initDigilocker(): Promise<{
   success: boolean;
@@ -90,8 +76,6 @@ export async function digilockerCallback(payload: {
   const { data } = await apiClient.post("/verification/digilocker/callback", payload);
   return data;
 }
-
-// ── RCI Profile (CV & Bio) ───────────────────────────────────────────────────
 
 export async function getRciProfile(): Promise<{
   cv_uploaded: boolean;
@@ -118,7 +102,7 @@ export async function saveRciProfile(cv?: File, bio?: string): Promise<{
   if (bio !== undefined) {
     formData.append("bio", bio);
   }
-  
+
   const { data } = await apiClient.post("/verification/profile", formData, {
     headers: {
       "Content-Type": "multipart/form-data",

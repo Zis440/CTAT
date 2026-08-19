@@ -1,9 +1,5 @@
-// src/features/admin/services/adminService.ts
-// API calls for admin user management.
 
 import { apiClient } from "@/services/apiClient";
-
-// ── Types ────────────────────────────────────────────────────────────────────
 
 export interface AdminUser {
   id: string;
@@ -151,8 +147,6 @@ export interface AdminCreateUserPayload {
   phone?: string;
   rci_number?: string;
 }
-
-// ── API Calls ───────────────────────────────────────────────────────────────
 
 export async function fetchUsers(
   filters: UserFilters = {}
@@ -306,8 +300,8 @@ export const fetchAdminAppointmentById = async (id: string): Promise<Appointment
 };
 
 export interface AdminUpdateAppointmentPayload {
-  appointment_date?: string;  // "YYYY-MM-DD"
-  start_time?: string;        // "HH:MM"
+  appointment_date?: string;
+  start_time?: string;
   duration_minutes?: number;
   status?: string;
   purpose?: string;

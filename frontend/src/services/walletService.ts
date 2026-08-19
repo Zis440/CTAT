@@ -1,17 +1,11 @@
-// ─── Wallet Service ─────────────────────────────────────────────────────────
-// API calls for wallet balance and transaction history (Razorpay integration).
 
 import { apiClient } from "./apiClient";
 import type { WalletBalance, Transaction } from "@/types/wallet";
-
-// ─── Balance ────────────────────────────────────────────────────────────────
 
 export async function getWalletBalance(): Promise<WalletBalance> {
   const { data } = await apiClient.get<WalletBalance>("/wallet/balance");
   return data;
 }
-
-// ─── Transactions ───────────────────────────────────────────────────────────
 
 export interface TransactionsResponse {
   transactions: Transaction[];
@@ -36,8 +30,6 @@ export async function getTransactions(
   }
   return data;
 }
-
-// ─── Razorpay recharge ──────────────────────────────────────────────────────
 
 export interface RazorpayOrderResponse {
   order_id: string;

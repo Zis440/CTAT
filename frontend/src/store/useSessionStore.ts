@@ -1,5 +1,3 @@
-// ─── Session Store ──────────────────────────────────────────────────────────
-// Zustand store for the active TAT assessment session.
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
@@ -13,35 +11,32 @@ interface PatientInfo {
 }
 
 interface SessionState {
-  /** Current active session ID */
+
   sessionId: string | null;
-  /** Patient associated with this session */
+
   patientId: string | null;
   patientName: string | null;
-  /** Full patient info set during intake */
+
   patient: PatientInfo | null;
-  /** Active patient ID used during session (alias for patientId) */
+
   activePatientId: string | null;
-  /** Test type being administered */
+
   testType: string | null;
-  /** Which card set variant (e.g., "standard", "custom") */
+
   cardSet: string;
-  /** Current card index in the assessment */
+
   currentCardIndex: number;
-  /** Total number of cards in this assessment */
+
   totalCards: number;
-  /** Selected TAT card IDs for this session */
+
   selectedCards: string[];
 
-  // ── Actions ───────────────────────────────────────────────────────────────
-
-  /** Set patient info from intake form */
   setPatient: (patient: PatientInfo) => void;
-  /** Set the test type being administered */
+
   setTestType: (testType: string) => void;
-  /** Toggle a card selection on/off */
+
   toggleCard: (cardId: string) => void;
-  /** Initialize a new session */
+
   startSession: (params: {
     sessionId: string;
     patientId: string;
@@ -50,17 +45,17 @@ interface SessionState {
     cardSet?: string;
     totalCards?: number;
   }) => void;
-  /** Move to the next card */
+
   nextCard: () => void;
-  /** Move to a specific card */
+
   goToCard: (index: number) => void;
-  /** Whether user wants manual psychologist validation for 100 Rs */
+
   requestPsychologistValidation: boolean;
-  /** Toggle validation requirement */
+
   toggleValidation: () => void;
-  /** Clear session state */
+
   clearSession: () => void;
-  /** Alias for clearSession */
+
   resetSession: () => void;
 }
 

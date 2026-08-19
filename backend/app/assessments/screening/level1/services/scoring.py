@@ -5,15 +5,11 @@ No approximations. No invented scoring.
 from .story_analyzer import get_story_traits
 from app.assessments.screening.level1.utils.games.scoring_tables import raw_to_scaled, compute_processing_speed_index
 
-
-# ---------------------------------------------------------------------------
 import json
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Age Band mapping (Advanced Cognitive Performance Assessment (ACPA) only)
-# ---------------------------------------------------------------------------
 def get_age_band(age: int) -> str:
     if age <= 24:   return "20-24"
     elif age <= 29: return "25-29"
@@ -22,10 +18,6 @@ def get_age_band(age: int) -> str:
     elif age <= 54: return "45-54"
     else:           return "55-64"
 
-
-# ---------------------------------------------------------------------------
-# WEMWBS — 14 items, 1-5, no reverse
-# ---------------------------------------------------------------------------
 def calculate_wemwbs(responses: dict) -> dict:
     items = [responses.get(f"wemwbs_{i}", 3) for i in range(1, 15)]
     total = sum(items)
@@ -37,10 +29,6 @@ def calculate_wemwbs(responses: dict) -> dict:
 
     return {"total": total, "score": round(score, 2), "category": category}
 
-
-# ---------------------------------------------------------------------------
-# PSS — 10 items, 0-4, reverse Q4,Q5,Q7,Q8
-# ---------------------------------------------------------------------------
 def calculate_pss(responses: dict) -> dict:
     reverse_ids = {"pss_4", "pss_5", "pss_7", "pss_8"}
     total = 0
@@ -49,7 +37,7 @@ def calculate_pss(responses: dict) -> dict:
         val = responses.get(key, 2)
         total += (4 - val) if key in reverse_ids else val
 
-    score = 100 - ((total / 40) * 100)  # higher = better
+    score = 100 - ((total / 40) * 100)
 
     if total <= 13:   category = "Low Stress"
     elif total <= 26: category = "Moderate"
@@ -57,10 +45,6 @@ def calculate_pss(responses: dict) -> dict:
 
     return {"total": total, "score": round(score, 2), "category": category}
 
-
-# ---------------------------------------------------------------------------
-# MBI — 22 items: Section A(7), B(7), C(8), 0-6 scale
-# ---------------------------------------------------------------------------
 def calculate_mbi(responses: dict) -> dict:
     ee_sum = sum(responses.get(f"mbi_a_{i}", 0) for i in range(1, 8))
 
@@ -75,10 +59,6 @@ def calculate_mbi(responses: dict) -> dict:
         "score": round(score, 2),
     }
 
-
-# ---------------------------------------------------------------------------
-# WRQoL — 23 scored items, 1-5, reverse Q7,Q9,Q19. Q24 excluded.
-# ---------------------------------------------------------------------------
 def calculate_wrqol(responses: dict) -> dict:
     reverse_ids = {"wrqol_5"}
     total = 0
@@ -91,24 +71,16 @@ def calculate_wrqol(responses: dict) -> dict:
 
     return {"total": total, "score": round(score, 2)}
 
-
-# ---------------------------------------------------------------------------
-# Mental Health Index
-# ---------------------------------------------------------------------------
 def calculate_mental_health_index(wemwbs_score, pss_score, mbi_score, wrqol_score) -> float:
     return round(
         (wemwbs_score * 0.30) + (pss_score * 0.25) +
         (mbi_score * 0.25) + (wrqol_score * 0.20), 2
     )
 
-
-# ---------------------------------------------------------------------------
-# Cognitive Index — V3.0 Algorithmic Scoring (Replacing ACPA Lookup Tables)
-# ---------------------------------------------------------------------------
 def calculate_cognitive_index(age: int, game_metrics: list, gender: str = None) -> dict:
     """
-    Uses dynamic algorithmic scoring for CD (Symbol-Number Association Task) 
-    and SS (Visual Pattern Search Task), incorporating advanced metrics like latency, 
+    Uses dynamic algorithmic scoring for CD (Symbol-Number Association Task)
+    and SS (Visual Pattern Search Task), incorporating advanced metrics like latency,
     fatigue, and learning efficiency.
     """
     raw_scores = {}
@@ -117,8 +89,7 @@ def calculate_cognitive_index(age: int, game_metrics: list, gender: str = None) 
     for gm in game_metrics:
         gt = gm.get("game_type") if isinstance(gm, dict) else gm.game_type
         rs = float(gm.get("score") if isinstance(gm, dict) else gm.score)
-        
-        # Parse advanced metrics safely
+
         adv = gm.get("advanced_metrics") if isinstance(gm, dict) else getattr(gm, "advanced_metrics", None)
         if isinstance(adv, str):
             import json
@@ -128,31 +99,25 @@ def calculate_cognitive_index(age: int, game_metrics: list, gender: str = None) 
                 adv = {}
         advanced_data[gt] = adv or {}
 
-        # Gender Correction Factor (GCF) based on clinical research (Male +5% speed offset)
         if gender == "Male" and gt in ["CD", "SS"]:
             rs = rs * 1.05
 
         raw_scores[gt] = int(rs)
 
-    # 1. Processing Speed Index (PSI) Component Calculation
-    # Baseline expected scores for 120s trials
     expected_cd = 60 - max(0, (age - 30) * 0.5)
     expected_ss = 50 - max(0, (age - 30) * 0.4)
 
     cd_score = raw_scores.get("CD", 0)
     ss_score = raw_scores.get("SS", 0)
 
-    # Calculate individual scaled components (Mean=10, SD=3)
     cd_scaled = 10 + ((cd_score - expected_cd) / 10) * 3
     ss_scaled = 10 + ((ss_score - expected_ss) / 8) * 3
 
-    # Constrain scaled scores 1-19
     cd_scaled = max(1, min(19, round(cd_scaled)))
     ss_scaled = max(1, min(19, round(ss_scaled)))
 
-    # Composite IVP (Mean 100, SD 15)
     psi_sum = cd_scaled + ss_scaled
-    ivp_estimate = 50 + (psi_sum * 2.5)  # 20 sum = 100 IVP
+    ivp_estimate = 50 + (psi_sum * 2.5)
     ivp_estimate = max(45, min(155, round(ivp_estimate)))
 
     psi_data = None
@@ -181,10 +146,6 @@ def calculate_cognitive_index(age: int, game_metrics: list, gender: str = None) 
         "cognitive_index": cognitive_index,
     }
 
-
-# ---------------------------------------------------------------------------
-# Human Performance Index
-# ---------------------------------------------------------------------------
 def calculate_human_performance_index(mhi: float, ci: float) -> dict:
     hpi = round((mhi * 0.70) + (ci * 0.30), 2)
 
@@ -196,7 +157,6 @@ def calculate_human_performance_index(mhi: float, ci: float) -> dict:
 
     return {"hpi": hpi, "classification": classification}
 
-
 def classify_index(score: float) -> str:
     if score <= 39:   return "Critical Risk"
     elif score <= 54: return "High Risk"
@@ -204,10 +164,6 @@ def classify_index(score: float) -> str:
     elif score <= 84: return "Good"
     else:             return "Excellent"
 
-
-# ---------------------------------------------------------------------------
-# Full Report Data Pipeline
-# ---------------------------------------------------------------------------
 def generate_report_data(user_info: dict, questionnaire_responses, game_metrics,
                          story_assessments: list = None, patient_context: dict = None) -> dict:
     """
@@ -220,14 +176,13 @@ def generate_report_data(user_info: dict, questionnaire_responses, game_metrics,
             patient_context = json.loads(patient_context)
         except Exception:
             patient_context = {}
-    # 1. Build response dict from questionnaire responses
+
     q_dict = {}
     for r in questionnaire_responses:
         qid = r.get("question_id") if isinstance(r, dict) else r.question_id
         sc = r.get("score") if isinstance(r, dict) else r.score
         q_dict[qid] = sc
 
-    # 2. Calculate mental health scores
     wemwbs_res = calculate_wemwbs(q_dict)
     pss_res = calculate_pss(q_dict)
     mbi_res = calculate_mbi(q_dict)
@@ -237,31 +192,25 @@ def generate_report_data(user_info: dict, questionnaire_responses, game_metrics,
         wemwbs_res["score"], pss_res["score"], mbi_res["score"], wrqol_res["score"]
     )
 
-    # 3. Calculate cognitive scores
     age = int(user_info.get("age", 30))
     gender = patient_context.get("gender", "Neutral") if patient_context else "Neutral"
     cog_res = calculate_cognitive_index(age, game_metrics, gender)
 
-    # 4. Human Performance Index
     hpi_res = calculate_human_performance_index(mhi, cog_res["cognitive_index"])
 
-    # 5. Story Qualitative Analysis (Context-Aware)
     story_analysis = {}
     if story_assessments and any(s.get("story_text", "").strip() for s in story_assessments):
         story_analysis = get_story_traits(story_assessments, patient_context)
 
-    # 6. Determine strengths and development areas
     strengths, dev_areas = _determine_strengths_and_areas(
         wemwbs_res, pss_res, mbi_res, wrqol_res, cog_res
     )
 
-    # 7. Growth Potential (0-100)
     wellbeing_factor = min(wemwbs_res["total"] / 70, 1.0) * 40
     stress_factor = max(0, (40 - pss_res["total"]) / 40) * 30
     cog_factor = (cog_res["cognitive_index"] / 100) * 30
     growth_potential = round(wellbeing_factor + stress_factor + cog_factor)
 
-    # 8. Executive Summary
     exec_summary = (
         f"Based on the comprehensive Level 1 assessment, {user_info.get('name', 'the employee')} "
         f"demonstrates {pss_res['category'].lower()} ({pss_res['score']:.0f}/100) and "
@@ -279,30 +228,28 @@ def generate_report_data(user_info: dict, questionnaire_responses, game_metrics,
             f"{psi['percentile']}th percentile)."
         )
 
-    # 9. Collaboration & personality insights from Story Assessment
     dimensions = story_analysis.get("dimensions", {})
     collab_style = "Collaborative and team-oriented" if dimensions.get("Social Relationships", 50) >= 60 else "Independent with selective collaboration"
     decision_making = "Analytical and measured" if dimensions.get("Coping Style", 50) >= 60 else "May benefit from structured decision frameworks"
     conflict_handling = "Constructive" if dimensions.get("Main Conflict", 50) <= 40 else "Direct — may benefit from conflict resolution training"
     team_culture = "Supportive" if dimensions.get("Emotional Tone", 50) >= 60 else "Pragmatic"
 
-    # 10. Generate Impression (2-3 lines exact problem statement)
     impression_parts = []
     if hpi_res["classification"] in ["Critical Risk", "High Risk"]:
         impression_parts.append(f"Patient indicates a {hpi_res['classification'].lower()} profile.")
     else:
         impression_parts.append("Patient presents a generally stable profile.")
-        
+
     if dev_areas:
         impression_parts.append(f"Primary challenges involve: {', '.join([d.lower() for d in dev_areas[:2]])}.")
     else:
         impression_parts.append("No significant immediate challenges identified.")
-        
+
     if psi and psi.get("classification") in ["Borderline", "Extremely Low"]:
         impression_parts.append("Cognitive processing speed is notably reduced, requiring attention.")
     elif mbi_res["burnout_index"] > 60:
         impression_parts.append("Elevated burnout indices suggest urgent need for stress management and recovery.")
-        
+
     impression = " ".join(impression_parts)
 
     impression = " ".join(impression_parts)
@@ -340,7 +287,6 @@ def generate_report_data(user_info: dict, questionnaire_responses, game_metrics,
         }
     }
 
-    # 11. Deterministic Risk Analysis (Fallbacks if AI generation fails or defaults)
     def determine_risk(score, inverted=False):
         if inverted:
             if score >= 75: return "Critical"
@@ -363,19 +309,16 @@ def generate_report_data(user_info: dict, questionnaire_responses, game_metrics,
         "performance": hpi_res["classification"]
     }
 
-    # Generate massive LLM insights in one shot
     ai_insights = _generate_ai_clinical_insights(base_report, patient_context)
 
-    # Merge AI insights
     base_report["executive_summary"] = ai_insights.get("executive_summary", exec_summary)
     base_report["ai_clinical_insight"] = ai_insights.get("ai_clinical_insight", "Data generated conservatively based on profile.")
     base_report["cross_assessment_integration"] = ai_insights.get("cross_assessment_integration", "Data generated conservatively based on profile.")
     base_report["comprehensive_ai_summary"] = ai_insights.get("comprehensive_ai_summary", "Data generated conservatively based on profile.")
     base_report["detailed_findings"] = ai_insights.get("detailed_findings", "Data generated conservatively based on profile.")
-    
-    # Use deterministic risk analysis
+
     base_report["risk_analysis"] = deterministic_risk
-    
+
     base_report["strength_analysis"] = ai_insights.get("strength_analysis", strengths)
     base_report["development_areas"] = ai_insights.get("development_areas", dev_areas)
     base_report["workplace_interpretation"] = ai_insights.get("workplace_interpretation", {})
@@ -383,7 +326,6 @@ def generate_report_data(user_info: dict, questionnaire_responses, game_metrics,
     base_report["appendix"] = ai_insights.get("appendix", "Raw data appendix.")
 
     return base_report
-
 
 def _determine_strengths_and_areas(wemwbs, pss, mbi, wrqol, cog):
     strengths = []
@@ -435,7 +377,6 @@ def _determine_strengths_and_areas(wemwbs, pss, mbi, wrqol, cog):
 
     return strengths[:5], dev_areas[:5]
 
-
 def _generate_personality_insights(dimensions: dict) -> list:
     if not dimensions:
         return ["Personality insights require Story Assessment completion."]
@@ -449,7 +390,7 @@ def _generate_personality_insights(dimensions: dict) -> list:
         insights.append("May experience situational or underlying emotional distress.")
     if dimensions.get("Social Relationships", 50) >= 70:
         insights.append("Demonstrates strong capacity for building interpersonal relationships.")
-    
+
     if not insights:
         insights.append("Personality profile is within normative range across all measured dimensions.")
 
@@ -458,7 +399,7 @@ def _generate_personality_insights(dimensions: dict) -> list:
 def _generate_ai_clinical_insights(base_report, patient_context) -> dict:
     import ollama
     import json
-    
+
     prompt = (
         "You are generating a professional-grade psychometric, cognitive, personality, narrative, and workplace assessment report. "
         "The report must exceed the quality of traditional psychological assessment platforms.\n\n"
@@ -496,36 +437,34 @@ def _generate_ai_clinical_insights(base_report, patient_context) -> dict:
                 from ollama import Client
                 ollama_host = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434")
                 client = Client(host=ollama_host)
-                
+
                 response = client.chat(
-                    model='llama3', 
+                    model='llama3',
                     messages=[{'role': 'user', 'content': prompt}],
                     format='json',
                     options={'num_predict': 800, 'temperature': 0.3}
                 )
-                
-                # Attempt to close underlying httpx client to prevent socket leak warnings
+
                 if hasattr(client, '_client'):
                     client._client.close()
-                    
+
                 content = response['message']['content']
-                
+
                 json_start = content.find('{')
                 json_end = content.rfind('}') + 1
                 if json_start != -1 and json_end > json_start:
                     json_str = content[json_start:json_end]
                     result = json.loads(json_str)
-                    
-                    # Relaxed validation: as long as it's a valid JSON dict, we accept it to avoid long retries.
+
                     if isinstance(result, dict) and "executive_summary" in result:
                         return result
                     else:
                         logger.warning(f"Attempt {attempt + 1}: Output validation failed. Missing critical keys. Retrying...")
                         if attempt == max_retries - 1:
-                            return result # Return best effort on last attempt
+                            return result
             except Exception as e:
                 logger.error(f"Attempt {attempt + 1} failed to generate AI insights: {e}")
                 if attempt == max_retries - 1:
                     return {}
-                
+
     return {}

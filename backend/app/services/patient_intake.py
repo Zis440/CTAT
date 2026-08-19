@@ -10,12 +10,11 @@ from pathlib import Path
 import json
 import csv
 
-
 @dataclass
 class PatientProfile:
     """Patient profile with demographics and session history"""
     patient_id: str
-    patient_type: str  # 'new', 'returning', 'anonymous'
+    patient_type: str
     name: Optional[str] = None
     age: Optional[int] = None
     gender: Optional[str] = None
@@ -25,7 +24,7 @@ class PatientProfile:
     last_session_date: Optional[str] = None
     notes: str = ""
     demographic_data: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization"""
         return {
@@ -41,7 +40,7 @@ class PatientProfile:
             'notes': self.notes,
             'demographic_data': self.demographic_data
         }
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'PatientProfile':
         """Create from dictionary"""
@@ -59,19 +58,17 @@ class PatientProfile:
             demographic_data=data.get('demographic_data', {})
         )
 
-
 class PatientDatabase:
     """Simple patient database using CSV storage with thread-safe access."""
 
     def __init__(self, db_path: Path):
         self.db_path = db_path
-        self._lock = threading.RLock()  # Re-entrant: methods may call each other
+        self._lock = threading.RLock()
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Create database file if it doesn't exist
         if not self.db_path.exists():
             self._create_database()
-    
+
     def _create_database(self):
         """Create new database file"""
         with open(self.db_path, 'w', newline='', encoding='utf-8') as f:
@@ -81,14 +78,13 @@ class PatientDatabase:
                 'first_session_date', 'total_sessions', 'last_session_date',
                 'notes', 'demographic_data'
             ])
-    
+
     def add_patient(self, profile: PatientProfile) -> bool:
         """Add or update a patient (thread-safe)."""
         with self._lock:
             existing_patients = self._read_all_patients()
             patient_dict = profile.to_dict()
 
-            # Update existing or add new
             updated = False
             for i, p in enumerate(existing_patients):
                 if p['patient_id'] == profile.patient_id:
@@ -101,7 +97,7 @@ class PatientDatabase:
 
             self._write_all_patients(existing_patients)
             return True
-    
+
     def get_patient(self, patient_id: str) -> Optional[PatientProfile]:
         """Retrieve a patient by ID"""
         patients = self.get_all_patients()
@@ -109,7 +105,7 @@ class PatientDatabase:
             if p['patient_id'] == patient_id:
                 return PatientProfile.from_dict(p)
         return None
-    
+
     def get_all_patients(self) -> List[Dict[str, Any]]:
         """Get all patients as dicts (thread-safe public API)."""
         with self._lock:
@@ -123,7 +119,7 @@ class PatientDatabase:
             with open(self.db_path, 'r', newline='', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
                 for row in reader:
-                    # Parse special fields
+
                     row['age'] = int(row['age']) if row['age'] and row['age'] != 'None' else None
                     row['consent_given'] = row['consent_given'].lower() == 'true'
                     row['total_sessions'] = int(row['total_sessions']) if row['total_sessions'] else 0
@@ -133,23 +129,23 @@ class PatientDatabase:
             pass
 
         return patients
-    
+
     def _write_all_patients(self, patients: List[Dict[str, Any]]):
         """Write all patients to database"""
         with open(self.db_path, 'w', newline='', encoding='utf-8') as f:
             if patients:
-                # Ensure 'name' is in fieldnames even if patient dict is old
+
                 keys = list(patients[0].keys())
                 if 'name' not in keys:
                     keys.insert(2, 'name')
                 writer = csv.DictWriter(f, fieldnames=keys, extrasaction='ignore')
                 writer.writeheader()
                 for p in patients:
-                    # Serialize demographic_data
+
                     if 'demographic_data' in p and not isinstance(p['demographic_data'], str):
                         p['demographic_data'] = json.dumps(p['demographic_data'])
                     writer.writerow(p)
-    
+
     def increment_session(self, patient_id: str) -> bool:
         """Increment session count for patient"""
         profile = self.get_patient(patient_id)
@@ -158,12 +154,12 @@ class PatientDatabase:
             profile.last_session_date = datetime.now().isoformat()
             return self.add_patient(profile)
         return False
-    
+
     def search_patients(self, **criteria) -> List[PatientProfile]:
         """Search patients by criteria"""
         all_patients = self.get_all_patients()
         results = []
-        
+
         for p in all_patients:
             match = True
             for key, value in criteria.items():
@@ -172,63 +168,60 @@ class PatientDatabase:
                     break
             if match:
                 results.append(PatientProfile.from_dict(p))
-        
-        return results
 
+        return results
 
 class SessionManager:
     """Manages analysis sessions for patients"""
-    
+
     def __init__(self, session_dir: Path):
         self.session_dir = session_dir
         self.session_dir.mkdir(parents=True, exist_ok=True)
-    
+
     def save_session(self, patient_id: str, session_data: Dict[str, Any]) -> Path:
         """Save a session analysis"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         session_file = self.session_dir / f"{patient_id}_{timestamp}.json"
-        
-        # Add metadata
+
         session_data['_metadata'] = {
             'patient_id': patient_id,
             'timestamp': datetime.now().isoformat(),
             'session_file': str(session_file)
         }
-        
+
         with open(session_file, 'w', encoding='utf-8') as f:
             json.dump(session_data, f, indent=2)
-        
+
         return session_file
-    
+
     def get_patient_sessions(self, patient_id: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get all sessions for a patient or all sessions if patient_id is None"""
         sessions = []
-        
+
         pattern = f"{patient_id}_*.json" if patient_id else "*.json"
-        
+
         for session_file in self.session_dir.glob(pattern):
             try:
                 with open(session_file, 'r', encoding='utf-8') as f:
                     sessions.append(json.load(f))
             except json.JSONDecodeError:
                 pass
-        
-        # Sort by timestamp
+
         sessions.sort(key=lambda x: x.get('_metadata', {}).get('timestamp', ''), reverse=True)
         return sessions
-    
+
     def get_latest_session(self, patient_id: str) -> Optional[Dict[str, Any]]:
         """Get most recent session for patient"""
         sessions = self.get_patient_sessions(patient_id)
         return sessions[0] if sessions else None
-        
+
     def delete_session(self, patient_id: str, timestamp: str) -> bool:
         """Delete a specific session by patient ID and timestamp"""
         pattern = f"{patient_id}_*.json"
-        
+
         target_file = None
         pdf_to_delete = None
-        
+
         for session_file in self.session_dir.glob(pattern):
             try:
                 with open(session_file, 'r', encoding='utf-8') as f:
@@ -240,30 +233,24 @@ class SessionManager:
                         break
             except (json.JSONDecodeError, OSError) as e:
                 print(f"Error accessing session file {session_file}: {e}")
-                
+
         if target_file and target_file.exists():
             try:
                 target_file.unlink()
-                
-                # Also try to delete the associated PDF report if there is one
+
                 if pdf_to_delete:
-                    # Resolve output dir from project root (backend/)
+
                     project_root = Path(__file__).resolve().parent.parent
                     output_dir = project_root / "outputs"
                     pdf_path = output_dir / pdf_to_delete
                     if pdf_path.exists():
                         pdf_path.unlink()
-                
+
                 return True
             except OSError as e:
                 print(f"Error deleting session files target={target_file}: {e}")
-                
+
         return False
-
-
-# ============================================================================
-# PATIENT INTAKE FUNCTION (ADDED FROM NOTEBOOK)
-# ============================================================================
 
 def collect_patient_info(patient_database):
     """
@@ -276,9 +263,6 @@ def collect_patient_info(patient_database):
     print("PATIENT INTAKE")
     print("="*80 + "\n")
 
-    # ----------------------------------------------------------------------
-    # PATIENT TYPE
-    # ----------------------------------------------------------------------
     print("Patient Type:")
     print("  1. New patient")
     print("  2. Returning patient")
@@ -286,9 +270,6 @@ def collect_patient_info(patient_database):
 
     patient_type = input("\nSelect patient type (1/2/3): ").strip()
 
-    # ----------------------------------------------------------------------
-    # RETURNING PATIENT
-    # ----------------------------------------------------------------------
     if patient_type == "2":
         print("\n" + "-"*80)
         print("RETURNING PATIENT LOOKUP")
@@ -310,9 +291,6 @@ def collect_patient_info(patient_database):
             print("Switching to New Patient mode.\n")
             patient_type = "1"
 
-    # ----------------------------------------------------------------------
-    # NEW OR ANONYMOUS PATIENT
-    # ----------------------------------------------------------------------
     print("\n" + "-"*80)
     print("DEMOGRAPHIC INFORMATION")
     print("-"*80)
@@ -341,9 +319,6 @@ def collect_patient_info(patient_database):
     print("\nGender (free text, e.g., Male, Female, Non-binary, etc.)")
     gender = input("Gender: ").strip() or "Not specified"
 
-    # ----------------------------------------------------------------------
-    # SOCIO-CULTURAL BACKGROUND
-    # ----------------------------------------------------------------------
     print("\n" + "-"*80)
     print("SOCIO-CULTURAL BACKGROUND")
     print("-"*80)
@@ -355,9 +330,6 @@ def collect_patient_info(patient_database):
     print("- Cultural/religious background (if relevant)")
     background = input("\nSocio-cultural background: ").strip() or "Not specified"
 
-    # ----------------------------------------------------------------------
-    # CURRENT ENVIRONMENT
-    # ----------------------------------------------------------------------
     print("\n" + "-"*80)
     print("CURRENT ENVIRONMENT")
     print("-"*80)
@@ -367,17 +339,11 @@ def collect_patient_info(patient_database):
     print("- Major life stressors or recent changes")
     environment = input("\nEnvironment & support system: ").strip() or "Not specified"
 
-    # ----------------------------------------------------------------------
-    # GENERATE PATIENT ID
-    # ----------------------------------------------------------------------
     if patient_type == "3":
         patient_id = f"ANON_{str(uuid.uuid4())[:8].upper()}"
     else:
         patient_id = f"PAT_{str(uuid.uuid4())[:8].upper()}"
 
-    # ----------------------------------------------------------------------
-    # CREATE PATIENT PROFILE
-    # ----------------------------------------------------------------------
     demographic_data = {
         "background": background,
         "environment": environment
@@ -390,7 +356,7 @@ def collect_patient_info(patient_database):
         gender=gender,
         demographic_data=demographic_data
     )
-    patient.name = name   # inject name attribute
+    patient.name = name
 
     if patient_type != "3":
         patient_database.add_patient(patient)

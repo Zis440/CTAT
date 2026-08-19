@@ -12,10 +12,9 @@ interface ModuleGuardProps {
 export function ModuleGuard({ children, moduleKey }: ModuleGuardProps) {
   const { user } = useAuthStore();
   const navigate = useNavigate();
-  // If user is not staff, they bypass this guard
+
   const isStaff = user?.role.includes("staff");
 
-  // If staff, check if they have the specific module permission
   const hasPermission = !isStaff || !!user?.module_permissions?.[moduleKey];
 
   useEffect(() => {
@@ -28,7 +27,7 @@ export function ModuleGuard({ children, moduleKey }: ModuleGuardProps) {
         else if (user?.role === "org_admin") fallback = "/org/dashboard";
         else if (user?.role === "org_staff") fallback = "/org-staff/dashboard";
         navigate(fallback, { replace: true });
-      }, 3000); // 3 seconds redirect
+      }, 3000);
 
       return () => clearTimeout(timer);
     }

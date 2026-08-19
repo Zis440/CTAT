@@ -57,8 +57,6 @@ const STAFF_ROLES = [
   { value: "org_staff", label: "Staff (View Only)" },
 ];
 
-
-// ── Component ────────────────────────────────────────────────────────────────
 export function ClinicStaffDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -69,7 +67,6 @@ export function ClinicStaffDetailsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Editable form state
   const [form, setForm] = useState({
     first_name: "",
     last_name: "",
@@ -79,19 +76,18 @@ export function ClinicStaffDetailsPage() {
     role: "",
   });
 
-  // ── Fetch staff member ─────────────────────────────────────────────────────
   const fetchStaff = useCallback(async () => {
     if (!id) return;
     setIsLoading(true);
     try {
-      // Try individual endpoint first; fall back to list lookup
+
       try {
         const { data } = await apiClient.get<AuthUser>(`/auth/staff/${id}`);
         setStaff(data);
         syncForm(data);
       } catch (individualErr: any) {
         if (individualErr?.response?.status === 404 || individualErr?.response?.status === 405) {
-          // Fall back: fetch list and find matching member
+
           const { data: list } = await apiClient.get<AuthUser[]>("/auth/staff");
           const found = list.find((s) => s.id === id);
           if (!found) {
@@ -152,22 +148,21 @@ export function ClinicStaffDetailsPage() {
       if ((currentRole === "clinic_staff" || currentRole === "org_staff") && staff?.can_assess) {
         currentRole = `${currentRole}_assess`;
       }
-      
+
       if (form.role !== currentRole) {
          let finalRole = form.role;
          let finalCanAssess = staff?.can_assess || false;
-         
+
          if (form.role === 'clinic_staff_assess' || form.role === 'org_staff_assess') {
              finalRole = form.role.replace('_assess', '');
              finalCanAssess = true;
          } else if (form.role === 'clinic_staff' || form.role === 'org_staff') {
              finalCanAssess = false;
          }
-         
+
          payload.role = finalRole;
          payload.can_assess = finalCanAssess;
       }
-
 
       if (Object.keys(payload).length === 0) {
         toast.info("No changes to save.");
@@ -204,7 +199,6 @@ export function ClinicStaffDetailsPage() {
     }
   }
 
-  // ── Loading skeleton ───────────────────────────────────────────────────────
   if (isLoading) {
     return (
       <div className="w-full relative min-h-full isolate">
@@ -249,7 +243,6 @@ export function ClinicStaffDetailsPage() {
 
       <div className="w-full max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
-        {/* ── Top bar ── */}
         <div className="flex items-center justify-end">
           <motion.div
             initial={{ opacity: 0, x: 12 }}
@@ -272,18 +265,16 @@ export function ClinicStaffDetailsPage() {
           </motion.div>
         </div>
 
-        {/* ── Identity Card ── */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <Card className="border-primary/10 bg-background/80 backdrop-blur-sm overflow-hidden">
             <div className="h-1 bg-gradient-to-r from-primary/60 via-primary to-primary/60" />
             <CardContent className="pt-6">
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-                {/* Avatar */}
+
                 <div className="h-16 w-16 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center shrink-0">
                   <span className="text-xl font-bold text-primary">{initial}</span>
                 </div>
 
-                {/* Name + meta */}
                 <div className="flex-1 text-center sm:text-left space-y-3">
                   {isEditing ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg">
@@ -323,7 +314,6 @@ export function ClinicStaffDetailsPage() {
                     )}
                   </div>
 
-                  {/* Contact */}
                   <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 pt-2 border-t border-primary/10">
                     <div className="space-y-1">
                       <Label className="text-muted-foreground font-bold text-[10px] uppercase tracking-wider flex items-center gap-1">
@@ -349,7 +339,6 @@ export function ClinicStaffDetailsPage() {
                   </div>
                 </div>
 
-                {/* Joined date & Role */}
                 <div className="text-center sm:text-right shrink-0 space-y-2 w-full sm:w-auto mt-4 sm:mt-0">
                   {isEditing ? (
                     <Select
@@ -387,7 +376,6 @@ export function ClinicStaffDetailsPage() {
           </Card>
         </motion.div>
 
-        {/* ── Professional Info ── */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}>
           <Card className="border-primary/10 bg-background/80 backdrop-blur-sm">
             <CardHeader>
@@ -434,7 +422,6 @@ export function ClinicStaffDetailsPage() {
           </Card>
         </motion.div>
 
-        {/* ── Permissions ── */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.15 }}>
           <Card className="border-primary/10 bg-background/80 backdrop-blur-sm">
             <CardHeader>
@@ -495,7 +482,6 @@ export function ClinicStaffDetailsPage() {
           </Card>
         </motion.div>
 
-        {/* ── Action Bar (edit mode) ── */}
         {isEditing && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}

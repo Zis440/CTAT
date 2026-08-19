@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 from sqlalchemy import text
 
-# Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.database import engine, SessionLocal, Base
@@ -13,7 +12,6 @@ from app.models.user import User
 from app.models.wallet import Wallet
 from app.models.patient import Patient, Session
 from app.models.pricing import TestPricing
-
 
 def verify_connection():
     try:
@@ -24,7 +22,6 @@ def verify_connection():
     except Exception as e:
         print(f"[FAIL] Connection failed: {e}")
         return False
-
 
 def verify_tables():
     """Check that all required tables exist."""
@@ -52,7 +49,6 @@ def verify_tables():
 
     return all_exist
 
-
 def verify_session():
     """Test session creation."""
     try:
@@ -64,7 +60,6 @@ def verify_session():
     except Exception as e:
         print(f"[FAIL] Session failed: {e}")
         return False
-
 
 def main():
     print("PostgreSQL Database Verification\n")
@@ -81,7 +76,6 @@ def main():
     else:
         print("\n[FAIL] Some checks failed. Please review the errors above.")
         return 1
-
 
 if __name__ == "__main__":
     sys.exit(main())

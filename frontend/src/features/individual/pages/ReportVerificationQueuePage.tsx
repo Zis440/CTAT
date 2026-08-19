@@ -71,10 +71,9 @@ export function ReportVerificationQueuePage() {
     queryFn: getPsychologistVerificationHistory,
   });
 
-  // Live countdown timer
   const [, setTick] = useState(0);
   useEffect(() => {
-    const interval = setInterval(() => setTick(t => t + 1), 60_000); // re-render every minute
+    const interval = setInterval(() => setTick(t => t + 1), 60_000);
     return () => clearInterval(interval);
   }, []);
 
@@ -98,7 +97,7 @@ export function ReportVerificationQueuePage() {
   }
 
   const approveMutation = useMutation({
-    mutationFn: ({ requestId, note }: { requestId: string, note: string }) => 
+    mutationFn: ({ requestId, note }: { requestId: string, note: string }) =>
       approveVerificationRequest(requestId, note),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["psychologist-verification-queue"] });
@@ -206,7 +205,7 @@ export function ReportVerificationQueuePage() {
           <TabsTrigger value="pending">Pending Verification</TabsTrigger>
           <TabsTrigger value="history">Verified History</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="pending" className="space-y-4 mt-0">
       {queue?.length === 0 ? (
         <Card className="bg-background/40 border-dashed border-primary/20">
@@ -271,16 +270,16 @@ export function ReportVerificationQueuePage() {
                       {approvingId === req.request_id ? (
                         <div className="flex items-center gap-2 justify-end">
                           <Button variant="ghost" size="sm" onClick={() => setApprovingId(null)}>Cancel</Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="destructive"
                             onClick={() => handleReject(req.request_id)}
                             disabled={rejectMutation.isPending || approveMutation.isPending}
                           >
                             {rejectMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Reject"}
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             className="bg-green-600 hover:bg-green-700 text-white"
                             onClick={() => handleApprove(req.request_id)}
                             disabled={approveMutation.isPending || rejectMutation.isPending}
@@ -290,8 +289,8 @@ export function ReportVerificationQueuePage() {
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 justify-end">
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             className="text-destructive border-destructive/20 hover:bg-destructive/10"
                             onClick={() => handleReject(req.request_id)}
@@ -299,8 +298,8 @@ export function ReportVerificationQueuePage() {
                           >
                             {rejectMutation.isPending && req.request_id === rejectMutation.variables?.requestId ? <Loader2 className="h-4 w-4 animate-spin" /> : "Reject"}
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             onClick={() => setApprovingId(req.request_id)}
                           >
                             Verify & Sign
@@ -313,7 +312,7 @@ export function ReportVerificationQueuePage() {
                     <TableRow className="bg-primary/5">
                       <TableCell colSpan={7} className="p-4">
                         <label className="text-sm font-semibold mb-2 block">Verification Notes (Optional)</label>
-                        <Textarea 
+                        <Textarea
                           value={notes[req.request_id] || ""}
                           onChange={(e) => setNotes({...notes, [req.request_id]: e.target.value})}
                           placeholder="Any internal notes about this verification..."
@@ -388,4 +387,3 @@ export function ReportVerificationQueuePage() {
     </div>
   );
 }
-

@@ -16,18 +16,18 @@ const ACCEPTED = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
 export function PsychologistApplyPage() {
   const navigate = useNavigate();
   const { user, setUser } = useAuthStore();
-  
+
   const [rciLicense, setRciLicense] = useState<File | null>(null);
   const [eSignature, setESignature] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const rciInputRef = useRef<HTMLInputElement>(null);
   const sigInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<File | null>>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0];
-    
+
     if (!ACCEPTED.includes(file.type)) {
       toast.error(`"${file.name}" is not allowed. Use PDF, JPG, or PNG.`);
       return;
@@ -45,19 +45,19 @@ export function PsychologistApplyPage() {
       toast.error("Please upload both your RCI License and E-Signature to continue.");
       return;
     }
-    
+
     setIsSubmitting(true);
     try {
       const formData = new FormData();
       formData.append("rci_license", rciLicense);
       formData.append("e_signature", eSignature);
-      
+
       const response = await apiClient.post("/api/individual/apply", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         }
       });
-      
+
       toast.success(response.data.message || "Application submitted successfully!");
       if (user) {
         setUser({ ...user, verification_status: "pending" });
@@ -70,7 +70,6 @@ export function PsychologistApplyPage() {
     }
   };
 
-  // Guard: only RCI-certificated Clinical Psychologists can apply
   const isEligible = user?.professional_domain === "Clinical Psychologist" && !!user?.rci_number;
 
   if (!isEligible) {
@@ -104,8 +103,8 @@ export function PsychologistApplyPage() {
             <ShieldCheck className="h-12 w-12 text-primary mx-auto mb-4" />
             <CardTitle>{isApproved ? "RCI Psychologist Verified" : "Application Under Review"}</CardTitle>
             <CardDescription>
-              {isApproved 
-                ? "You are already verified as an RCI Psychologist!" 
+              {isApproved
+                ? "You are already verified as an RCI Psychologist!"
                 : "Your verification status is currently pending. Our team is reviewing your documents."}
             </CardDescription>
           </CardHeader>
@@ -141,7 +140,7 @@ export function PsychologistApplyPage() {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* RCI License Upload */}
+
           <Card className="border-primary/10 bg-background/80 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="text-lg font-bold text-text flex items-center gap-2">
@@ -179,7 +178,6 @@ export function PsychologistApplyPage() {
             </CardContent>
           </Card>
 
-          {/* E-Signature Upload */}
           <Card className="border-primary/10 bg-background/80 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="text-lg font-bold text-text flex items-center gap-2">

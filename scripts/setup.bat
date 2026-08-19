@@ -5,7 +5,6 @@ echo   Psyichub : Project Setup (Windows)
 echo ============================================
 echo.
 
-:: ── Frontend ──────────────────────────────────
 echo [1/3] Installing frontend dependencies...
 cd /d "%~dp0..\frontend"
 call npm install
@@ -17,7 +16,6 @@ if errorlevel 1 (
 echo   Frontend dependencies installed.
 echo.
 
-:: ── Backend ───────────────────────────────────
 echo [2/3] Setting up backend virtual environment...
 cd /d "%~dp0..\backend"
 
@@ -52,7 +50,6 @@ pip install https://github.com/explosion/spacy-models/releases/download/en_core_
 echo   Backend dependencies installed.
 echo.
 
-:: ── NLTK ──────────────────────────────────────
 echo [3/3] Downloading NLTK data...
 python scripts\download_nltk.py
 if errorlevel 1 (

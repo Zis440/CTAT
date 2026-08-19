@@ -10,7 +10,6 @@ import json
 import hashlib
 from pathlib import Path
 
-
 @dataclass
 class ScoringDecision:
     """Record of a single scoring decision"""
@@ -18,63 +17,52 @@ class ScoringDecision:
     dimension: str
     score: float
     confidence: float
-    method: str  # 'rule-based' or 'heuristic'
-    evidence: List[str]  # Keywords or rules that triggered score
+    method: str
+    evidence: List[str]
     reasoning: str
-    uncertainty_level: str  # 'low', 'medium', 'high'
-    
+    uncertainty_level: str
+
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
-
 
 @dataclass
 class AuditRecord:
     """Complete audit record for a TAT analysis"""
-    
-    # Session metadata
+
     session_id: str
     timestamp: str
     system_version: str
-    
-    # Input data
+
     patient_id: Optional[str]
     card_id: str
     story_text: str
-    story_hash: str  # SHA256 for reproducibility verification
-    
-    # Patient context
+    story_hash: str
+
     patient_age: Optional[int]
     patient_gender: Optional[str]
     patient_education: Optional[str]
     presenting_issue: Optional[str]
-    
-    # Scoring decisions
+
     scoring_decisions: List[ScoringDecision] = field(default_factory=list)
-    
-    # Final outputs
+
     final_scores: Dict[str, float] = field(default_factory=dict)
     overall_score: float = 0.0
     clinical_interpretation: Dict[str, Any] = field(default_factory=dict)
-    
-    # Medication recommendations
+
     medication_recommendations: List[Dict[str, Any]] = field(default_factory=list)
-    
-    # Manual overrides (if clinician adjusts)
+
     manual_overrides: List[Dict[str, Any]] = field(default_factory=list)
-    
-    # Reproducibility
-    config_hash: str = ""  # Hash of all configuration parameters
-    
-    # Production Hardening Logging (§11)
+
+    config_hash: str = ""
+
     aggregation_steps: List[Dict[str, Any]] = field(default_factory=list)
     volatility_triggers: List[Dict[str, Any]] = field(default_factory=list)
     input_quality: List[Dict[str, Any]] = field(default_factory=list)
-    
-    # RAG retrieval metadata (additive — optional)
+
     rag_passages: List[Dict[str, Any]] = field(default_factory=list)
     rag_scores: List[float] = field(default_factory=list)
     rag_generation_time: float = 0.0
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             'session_id': self.session_id,
@@ -104,19 +92,18 @@ class AuditRecord:
             'input_quality': self.input_quality,
         }
 
-
 class AuditLogger:
     """
     Comprehensive audit logging for TAT system
     Ensures complete traceability for research and potential forensic use
     """
-    
+
     def __init__(self, output_dir: str = "audit_logs"):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.current_record: Optional[AuditRecord] = None
         self.system_version = "1.0.0-research"
-    
+
     def start_session(
         self,
         patient_id: Optional[str],
@@ -128,10 +115,10 @@ class AuditLogger:
         presenting_issue: Optional[str] = None
     ) -> str:
         """Start a new audit session"""
-        
+
         session_id = self._generate_session_id()
         story_hash = self._hash_text(story_text)
-        
+
         self.current_record = AuditRecord(
             session_id=session_id,
             timestamp=datetime.now().isoformat(),
@@ -145,9 +132,9 @@ class AuditLogger:
             patient_education=patient_education,
             presenting_issue=presenting_issue
         )
-        
+
         return session_id
-    
+
     def log_scoring_decision(
         self,
         dimension: str,
@@ -159,10 +146,10 @@ class AuditLogger:
         uncertainty_level: str = "medium"
     ):
         """Log a single scoring decision"""
-        
+
         if not self.current_record:
             raise ValueError("No active session. Call start_session() first.")
-        
+
         decision = ScoringDecision(
             timestamp=datetime.now().isoformat(),
             dimension=dimension,
@@ -173,9 +160,9 @@ class AuditLogger:
             reasoning=reasoning,
             uncertainty_level=uncertainty_level
         )
-        
+
         self.current_record.scoring_decisions.append(decision)
-    
+
     def log_final_scores(
         self,
         scores: Dict[str, float],
@@ -183,22 +170,22 @@ class AuditLogger:
         clinical_interpretation: Dict[str, Any]
     ):
         """Log final aggregated scores"""
-        
+
         if not self.current_record:
             raise ValueError("No active session.")
-        
+
         self.current_record.final_scores = scores
         self.current_record.overall_score = overall_score
         self.current_record.clinical_interpretation = clinical_interpretation
-    
+
     def log_medication_recommendations(self, recommendations: List[Dict[str, Any]]):
         """Log medication recommendations"""
-        
+
         if not self.current_record:
             raise ValueError("No active session.")
-        
+
         self.current_record.medication_recommendations = recommendations
-    
+
     def log_manual_override(
         self,
         dimension: str,
@@ -208,10 +195,10 @@ class AuditLogger:
         reason: str
     ):
         """Log manual score adjustment by clinician"""
-        
+
         if not self.current_record:
             raise ValueError("No active session.")
-        
+
         override = {
             'timestamp': datetime.now().isoformat(),
             'dimension': dimension,
@@ -220,10 +207,8 @@ class AuditLogger:
             'clinician_id': clinician_id,
             'reason': reason
         }
-        
-        self.current_record.manual_overrides.append(override)
 
-    # --- PRODUCTION HARDENING: Structured Logging Methods (§11) ---
+        self.current_record.manual_overrides.append(override)
 
     def log_aggregation_step(self, metric: str, mean: float, peak: float, volatility: float, final: float):
         """Log dual-layer aggregation computation step"""
@@ -255,79 +240,72 @@ class AuditLogger:
                 "card_id": card_id,
                 "quality_result": quality_result
             })
-    
+
     def finalize_session(self, config: Dict[str, Any] = None) -> str:
         """Finalize and save audit record"""
-        
+
         if not self.current_record:
             raise ValueError("No active session.")
-        
-        # Hash configuration for reproducibility
+
         if config:
             self.current_record.config_hash = self._hash_dict(config)
-        
-        # Save to file
+
         filename = f"audit_{self.current_record.session_id}.json"
         filepath = self.output_dir / filename
-        
+
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(self.current_record.to_dict(), f, indent=2, ensure_ascii=False)
-        
+
         session_id = self.current_record.session_id
         self.current_record = None
-        
+
         return str(filepath)
-    
+
     def verify_reproducibility(self, session_id: str, story_text: str) -> bool:
         """Verify that a story matches the recorded hash"""
-        
+
         filepath = self.output_dir / f"audit_{session_id}.json"
-        
+
         if not filepath.exists():
             return False
-        
+
         with open(filepath, 'r', encoding='utf-8') as f:
             record = json.load(f)
-        
+
         expected_hash = record['story_hash']
         actual_hash = self._hash_text(story_text)
-        
+
         return expected_hash == actual_hash
-    
+
     def _generate_session_id(self) -> str:
         """Generate unique session ID"""
         timestamp = datetime.now().isoformat()
         return hashlib.sha256(timestamp.encode()).hexdigest()[:16]
-    
+
     def _hash_text(self, text: str) -> str:
         """Generate SHA256 hash of text"""
         return hashlib.sha256(text.encode('utf-8')).hexdigest()
-    
+
     def _hash_dict(self, data: Dict) -> str:
         """Generate hash of dictionary (for config)"""
         json_str = json.dumps(data, sort_keys=True)
         return hashlib.sha256(json_str.encode('utf-8')).hexdigest()
 
-
-# Global logger instance
 _global_logger: Optional[AuditLogger] = None
-
 
 def get_audit_logger(output_dir: str = "audit_logs") -> AuditLogger:
     """Get or create global audit logger"""
     global _global_logger
-    
+
     if _global_logger is None:
         _global_logger = AuditLogger(output_dir)
-    
+
     return _global_logger
 
-
 if __name__ == "__main__":
-    # Test the audit logger
+
     logger = AuditLogger("test_audit_logs")
-    
-    # Start session
+
     session_id = logger.start_session(
         patient_id="P001",
         card_id="Card_1",
@@ -335,8 +313,7 @@ if __name__ == "__main__":
         patient_age=25,
         patient_gender="female"
     )
-    
-    # Log scoring decisions
+
     logger.log_scoring_decision(
         dimension="affective_integration",
         score=6.5,
@@ -346,7 +323,7 @@ if __name__ == "__main__":
         reasoning="Keyword-based heuristic scoring",
         uncertainty_level="high"
     )
-    
+
     logger.log_scoring_decision(
         dimension="social_cognition",
         score=4.2,
@@ -356,20 +333,17 @@ if __name__ == "__main__":
         reasoning="Limited social interaction in narrative",
         uncertainty_level="high"
     )
-    
-    # Log final scores
+
     logger.log_final_scores(
         scores={"affective_integration": 6.5, "social_cognition": 4.2},
         overall_score=5.35,
         clinical_interpretation={"concerns": ["social isolation", "low mood"]}
     )
-    
-    # Finalize
+
     filepath = logger.finalize_session(config={"version": "1.0.0"})
-    
+
     print(f"Audit log saved to: {filepath}")
-    
-    # Verify reproducibility
+
     is_valid = logger.verify_reproducibility(
         session_id,
         "A young woman sits alone, feeling sad and isolated."

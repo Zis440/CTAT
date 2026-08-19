@@ -5,12 +5,10 @@ from sqlalchemy.sql import func
 from app.database import Base
 from app.utils.id_generator import generate_id
 
-
 class ResetRequestStatus(str, enum.Enum):
     pending = "pending"
     sent = "sent"
     completed = "completed"
-
 
 class PasswordResetRequest(Base):
     __tablename__ = "password_resets"

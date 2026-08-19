@@ -1,5 +1,3 @@
-// ─── Auth Types ─────────────────────────────────────────────────────────────
-// Shared type definitions for authentication, user roles, and registration.
 
 export type UserRole =
   | "individual_psychologist"
@@ -9,7 +7,6 @@ export type UserRole =
   | "org_admin"
   | "org_staff";
 
-/** Roles visible to the public (signup page) */
 export const PUBLIC_ROLES: { value: UserRole; label: string; hint: string }[] = [
   {
     value: "individual_psychologist",
@@ -23,7 +20,6 @@ export const PUBLIC_ROLES: { value: UserRole; label: string; hint: string }[] = 
   },
 ];
 
-/** All roles (admin panel, account creation by admins) */
 export const ALL_ROLES: { value: UserRole; label: string; hint: string }[] = [
   ...PUBLIC_ROLES,
   {
@@ -87,14 +83,14 @@ export interface RegisterIndividualPayload {
   last_name?: string;
   email: string;
   password: string;
-  phone: string;  // Required — must be OTP-verified
-  phone_otp_token?: string;  // Firebase ID token proving phone was verified
+  phone: string;
+  phone_otp_token?: string;
   professional_domain?: string;
   rci_number?: string;
   specialization?: string;
   date_of_birth?: string;
   gender?: string;
-  // Advanced verification
+
   rci_crosscheck_passed?: boolean;
   aadhaar_number?: string;
   aadhaar_verified?: boolean;
@@ -110,15 +106,15 @@ export interface RegisterClinicPayload {
   last_name?: string;
   email: string;
   password: string;
-  phone: string;  // Required — must be OTP-verified
-  phone_otp_token?: string;  // Firebase ID token proving phone was verified
+  phone: string;
+  phone_otp_token?: string;
   clinic_name: string;
   clinic_type?: string;
   address?: string;
   roc_number?: string;
   date_of_birth?: string;
   gender?: string;
-  // Bank verification
+
   bank_account_number?: string;
   bank_ifsc_code?: string;
   bank_verified?: boolean;
@@ -173,8 +169,6 @@ export interface VerificationUser {
   bio?: string;
 }
 
-// ── Verification Documents System ───────────────────────────────────────────
-
 export type DocumentCategory = "professional" | "business" | "identity" | "compliance";
 
 export interface DocumentRequirement {
@@ -210,4 +204,3 @@ export interface VerificationStatusResponse {
   required_count: number;
   uploaded_required_count: number;
 }
-

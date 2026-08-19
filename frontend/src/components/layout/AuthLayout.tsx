@@ -27,9 +27,6 @@ export function Layout() {
               )}
             </Button>
 
-            {/* <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center">
-              <User className="h-4 w-4 text-white" />
-            </div> */}
           </div>
         </div>
       </header>

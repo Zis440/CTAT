@@ -1,7 +1,6 @@
-// src/features/landing/components/AboutSections.tsx
+
 import { HeartHandshake, Mail } from "lucide-react";
 
-// Brand icons were removed from lucide-react; inline SVG replacements
 function Github({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -18,8 +17,6 @@ function Linkedin({ className }: { className?: string }) {
   );
 }
 
-
-// ── Team data ───────────────────────────────────────────────────────────────
 const people = [
   {
     name: "Saphalya Das",
@@ -47,11 +44,10 @@ const people = [
   },
 ];
 
-// ── Combined section ────────────────────────────────────────────────────────
 export function AboutSections() {
   return (
     <>
-      {/* Team Section */}
+
       <div className="mx-auto flex flex-col items-center max-w-[1440px] gap-16">
         <div className="max-w-3xl text-center">
           <h2 className="text-4xl font-extrabold tracking-tight text-text sm:text-5xl font-serif">
@@ -123,7 +119,7 @@ export function AboutSections() {
           ))}
         </ul>
       </div>
-      {/* Special Thanks */}
+
       <div className="w-full max-w-5xl mx-auto mt-12 bg-primary/10 border-l-4 border-primary rounded-r-2xl p-6 sm:p-8 flex flex-col sm:flex-row gap-6 items-start shadow-sm transition-colors relative overflow-hidden">
         <div className="absolute right-0 top-0 w-32 h-32 bg-primary/20 rounded-full blur-2xl transform translate-x-1/2 -translate-y-1/2" />
 

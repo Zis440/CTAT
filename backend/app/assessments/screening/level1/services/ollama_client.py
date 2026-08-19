@@ -3,7 +3,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Fallback insight pool — used when Ollama is unavailable
 FALLBACK_INSIGHTS = [
     {
         "message": "Taking time to reflect on your mental health is a sign of strength, not weakness.",
@@ -71,14 +70,11 @@ FALLBACK_INSIGHTS = [
     },
 ]
 
-# Track which insights have been shown to avoid repeats within a session
 _shown_indices = set()
-
 
 def _reset_pool():
     global _shown_indices
     _shown_indices = set()
-
 
 async def get_llm_insight(context: str = "general") -> dict:
     """
@@ -89,7 +85,7 @@ async def get_llm_insight(context: str = "general") -> dict:
         context: A hint about the current assessment phase, e.g.
                  "stress_questionnaire", "burnout_questionnaire", "cognitive_game", "general"
     """
-    # Attempt Ollama first
+
     try:
         import ollama as ollama_lib
         import os
@@ -101,15 +97,13 @@ async def get_llm_insight(context: str = "general") -> dict:
             messages=[{"role": "user", "content": prompt}],
         )
         message = response["message"]["content"].strip()
-        # Basic sanity check — if response is too short or too long, fall back
+
         if 20 < len(message) < 500:
             return {"message": message, "category": "llm", "source": "ollama"}
     except Exception as e:
         logger.debug(f"Ollama unavailable, using fallback pool: {e}")
 
-    # Fallback
     return _get_fallback_insight()
-
 
 def _build_prompt(context: str) -> str:
     context_hints = {
@@ -122,7 +116,7 @@ def _build_prompt(context: str) -> str:
         "general": "The user is going through a mental health screening assessment.",
     }
     hint = context_hints.get(context, context_hints["general"])
-    
+
     personas = [
         "A highly analytical neuroscientist who drops a fascinating, bite-sized brain fact related to mental effort.",
         "A deeply empathetic philosopher who shares a profound, poetic thought about human resilience.",
@@ -140,7 +134,6 @@ def _build_prompt(context: str) -> str:
         f"DO NOT sound like a typical boring AI. DO NOT start with 'Remember' or 'It's okay' or 'You're doing great'. "
         f"Make it punchy, thought-provoking, or fascinating. Do NOT use clinical jargon or diagnose."
     )
-
 
 def _get_fallback_insight() -> dict:
     global _shown_indices

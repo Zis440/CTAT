@@ -146,7 +146,6 @@ export function AdminOrganizationManagementPage() {
         <title>Organization Management  | PsyicHub - Psychological Intelligence</title>
       </Helmet>
 
-      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2">
@@ -177,48 +176,6 @@ export function AdminOrganizationManagementPage() {
         </div>
       </div>
 
-      {/* KPI Cards */}
-      {/* <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="border-primary/10 bg-background/50 backdrop-blur-sm relative overflow-hidden">
-          <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-primary/30 to-transparent" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-semibold tracking-wider uppercase text-muted-foreground">Total Organizations</CardTitle>
-            <Building2 className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{totalOrganizationsCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">Onboarded systems</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-primary/10 bg-background/50 backdrop-blur-sm relative overflow-hidden">
-          <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-green-500/30 to-transparent" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-semibold tracking-wider uppercase text-muted-foreground">Active Status</CardTitle>
-            <Activity className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-green-500">{activeOrganizationsCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">Actively consulting</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-primary/10 bg-background/50 backdrop-blur-sm relative overflow-hidden">
-          <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-blue-500/30 to-transparent" />
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-semibold tracking-wider uppercase text-muted-foreground">Platform Yield</CardTitle>
-            <TrendingUp className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-blue-500">
-              {organizations.reduce((sum, c) => sum + (c.total_sessions || 0), 0)}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Sessions administered</p>
-          </CardContent>
-        </Card>
-      </div> */}
-
-      {/* Main Grid */}
       <Card className="border-primary/10 bg-background/50 backdrop-blur-sm relative overflow-hidden pb-0">
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
         {isSelectionMode ? (
@@ -423,7 +380,6 @@ export function AdminOrganizationManagementPage() {
 
       </Card>
 
-      {/* Pagination */}
       {totalPages >= 0 && !isLoading && (
         <div className="pt-6 pb-10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground w-full sm:w-auto text-center sm:text-left">
@@ -477,7 +433,6 @@ export function AdminOrganizationManagementPage() {
         </div>
       )}
 
-      {/* Delete Confirmation */}
       <AlertDialog open={!!deletingOrganization} onOpenChange={(o) => !o && setDeletingOrganization(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

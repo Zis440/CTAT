@@ -136,7 +136,7 @@ const SymbolGame: React.FC<SymbolGameProps> = ({ onComplete }) => {
 
     if (isCorrect) setCorrect(p => p + 1);
     else setWrong(p => p + 1);
-    
+
     setScore(p => Math.max(0, p + (isCorrect ? 1 : -1)));
 
     const newRecent = [...recentAccuracy, isCorrect].slice(-5);

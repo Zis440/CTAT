@@ -16,16 +16,11 @@ from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
-# --- Library-based psychological construct detection ---
 try:
     from nltk.corpus import wordnet as wn
     _WN_THEME_AVAILABLE = True
 except ImportError:
     _WN_THEME_AVAILABLE = False
-
-# ============================================================================
-# EXPRESSION MODE PROTOTYPES (literal vs figurative detection)
-# ============================================================================
 
 LITERAL_PROTOTYPES = [
     "The man walked to the store.",
@@ -59,7 +54,6 @@ SYMBOLIC_PROTOTYPES = [
     "The storm inside him raged without end.",
 ]
 
-# Figurative language marker words
 FIGURATIVE_MARKERS = {
     'like', 'as if', 'seemed', 'felt like', 'as though',
     'metaphor', 'symbol', 'represent', 'mirror', 'echo',
@@ -70,13 +64,12 @@ FIGURATIVE_MARKERS = {
     'ghost', 'phantom', 'mask', 'chains', 'prison', 'wings',
 }
 
-# Add NLTK stopword fallback for robust theme filtering
 try:
     import nltk
     from nltk.corpus import stopwords
     STOPWORDS = set(stopwords.words('english'))
 except Exception:
-    # A robust default list if NLTK data isn't available
+
     STOPWORDS = {
         'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've", "you'll", "you'd",
         'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', "she's", 'her', 'hers',
@@ -104,7 +97,6 @@ EXTRA_TAT_STOPWORDS = {
 }
 STOPWORDS.update(EXTRA_TAT_STOPWORDS)
 
-# High-priority psychological constructs to explicitly capture
 PSYCHOLOGICAL_CONSTRUCTS = {
         'authority', 'control', 'conflict', 'identity', 'duty', 'suppression',
         'guilt', 'fear', 'abandonment', 'rejection', 'success', 'failure',
@@ -112,14 +104,13 @@ PSYCHOLOGICAL_CONSTRUCTS = {
         'shame', 'pride', 'dependence', 'independence', 'autonomy', 'power'
 }
 
-
 def _is_psychological_construct_wn(word: str) -> bool:
     """Check if word relates to psychological/emotional constructs via WordNet.
     Looks for words whose hypernym chain includes emotion, feeling, trait,
     cognition, or motivation — the semantic families of psychological constructs."""
     if not _WN_THEME_AVAILABLE:
-        return word.lower() in PSYCHOLOGICAL_CONSTRUCTS  # fallback
-    # Quick check: is it in the static set? (optimization)
+        return word.lower() in PSYCHOLOGICAL_CONSTRUCTS
+
     if word.lower() in PSYCHOLOGICAL_CONSTRUCTS:
         return True
     synsets = wn.synsets(word.lower(), pos=wn.NOUN)
@@ -134,10 +125,6 @@ def _is_psychological_construct_wn(word: str) -> bool:
             return True
     return False
 
-
-# Clinical construct prototypes for SBERT-based label matching.
-# These are descriptive phrases — SBERT encodes them; classification is by cosine similarity,
-# NOT keyword matching. Adding more anchors improves discriminative resolution.
 CLINICAL_LABEL_PROTOTYPES = {
     "Attachment & Bonding": (
         "emotional connection, closeness, separation, bonding, intimacy, yearning to be close, "
@@ -187,7 +174,7 @@ CLINICAL_LABEL_PROTOTYPES = {
         "optimism, dreams, future plans, aspiration, positive outlook, "
         "things will get better, believing in oneself, seeing light ahead"
     ),
-    # --- Extended constructs added for broader TAT coverage ---
+
     "Trauma & Victimization": (
         "being hurt, abused, harmed, violated, traumatized, experiencing something terrible, "
         "painful past, wound that won't heal, victim of circumstance or violence"
@@ -221,13 +208,6 @@ CLINICAL_LABEL_PROTOTYPES = {
         "differentiation from family, growing up apart, cutting ties to become independent"
     ),
 }
-
-# ============================================================================
-# THEME TYPE PROTOTYPES — SBERT-anchored, not keyword-matched
-# Each type is represented by rich prototype sentences that are embedded
-# and compared via cosine similarity to the theme's sentence centroid.
-# Classification is entirely computed; no string comparison is performed.
-# ============================================================================
 
 THEME_TYPE_PROTOTYPES = {
     "relational": [
@@ -350,14 +330,8 @@ THEME_TYPE_PROTOTYPES = {
     ],
 }
 
-# ============================================================================
-# Pre-computed SBERT embeddings for THEME_TYPE_PROTOTYPES
-# Populated at engine init to avoid re-encoding on every call.
-# ============================================================================
 _THEME_TYPE_PROTO_EMBS_CACHE: dict = {}
 
-
-# Need prototypes for theme-to-need mapping (reused from Murray but kept independent)
 NEED_PROTOTYPES = {
     "nAchievement": [
         "The person strives to accomplish something difficult.",
@@ -443,7 +417,7 @@ NEED_PROTOTYPES = {
         "Desire to overcome opposition forcefully.",
         "Need to fight or destroy."
     ],
-    # Additional needs from requirements
+
     "nBlameAvoidance": [
         "The person wants to avoid blame, criticism, or punishment.",
         "They are sensitive to disapproval.",
@@ -482,7 +456,6 @@ NEED_PROTOTYPES = {
     ]
 }
 
-# Opposing need pairs for conflict detection (need-need)
 OPPOSING_NEED_PAIRS = [
     ("nAutonomy", "nDominance"),
     ("nNurturance", "nAggression"),
@@ -505,15 +478,15 @@ class ThemeDetectionEngine:
         self.processor = nlp_processor
         self.sentence_model = nlp_processor.bert_embedder
         self.topic_model = None
-        # Pre-compute need prototype embeddings for theme-to-need mapping
+
         self.need_proto_embs = {}
         self._compute_need_prototype_embeddings()
-        # Pre-compute clinical label prototype embeddings for SBERT label matching
+
         self._clinical_proto_embs = {}
         self._compute_clinical_label_embeddings()
-        # Try to access sentiment analyzer if available
+
         self.sentiment_analyzer = getattr(nlp_processor, 'sentiment_analyzer', None)
-        # Config thresholds
+
         self.config = getattr(nlp_processor, 'config', None)
 
     def _compute_need_prototype_embeddings(self):
@@ -533,7 +506,7 @@ class ThemeDetectionEngine:
         Input: list of story texts (one per card)
         Returns: dictionary with structured themes and sentence mapping.
         """
-        # Split stories into sentences
+
         sentences = []
         for story in stories:
             sents = re.split(r'[.!?]', story)
@@ -541,52 +514,44 @@ class ThemeDetectionEngine:
 
         min_size = getattr(self.config, 'THEME_MIN_SIZE', 3) if self.config else 3
         if len(sentences) < min_size:
-            # Fallback: semantic sentence clustering
+
             return self._fallback_themes(stories, sentences)
 
-        # Compute sentence embeddings
         embeddings = self.sentence_model.encode(sentences, show_progress_bar=False)
 
-        # Use BERTopic to cluster sentences into themes, passing custom stop_words
         from sklearn.feature_extraction.text import CountVectorizer
         vectorizer_model = CountVectorizer(stop_words=list(STOPWORDS))
         self.topic_model = BERTopic(embedding_model=self.sentence_model, vectorizer_model=vectorizer_model, verbose=False)
         try:
             topics, probs = self.topic_model.fit_transform(sentences, embeddings)
         except (TypeError, ValueError, Exception) as e:
-            # UMAP spectral layout fails when k >= N (too few data points)
+
             return self._fallback_themes(stories, sentences)
 
-        # Get topic info — BERTopic can sometimes leave the model in a
-        # partially-fitted state with very few data points, so guard this.
         try:
             topic_info = self.topic_model.get_topic_info()
         except (ValueError, Exception) as e:
             logger.warning(f"BERTopic get_topic_info failed (not fitted edge case): {e}")
             return self._fallback_themes(stories, sentences)
 
-        # Group sentences by topic
         topic_sentences = defaultdict(list)
         topic_embeddings = defaultdict(list)
         topic_indices = defaultdict(list)
         for idx, (sent, topic, emb) in enumerate(zip(sentences, topics, embeddings)):
-            if topic != -1:  # ignore outliers
+            if topic != -1:
                 topic_sentences[topic].append(sent)
                 topic_embeddings[topic].append(emb)
                 topic_indices[topic].append(idx)
 
-        # Extract structured themes
         themes = []
         for topic_id, sent_list in topic_sentences.items():
             if topic_id == -1:
                 continue
             topic_words = self.topic_model.get_topic(topic_id)
-            
-            # Semantic filter using SpaCy for lemmatization and POS filtering
+
             raw_words = [w for w, _ in topic_words]
             filtered_words = []
-            
-            # Prioritize nouns, meaningful verbs, adjectives, and psychological constructs
+
             for w in raw_words:
                 doc = self.processor.nlp(w)
                 if len(doc) > 0:
@@ -596,28 +561,22 @@ class ThemeDetectionEngine:
                         continue
                     if token.pos_ in ('NOUN', 'VERB', 'ADJ') or lemma in PSYCHOLOGICAL_CONSTRUCTS:
                         filtered_words.append(lemma)
-            
-            # Deduplicate while preserving order
+
             filtered_words = list(dict.fromkeys(filtered_words))[:5]
-            
-            # If everything gets filtered out, fallback gracefully
+
             if not filtered_words:
                  filtered_words = ["latent_theme"]
-                 
+
             words = filtered_words
             count = len(sent_list)
             percentage = count / len(sentences) * 100
 
-            # Compute additional theme metrics
             theme_embeddings = np.array(topic_embeddings[topic_id])
             centroid = np.mean(theme_embeddings, axis=0)
 
-            # Clarity = average cosine similarity to centroid
             similarities = self._cosine_similarity(theme_embeddings, centroid)
             clarity = float(np.mean(similarities))
 
-            # Intensity = frequency signal blended with NLP-computed symbolic density
-            # (symbolic_density is computed below; pre-compute here only for intensity)
             _sd_preview = self._compute_symbolic_density(sent_list)
             intensity = round(
                 0.6 * (count / max(1, len(sentences)))
@@ -625,40 +584,27 @@ class ThemeDetectionEngine:
                 3
             )
 
-            # Affect tone: transformer-computed 5-way classification
             affect_tone = self._compute_affect_tone(sent_list)
 
-            # Emotional consistency = 1 - std of sentiment scores
             emotional_consistency = self._compute_emotional_consistency(sent_list)
 
-            # Narrative centrality = average sentence position (normalized)
             positions = np.array(topic_indices[topic_id]) / len(sentences)
             narrative_centrality = float(np.mean(positions))
 
-            # Frequency signal = count (could also be normalized)
             frequency_signal = count
 
-            # Expression mode: SBERT similarity to literal/figurative/symbolic prototypes
             expression_mode = self._compute_expression_mode(sent_list)
 
-            # Symbolic density: spaCy POS-ratio + figurative marker density (NLP-computed)
             symbolic_density = self._compute_symbolic_density(sent_list)
 
-            # Related needs: map theme centroid to need prototypes
             related_needs = self._map_to_needs(centroid)
 
-            # Conflicting needs: among related needs that oppose each other
             conflicting_needs = self._find_conflicting_needs(related_needs)
 
-            # Theme type: SBERT cosine similarity to THEME_TYPE_PROTOTYPES (not keyword matching)
             theme_type = self._infer_theme_type_sbert(sent_list, centroid)
 
-            # Generate a clinical label from the words
             label = self._generate_clinical_label(words, sent_list, related_needs)
 
-            # Create theme object (backward compatible: keep words, count, percentage)
-            # coherence + coherence_flag initialized here so BERTopic-path and fallback-path
-            # themes always have a consistent schema before _validate_theme_coherence runs.
             theme = {
                 "id": topic_id,
                 "_topic_id": topic_id,
@@ -678,28 +624,24 @@ class ThemeDetectionEngine:
                 "symbolic_density": round(symbolic_density, 3),
                 "emotional_consistency": round(emotional_consistency, 3),
                 "narrative_centrality": round(narrative_centrality, 3),
-                # Initialized here; overwritten by _validate_theme_coherence below
+
                 "coherence": 0.0,
                 "coherence_flag": "pending",
             }
             themes.append(theme)
 
-        # If no themes found, fallback
         if not themes:
             return self._fallback_themes(stories, sentences)
 
         themes.sort(key=lambda x: -x["count"])
 
-        # Compute centroid embeddings for deduplication
         centroid_embeddings = {}
         for topic_id_dup, emb_list in topic_embeddings.items():
             if emb_list:
                 centroid_embeddings[topic_id_dup] = np.mean(np.array(emb_list), axis=0)
 
-        # --- Semantic deduplication: merge themes with centroid cosine > 0.85 ---
         themes = self._deduplicate_themes(themes, centroid_embeddings)
 
-        # --- Coherence validation: flag low-coherence themes ---
         themes = self._validate_theme_coherence(themes, topic_sentences, sentences)
 
         return {
@@ -711,11 +653,11 @@ class ThemeDetectionEngine:
         """Generate a descriptive clinical theme label using SBERT similarity
         to match theme content against known clinical construct prototypes.
         v3.0: Library-driven — uses SBERT instead of raw keyword concatenation."""
-        # Strategy 1: Match sentences against clinical label prototypes via SBERT
+
         best_clinical_label = None
         best_sim = 0.0
         if sentences and hasattr(self, '_clinical_proto_embs'):
-            # Compute centroid of theme sentences
+
             sent_embs = self.processor.get_embeddings(sentences[:5])
             centroid = np.mean(sent_embs, axis=0)
             for label, proto_emb in self._clinical_proto_embs.items():
@@ -726,27 +668,23 @@ class ThemeDetectionEngine:
                     best_sim = cos_sim
                     best_clinical_label = label
 
-        # If SBERT match exceeds 0.35 (lowered from 0.5 — SBERT clinical cosines cluster 0.35–0.55)
-        # This is computed similarity, not keyword comparison.
         if best_clinical_label and best_sim > 0.35:
             return best_clinical_label
 
-        # Strategy 2: Fallback to spaCy noun phrases + need context
         noun_phrases = []
         for sent in sentences[:3]:
             doc = self.processor.nlp(sent)
             for chunk in doc.noun_chunks:
                 np_text = chunk.root.lemma_.lower()
                 if np_text not in STOPWORDS and len(np_text) > 2:
-                    # Boost psychological constructs via WordNet
+
                     if _is_psychological_construct_wn(np_text):
-                        noun_phrases.insert(0, np_text)  # prioritize
+                        noun_phrases.insert(0, np_text)
                     else:
                         noun_phrases.append(np_text)
 
         all_terms = list(dict.fromkeys(words[:3] + noun_phrases[:3]))
 
-        # Add need context if available
         need_suffix = ""
         if related_needs:
             top_need = related_needs[0].replace("n", "", 1) if related_needs[0].startswith("n") else related_needs[0]
@@ -760,16 +698,13 @@ class ThemeDetectionEngine:
         Produces clinical-grade themes even for short narratives (< 5 sentences)."""
         text = " ".join(stories)
 
-        # Get sentences if not provided
         if not sentences:
             sentences = [s.strip() for s in re.split(r'[.!?]', text) if len(s.strip()) > 10]
         if not sentences:
             return {"themes": [], "sentence_topic_map": []}
 
-        # Compute sentence embeddings
         embeddings = self.sentence_model.encode(sentences, show_progress_bar=False)
 
-        # --- Step 1: Cluster sentences using agglomerative clustering ---
         n_clusters = max(2, min(len(sentences) // 2, 4))
         try:
             from sklearn.cluster import AgglomerativeClustering
@@ -780,10 +715,9 @@ class ThemeDetectionEngine:
             )
             labels = clustering.fit_predict(embeddings)
         except Exception:
-            # Single cluster fallback
+
             labels = [0] * len(sentences)
 
-        # --- Step 2: Group sentences by cluster ---
         cluster_sentences = defaultdict(list)
         cluster_embeddings = defaultdict(list)
         cluster_indices = defaultdict(list)
@@ -792,45 +726,35 @@ class ThemeDetectionEngine:
             cluster_embeddings[label].append(emb)
             cluster_indices[label].append(idx)
 
-        # --- Step 3: Build themes from each cluster ---
         themes = []
         for cluster_id, sent_list in cluster_sentences.items():
             embs = np.array(cluster_embeddings[cluster_id])
             centroid = np.mean(embs, axis=0)
 
-            # Extract key noun phrases from this cluster's sentences
             key_phrases = self._extract_key_phrases(sent_list)
 
-            # Map centroid to Murray needs
             related_needs = self._map_to_needs(centroid)
             conflicting_needs = self._find_conflicting_needs(related_needs)
 
-            # Compute real metrics
             expression_mode = self._compute_expression_mode(sent_list)
             symbolic_density = self._compute_symbolic_density(sent_list)
             affect_tone = self._compute_affect_tone(sent_list)
             emotional_consistency = self._compute_emotional_consistency(sent_list)
 
-            # Clarity
             similarities = self._cosine_similarity(embs, centroid)
             clarity = float(np.mean(similarities))
 
-            # Narrative centrality
             positions = np.array(cluster_indices[cluster_id]) / max(1, len(sentences))
             narrative_centrality = float(np.mean(positions))
 
-            # Intensity
             count = len(sent_list)
             percentage = count / len(sentences) * 100
             intensity = percentage / 100.0
 
-            # Theme type
             theme_type = self._infer_theme_type(related_needs, key_phrases)
 
-            # Generate clinical label
             label = self._generate_clinical_label(key_phrases, sent_list, related_needs)
 
-            # Coherence: compare label embedding to sentence embeddings
             try:
                 label_emb = self.sentence_model.encode([label], show_progress_bar=False)[0]
                 coherence = float(np.mean(self._cosine_similarity(embs, label_emb)))
@@ -873,21 +797,20 @@ class ThemeDetectionEngine:
         for sent in sentences:
             doc = self.processor.nlp(sent)
             for chunk in doc.noun_chunks:
-                # Get meaningful head noun
+
                 head_lemma = chunk.root.lemma_.lower()
                 if head_lemma in STOPWORDS or len(head_lemma) < 3:
                     continue
-                # Prefer multi-word phrases but also track single nouns
+
                 full_phrase = " ".join([t.lemma_.lower() for t in chunk if t.lemma_.lower() not in STOPWORDS and not t.is_punct])
                 if full_phrase:
                     phrase_counts[full_phrase] += 1
-            # Also extract psychological constructs via WordNet
+
             for token in doc:
                 lemma = token.lemma_.lower()
                 if _is_psychological_construct_wn(lemma):
-                    phrase_counts[lemma] += 5  # strong boost for psych constructs
+                    phrase_counts[lemma] += 5
 
-        # Sort by count, return top phrases
         sorted_phrases = sorted(phrase_counts.items(), key=lambda x: -x[1])
         return [p for p, _ in sorted_phrases[:8]]
 
@@ -931,12 +854,10 @@ class ThemeDetectionEngine:
         avg_pos = sum(pos_scores) / n
         avg_neg = sum(neg_scores) / n
 
-        # Coarse polarity
         if avg_pos <= avg_neg and avg_neg <= 0.25:
             return "neutral"
         if avg_neg > avg_pos and avg_neg > 0.25:
-            # Sub-classify negative: anxious vs. negative
-            # Use SBERT cosine to 'anxious' vs 'despairing' anchors
+
             try:
                 anxious_anchor = "She was full of dread and anxious anticipation of something terrible."
                 despair_anchor = "He felt empty, devastated, and consumed by hopeless grief."
@@ -957,7 +878,7 @@ class ThemeDetectionEngine:
             except Exception:
                 return "negative"
         if avg_pos > avg_neg and avg_pos > 0.25:
-            # Sub-classify positive: hopeful vs. positive
+
             try:
                 hopeful_anchor = "Despite everything, she believed that things would get better."
                 positive_anchor = "He felt genuinely happy and content with his life."
@@ -989,7 +910,7 @@ class ThemeDetectionEngine:
         for sent in sentences:
             try:
                 result = self.sentiment_analyzer(sent[:512])[0]
-                # map to numeric: positive=1, negative=-1, neutral=0
+
                 if result['label'].lower() == 'positive':
                     val = 1.0
                 elif result['label'].lower() == 'negative':
@@ -1002,7 +923,7 @@ class ThemeDetectionEngine:
         if len(scores) < 2:
             return 0.5
         std = np.std(scores)
-        consistency = 1.0 / (1.0 + std)  # normalize to 0-1, higher std -> lower consistency
+        consistency = 1.0 / (1.0 + std)
         return float(consistency)
 
     def _compute_expression_mode(self, sentences: List[str]) -> str:
@@ -1012,11 +933,10 @@ class ThemeDetectionEngine:
             return "direct"
 
         try:
-            # Compute sentence embeddings for the input
+
             sent_embs = self.sentence_model.encode(sentences, show_progress_bar=False)
             centroid = np.mean(sent_embs, axis=0)
 
-            # Compute prototype embeddings (cached after first call)
             if not hasattr(self, '_expr_proto_cache'):
                 self._expr_proto_cache = {
                     'literal': self.sentence_model.encode(LITERAL_PROTOTYPES, show_progress_bar=False),
@@ -1024,7 +944,6 @@ class ThemeDetectionEngine:
                     'symbolic': self.sentence_model.encode(SYMBOLIC_PROTOTYPES, show_progress_bar=False),
                 }
 
-            # Average similarity between centroid and each prototype set
             scores = {}
             for mode_name, proto_embs in self._expr_proto_cache.items():
                 proto_centroid = np.mean(proto_embs, axis=0)
@@ -1033,7 +952,6 @@ class ThemeDetectionEngine:
                 )
                 scores[mode_name] = float(cos_sim)
 
-            # Also check for figurative marker presence (lexical boost)
             text_lower = ' '.join(sentences).lower()
             marker_count = sum(1 for m in FIGURATIVE_MARKERS if m in text_lower)
             if marker_count >= 3:
@@ -1044,7 +962,6 @@ class ThemeDetectionEngine:
 
             best_mode = max(scores, key=scores.get)
 
-            # Map to output labels
             mode_map = {
                 'literal': 'direct',
                 'figurative': 'metaphorical',
@@ -1074,13 +991,11 @@ class ThemeDetectionEngine:
         try:
             doc = self.processor.nlp(text)
 
-            # Count POS categories
             adj_count = 0
             adv_count = 0
             abstract_noun_count = 0
             content_word_count = 0
 
-            # Abstract noun detection: nouns that are not concrete physical objects
             abstract_indicators = {
                 'love', 'fear', 'hope', 'dream', 'desire', 'grief', 'pain',
                 'loss', 'silence', 'freedom', 'justice', 'truth', 'fate',
@@ -1106,18 +1021,14 @@ class ThemeDetectionEngine:
             if content_word_count == 0:
                 return 0.0
 
-            # Ratio 1: Abstract content words / total content words
             abstract_content_ratio = min(1.0, (abstract_noun_count * 2) / content_word_count)
 
-            # Ratio 2: Figurative marker presence
             text_lower = text.lower()
             marker_hits = sum(1 for m in FIGURATIVE_MARKERS if m in text_lower)
             figurative_marker_ratio = min(1.0, marker_hits / max(1, total_words * 0.05))
 
-            # Ratio 3: Adjective + Adverb density
             adj_adv_ratio = min(1.0, (adj_count + adv_count) / content_word_count)
 
-            # Blended formula
             density = (
                 0.5 * abstract_content_ratio
                 + 0.3 * figurative_marker_ratio
@@ -1129,23 +1040,18 @@ class ThemeDetectionEngine:
         except Exception:
             return 0.1
 
-    # ================================================================
-    # Semantic Deduplication & Coherence Validation
-    # ================================================================
-
     def _deduplicate_themes(self, themes: List[Dict], topic_embeddings: Dict) -> List[Dict]:
         """Merge themes whose centroid embeddings have cosine similarity > 0.85."""
         if len(themes) < 2:
             return themes
 
-        # Compute centroids for each theme
         centroids = []
         for t in themes:
             topic_id = t.get("_topic_id", None)
             if topic_id is not None and topic_id in topic_embeddings:
                 centroids.append(topic_embeddings[topic_id])
             else:
-                # Fallback: encode the theme words
+
                 words_text = ' '.join(t.get("words", []))
                 if words_text.strip():
                     emb = self.sentence_model.encode([words_text], show_progress_bar=False)[0]
@@ -1153,7 +1059,6 @@ class ThemeDetectionEngine:
                 else:
                     centroids.append(np.zeros(self.sentence_model.get_sentence_embedding_dimension()))
 
-        # Find pairs to merge
         merged = [False] * len(themes)
         result = []
         for i in range(len(themes)):
@@ -1163,22 +1068,22 @@ class ThemeDetectionEngine:
             for j in range(i + 1, len(themes)):
                 if merged[j]:
                     continue
-                # Cosine similarity between centroids
+
                 cos_sim = np.dot(centroids[i], centroids[j]) / (
                     np.linalg.norm(centroids[i]) * np.linalg.norm(centroids[j]) + 1e-8
                 )
                 if cos_sim > 0.85:
-                    # Merge: combine words, sum counts, average intensities
+
                     merged[j] = True
                     other = themes[j]
                     combined_words = list(dict.fromkeys(current.get("words", []) + other.get("words", [])))
                     current["words"] = combined_words[:10]
                     current["count"] = current.get("count", 0) + other.get("count", 0)
                     current["intensity"] = (current.get("intensity", 0) + other.get("intensity", 0)) / 2
-                    # Keep the better label
+
                     if len(other.get("theme", "")) > len(current.get("theme", "")):
                         current["theme"] = other["theme"]
-                    # Merge related needs
+
                     merged_needs = list(dict.fromkeys(
                         current.get("related_needs", []) + other.get("related_needs", [])
                     ))
@@ -1209,7 +1114,6 @@ class ThemeDetectionEngine:
                 label_emb = self.sentence_model.encode([label], show_progress_bar=False)[0]
                 sent_embs = self.sentence_model.encode(sents[:20], show_progress_bar=False)
 
-                # Mean cosine similarity
                 cos_sims = np.dot(sent_embs, label_emb) / (
                     np.linalg.norm(sent_embs, axis=1) * np.linalg.norm(label_emb) + 1e-8
                 )
@@ -1235,13 +1139,13 @@ class ThemeDetectionEngine:
             return []
         scores = {}
         for need, proto_embs in self.need_proto_embs.items():
-            # similarity between centroid and each prototype, take max
+
             sims = np.dot(proto_embs, theme_centroid) / (
                 np.linalg.norm(proto_embs, axis=1) * np.linalg.norm(theme_centroid) + 1e-8
             )
             max_sim = np.max(sims)
             scores[need] = max_sim
-        # Sort and take those above threshold
+
         threshold = getattr(self.config, 'NEED_SIM_THRESHOLD', 0.5) if self.config else 0.5
         sorted_needs = sorted(scores.items(), key=lambda x: -x[1])
         related = [need for need, score in sorted_needs if score > threshold][:5]
@@ -1260,8 +1164,7 @@ class ThemeDetectionEngine:
         """Legacy entry point kept for backward compatibility.
         Now delegates to _infer_theme_type_sbert for transformer-based inference.
         Falls back to need-set heuristic only when SBERT is unavailable."""
-        # If sentence_model available, prefer SBERT (caller should supply sentences,
-        # but this entry point doesn't have them — perform need-set heuristic as fallback)
+
         if not related_needs:
             return "narrative"
         need_set = set(related_needs)
@@ -1311,20 +1214,18 @@ class ThemeDetectionEngine:
             return "narrative"
 
         try:
-            # --- Step 1: Build/retrieve prototype embeddings (cached at module level) ---
+
             if not _THEME_TYPE_PROTO_EMBS_CACHE:
                 for ttype, protos in THEME_TYPE_PROTOTYPES.items():
                     embs = self.sentence_model.encode(protos, show_progress_bar=False)
                     _THEME_TYPE_PROTO_EMBS_CACHE[ttype] = np.mean(embs, axis=0)
 
-            # --- Step 2: Compute centroid for the theme's sentences ---
             if centroid is None:
                 sent_embs = self.sentence_model.encode(
                     sentences[:10], show_progress_bar=False
                 )
                 centroid = np.mean(sent_embs, axis=0)
 
-            # --- Step 3: Cosine similarity to each type prototype centroid ---
             scores = {}
             for ttype, proto_centroid in _THEME_TYPE_PROTO_EMBS_CACHE.items():
                 cos_sim = float(

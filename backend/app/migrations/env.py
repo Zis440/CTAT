@@ -9,23 +9,17 @@ from alembic import context
 
 load_dotenv()
 
-# this is the Alembic Config object
 config = context.config
 
-# Interpret the config file for Python logging
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Model's MetaData object for 'autogenerate' support
 from app.database import Base
 
-# Import all models so Alembic can detect them
 from app.models.user import User
 from app.models.patient import Patient
 from app.models.wallet import Wallet
 from app.models.verification_request import VerificationRequest
-# from app.models.session import Session
-# from app.models.pricing import Pricing
 
 target_metadata = Base.metadata
 
@@ -45,11 +39,9 @@ if not database_url:
 
     database_url = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
-# Strip asyncpg prefix — Alembic needs the sync psycopg2 driver
 database_url = database_url.replace("postgresql+asyncpg://", "postgresql://")
 
 config.set_main_option("sqlalchemy.url", database_url)
-
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -74,7 +66,6 @@ def run_migrations_offline() -> None:
     with context.begin_transaction():
         context.run_migrations()
 
-
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode.
 
@@ -95,7 +86,6 @@ def run_migrations_online() -> None:
 
         with context.begin_transaction():
             context.run_migrations()
-
 
 if context.is_offline_mode():
     run_migrations_offline()

@@ -20,9 +20,6 @@ from app.models.pricing import TestPricing
 
 router = APIRouter(prefix="/api/pricing", tags=["pricing"])
 
-
-# ── Pydantic schemas ──────────────────────────────────────────────────────────
-
 class PricingOut(BaseModel):
     id: str
     test_type: str
@@ -35,7 +32,6 @@ class PricingOut(BaseModel):
     is_active: bool
 
     model_config = {"from_attributes": True}
-
 
 class CreatePricingRequest(BaseModel):
     test_type: str
@@ -50,15 +46,11 @@ class CreatePricingRequest(BaseModel):
             raise ValueError("Price cannot be negative")
         return v
 
-
 class UpdatePricingRequest(BaseModel):
     individual_price_paise: int | None = None
     clinic_price_paise: int | None = None
     org_price_paise: int | None = None
     is_active: bool | None = None
-
-
-# ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.get("/", response_model=List[PricingOut])
 def get_pricing(
@@ -80,7 +72,6 @@ def get_pricing(
         )
         for r in rows
     ]
-
 
 @router.post("/", response_model=PricingOut, status_code=201)
 def create_pricing(
@@ -110,7 +101,6 @@ def create_pricing(
         org_price_rupees=row.org_price_paise / 100.0,
         is_active=row.is_active,
     )
-
 
 @router.patch("/{pricing_id}", response_model=PricingOut)
 def update_pricing(

@@ -26,7 +26,7 @@ export function GenerateAnonymousLink() {
       toast.error("Please select an assessment.");
       return;
     }
-    
+
     setIsGenerating(true);
     setGeneratedLink(null);
     try {
@@ -46,13 +46,12 @@ export function GenerateAnonymousLink() {
         assessment_id: parseInt(selectedAssessment),
         expires_in_days: 1
       });
-      
+
       const token = res.data.token;
       const fullUrl = `${window.location.origin}/assessment/${token}`;
       setGeneratedLink(fullUrl);
       toast.success("Link generated successfully!");
-      
-      // Invalidate history table to show new link
+
       queryClient.invalidateQueries({ queryKey: ['org', 'anonymous-links'] });
     } catch (err: any) {
       toast.error(err.response?.data?.detail || "Failed to generate link.");
@@ -95,10 +94,10 @@ export function GenerateAnonymousLink() {
             </SelectContent>
           </Select>
         </div>
-        
-        <Button 
-          className="w-full" 
-          onClick={handleGenerate} 
+
+        <Button
+          className="w-full"
+          onClick={handleGenerate}
           disabled={isGenerating || !selectedAssessment}
         >
           {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}

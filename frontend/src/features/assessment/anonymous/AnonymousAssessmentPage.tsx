@@ -97,8 +97,7 @@ export function AnonymousAssessmentPage() {
   const isEMHW = validation.assessment_name.includes("Employee Mental Health") || validation.assessment_name.includes("Screening");
 
   const handleComplete = () => {
-    // Completion is handled within the components themselves visually.
-    // They will set their own step="completed" states.
+
   };
 
   const handleConsentSubmit = async () => {
@@ -139,25 +138,25 @@ export function AnonymousAssessmentPage() {
                 <li>The results generated may be used to inform clinical or organizational insights.</li>
               </ul>
             </div>
-            
+
             <div className="flex items-start space-x-3 pt-4 border-t">
-              <Checkbox 
-                id="consent" 
-                checked={agreedToTerms} 
-                onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)} 
+              <Checkbox
+                id="consent"
+                checked={agreedToTerms}
+                onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
                 className="mt-1"
               />
-              <label 
-                htmlFor="consent" 
+              <label
+                htmlFor="consent"
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
               >
                 I have read and agree to the data collection and privacy terms.
               </label>
             </div>
 
-            <Button 
-              className="w-full" 
-              disabled={!agreedToTerms || isSubmittingConsent} 
+            <Button
+              className="w-full"
+              disabled={!agreedToTerms || isSubmittingConsent}
               onClick={handleConsentSubmit}
             >
               {isSubmittingConsent ? (
@@ -189,4 +188,3 @@ export function AnonymousAssessmentPage() {
     </>
   );
 }
-

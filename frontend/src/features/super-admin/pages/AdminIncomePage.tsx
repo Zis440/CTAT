@@ -24,7 +24,6 @@ import type { AdminIncomeOverview } from "@/features/super-admin/services/adminI
 import { formatRupees } from "@/types/wallet";
 import { formatDateTime } from "@/lib/dateFormat";
 
-
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Card,
@@ -51,7 +50,7 @@ export function AdminIncomePage() {
     const loadOverview = async () => {
       try {
         const result = await adminIncomeService.getOverview();
-        // format the date for the chart
+
         const formattedResult = {
           ...result,
           daily_breakdown: result.daily_breakdown.map(item => ({
@@ -75,7 +74,6 @@ export function AdminIncomePage() {
         <title>Income | PsyicHub - Psychological Intelligence</title>
       </Helmet>
 
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2">
           <TrendingUp className="h-8 w-8 text-primary" />
@@ -86,7 +84,6 @@ export function AdminIncomePage() {
         </p>
       </div>
 
-      {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-background/50 backdrop-blur-sm border-primary/10">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -146,7 +143,6 @@ export function AdminIncomePage() {
         </Card>
       </div>
 
-      {/* Chart */}
       <Card className="border-primary/10 shadow-md bg-background/50 backdrop-blur-sm relative overflow-hidden">
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
         <CardHeader>
@@ -206,7 +202,6 @@ export function AdminIncomePage() {
         </CardContent>
       </Card>
 
-      {/* Recent Transactions Table */}
       <Card className="border-primary/10 shadow-md bg-background/50 backdrop-blur-sm relative overflow-hidden">
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
         <CardHeader>

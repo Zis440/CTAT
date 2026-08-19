@@ -25,14 +25,13 @@ export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    // For now, we mock the notifications based on pending counts from backend
-    // since we don't have a full notifications table yet.
+
     if (!user) return;
 
     const fetchNotifications = async () => {
       try {
         const { data } = await apiClient.get<NotificationItem[]>("/notifications/list");
-        
+
         try {
           const localReadStr = localStorage.getItem("local_read_notifications") || "{}";
           const localRead = JSON.parse(localReadStr);
@@ -49,7 +48,7 @@ export function NotificationBell() {
         console.error("Failed to fetch notifications", err);
       }
     };
-    
+
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 60000);
     return () => clearInterval(interval);

@@ -3,7 +3,7 @@ import random
 from locust import HttpUser, task, between
 
 class PsyicHubUser(HttpUser):
-    # Wait between 1 and 3 seconds between tasks
+
     wait_time = between(1, 3)
 
     def on_start(self):
@@ -14,8 +14,7 @@ class PsyicHubUser(HttpUser):
         self.token = None
         self.email = os.environ.get("LOAD_TEST_EMAIL", "admin@psyichub.com")
         self.password = os.environ.get("LOAD_TEST_PASSWORD", "password123")
-        
-        # If the backend is running and we have credentials, attempt login
+
         if self.email and self.password:
             response = self.client.post("/api/auth/login", json={
                 "email": self.email,
@@ -47,21 +46,18 @@ class PsyicHubUser(HttpUser):
         This requires an authenticated user token to succeed.
         """
         if not self.token:
-            # Skip if not authenticated
+
             return
 
-        # Dummy data for an analysis request
         payload = {
             "cardId": "1",
             "story": "This is a sample story for load testing the Narrative Intelligence model. It describes a boy looking at a violin.",
             "patientId": "ANON_12345",
             "effectiveAge": 25
         }
-        
-        # Using a timeout or catch_response to handle potential 500s or timeouts 
-        # gracefully during high load
+
         with self.client.post("/api/analysis/analyze", json=payload, headers=self.headers, catch_response=True) as response:
-            if response.status_code in [200, 402]:  # 402 is insufficient balance, still means the endpoint was hit successfully
+            if response.status_code in [200, 402]:
                 response.success()
             elif response.status_code == 401:
                 response.failure("Unauthorized - Invalid Token")

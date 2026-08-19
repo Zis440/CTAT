@@ -22,17 +22,17 @@ def get_verification_queue(
     """Get the queue of pending verifications assigned to the current psychologist."""
     if current_user.role != UserRole.individual_psychologist:
         raise HTTPException(status_code=403, detail="Only individual psychologists can access this verification queue.")
-        
+
     requests = db.query(VerificationRequest).filter(
         VerificationRequest.assigned_psychologist_id == current_user.id,
         VerificationRequest.status == VerificationRequestStatus.ASSIGNED
     ).order_by(desc(VerificationRequest.assigned_at)).all()
-    
+
     result = []
     for req in requests:
         session_info = db.query(AssessmentSession).filter(AssessmentSession.id == req.session_id).first()
         if session_info:
-            # Look up the requesting user (the one who created the session)
+
             requesting_user = db.query(User).filter(User.id == session_info.user_id).first()
             result.append({
                 "request_id": req.id,
@@ -46,7 +46,7 @@ def get_verification_queue(
                 "requesting_user_name": f"{requesting_user.first_name} {requesting_user.last_name or ''}".strip() if requesting_user else None,
                 "requesting_user_domain": requesting_user.professional_domain if requesting_user else None,
             })
-            
+
     return result
 
 @router.get("/history", response_model=List[Dict[str, Any]])
@@ -57,12 +57,12 @@ def get_verification_history(
     """Get the history of verified reports by the current psychologist."""
     if current_user.role != UserRole.individual_psychologist:
         raise HTTPException(status_code=403, detail="Only individual psychologists can access this history.")
-        
+
     requests = db.query(VerificationRequest).filter(
         VerificationRequest.assigned_psychologist_id == current_user.id,
         VerificationRequest.status == VerificationRequestStatus.VERIFIED
     ).order_by(desc(VerificationRequest.completed_at)).all()
-    
+
     result = []
     for req in requests:
         session_info = db.query(AssessmentSession).filter(AssessmentSession.id == req.session_id).first()
@@ -80,7 +80,7 @@ def get_verification_history(
                 "requesting_user_name": f"{requesting_user.first_name} {requesting_user.last_name or ''}".strip() if requesting_user else None,
                 "requesting_user_domain": requesting_user.professional_domain if requesting_user else None,
             })
-            
+
     return result
 
 @router.post("/{request_id}/approve")
@@ -93,33 +93,32 @@ def approve_verification(
     """Approve a report verification and regenerate the PDF with the signature."""
     if current_user.role != UserRole.individual_psychologist:
         raise HTTPException(status_code=403, detail="Only psychologists can approve verifications.")
-        
+
     v_req = db.query(VerificationRequest).filter(
         VerificationRequest.id == request_id,
         VerificationRequest.assigned_psychologist_id == current_user.id
     ).first()
-    
+
     if not v_req:
         raise HTTPException(status_code=404, detail="Verification request not found or not assigned to you.")
-        
+
     if v_req.status != VerificationRequestStatus.ASSIGNED:
         raise HTTPException(status_code=400, detail="This request is no longer pending assignment.")
-        
+
     try:
-        # Fetch session and regenerate report
+
         session_info = db.query(AssessmentSession).filter(AssessmentSession.id == v_req.session_id).first()
         if session_info and session_info.session_data_path:
             import json
             from app.database import DATA_STORE_DIR
             session_json_path = DATA_STORE_DIR / session_info.session_data_path
-            
+
             if session_json_path.exists():
                 with open(session_json_path, "r", encoding="utf-8") as f:
                     session_data = json.load(f)
-                    
+
                 analysis_data = session_data.get("report_summary", {})
-                
-                # Inject validation details
+
                 validation_details = {
                     "validator_name": f"{current_user.first_name} {current_user.last_name or ''}".strip(),
                     "license_number": current_user.rci_number or current_user.roc_number or "N/A",
@@ -127,29 +126,27 @@ def approve_verification(
                     "is_verified": True,
                     "signature_path": getattr(current_user, 'e_signature_path', '')
                 }
-                
+
                 analysis_data['psychologist_validation'] = validation_details
                 session_data["report_summary"] = analysis_data
-                
+
                 with open(session_json_path, "w", encoding="utf-8") as f:
                     json.dump(session_data, f, indent=2, default=str)
-                    
-                # Re-generate PDF
+
                 if session_info.pdf_filename:
                     from app.database import DATA_STORE_DIR
                     pdf_path = DATA_STORE_DIR / session_info.pdf_filename
                     if pdf_path.exists():
                         try:
-                            # Import the clinical report generator
+
                             from app.assessments.tat.engines.clinical.clinical_report_generator import generate_report
-                            
+
                             p_info = session_data.get('patient_info', {})
-                            
-                            # Use original test performer for user_info
+
                             perf_user = db.query(User).filter(User.id == session_info.user_id).first()
                             if not perf_user:
                                 perf_user = current_user
-                                
+
                             clinic_info = None
                             if perf_user.role == UserRole.org_staff or perf_user.role == UserRole.org_admin:
                                 from app.models.clinic import ClinicProfile
@@ -175,7 +172,7 @@ def approve_verification(
                                     clinic_logo_path = clinic_profile.logo_path
                                 elif clinic_admin.avatar_path:
                                     clinic_logo_path = clinic_admin.avatar_path
-                                    
+
                                 clinic_info = {
                                     "clinic_name": getattr(clinic_admin, 'clinic_name', '') or getattr(perf_user, 'clinic_name', ''),
                                     "address": getattr(clinic_admin, 'address', ''),
@@ -207,11 +204,11 @@ def approve_verification(
                         except Exception as e:
                             import logging
                             logging.getLogger(__name__).error(f"Failed to regenerate PDF: {e}")
-                        
+
                 session_info.validation_status = "Verified by Psychologist"
                 session_info.validator_name = f"{current_user.first_name} {current_user.last_name or ''}".strip()
                 session_info.validation_date = datetime.now(timezone.utc)
-                
+
                 if session_info.id.startswith("SCR_"):
                     from app.assessments.screening.level1.models import ScreeningReport as ScrReport
                     scr_rep = db.query(ScrReport).filter(ScrReport.assessment_id == session_info.id).first()
@@ -220,12 +217,12 @@ def approve_verification(
                         scr_rep.verified_by_id = current_user.id
                         scr_rep.verified_at = datetime.now(timezone.utc)
                         scr_rep.verification_notes = notes
-                        
+
                         import json
                         scr_data = scr_rep.json_data
                         if isinstance(scr_data, str):
                             scr_data = json.loads(scr_data)
-                        
+
                         if scr_data:
                             scr_summary = scr_data.get("report_summary", scr_data)
                             scr_summary["psychologist_validation"] = validation_details
@@ -233,23 +230,17 @@ def approve_verification(
                                 scr_data["report_summary"] = scr_summary
                             else:
                                 scr_data = scr_summary
-                            
+
                             scr_rep.json_data = scr_data
 
-        
-        # Mark as verified using raw SQL to guarantee the write.
-        # We must also expunge the stale v_req from the ORM session so that
-        # when db.commit() flushes dirty objects, it does NOT overwrite our
-        # UPDATE with the old ASSIGNED status still held in memory.
         from sqlalchemy import text as _text
-        db.expunge(v_req)  # remove stale object so ORM can't clobber our update
+        db.expunge(v_req)
         db.execute(
             _text("UPDATE verification_requests SET status = :status, completed_at = :completed_at, notes = :notes WHERE id = :rid"),
             {"status": "VERIFIED", "completed_at": datetime.now(timezone.utc), "notes": notes, "rid": request_id}
         )
         current_user.total_verifications_done = (current_user.total_verifications_done or 0) + 1
-                
-        # Add Audit Log
+
         from app.services.audit_service import AuditService
         AuditService().log_activity(
             db=db,
@@ -282,26 +273,24 @@ def reject_verification_request(
     """Reject an assigned verification request. It will be sent to the next available psychologist."""
     if current_user.role != UserRole.individual_psychologist:
         raise HTTPException(status_code=403, detail="Only psychologists can reject verifications.")
-        
+
     v_req = db.query(VerificationRequest).filter(
         VerificationRequest.id == request_id,
         VerificationRequest.assigned_psychologist_id == current_user.id
     ).first()
-    
+
     if not v_req:
         raise HTTPException(status_code=404, detail="Verification request not found or not assigned to you.")
-        
+
     if v_req.status != VerificationRequestStatus.ASSIGNED:
         raise HTTPException(status_code=400, detail="This request is no longer pending assignment.")
-        
-    # Set status to EXPIRED so the algorithm picks a new psychologist
+
     v_req.status = VerificationRequestStatus.EXPIRED
     db.commit()
-    
-    # Re-run assignment algorithm
+
     from app.services.verification_service import assign_verification_request
     assign_verification_request(db, request_id=v_req.id)
-    
+
     return {"status": "success", "message": "Report rejected and sent to the next psychologist."}
 
 @router.get("/admin/monitor", response_model=List[Dict[str, Any]])
@@ -312,15 +301,15 @@ def admin_monitor_verifications(
     """Super Admin view of all verification requests and their live status."""
     if current_user.role != UserRole.super_admin:
         raise HTTPException(status_code=403, detail="Only super admins can monitor verifications.")
-        
+
     requests = db.query(VerificationRequest).order_by(desc(VerificationRequest.created_at)).all()
-    
+
     result = []
     for req in requests:
         psychologist = None
         if req.assigned_psychologist_id:
             psychologist = db.query(User).filter(User.id == req.assigned_psychologist_id).first()
-            
+
         result.append({
             "request_id": req.id,
             "session_id": req.session_id,
@@ -332,7 +321,7 @@ def admin_monitor_verifications(
             "psychologist_name": f"{psychologist.first_name} {psychologist.last_name or ''}".strip() if psychologist else None,
             "psychologist_email": psychologist.email if psychologist else None
         })
-        
+
     return result
 
 @router.get("/admin/request/{request_id}", response_model=Dict[str, Any])
@@ -344,21 +333,21 @@ def admin_get_single_verification(
     """Get details of a single verification request."""
     if current_user.role != UserRole.super_admin:
         raise HTTPException(status_code=403, detail="Only super admins can view request details.")
-        
+
     req = db.query(VerificationRequest).filter(VerificationRequest.id == request_id).first()
     if not req:
         raise HTTPException(status_code=404, detail="Request not found")
-        
+
     psychologist = None
     if req.assigned_psychologist_id:
         psychologist = db.query(User).filter(User.id == req.assigned_psychologist_id).first()
-        
+
     session_info = db.query(AssessmentSession).filter(AssessmentSession.id == req.session_id).first()
-    
+
     requesting_user = None
     if session_info:
         requesting_user = db.query(User).filter(User.id == session_info.user_id).first()
-        
+
     return {
         "request_id": req.id,
         "session_id": req.session_id,
@@ -383,10 +372,10 @@ def admin_get_eligible_psychologists(
     """Get list of eligible RCI psychologists for manual assignment."""
     if current_user.role != UserRole.super_admin:
         raise HTTPException(status_code=403, detail="Only super admins can view this.")
-        
+
     from app.services.verification_service import _get_eligible_validators
     psychologists = _get_eligible_validators(db)
-    
+
     result = []
     for p in psychologists:
         result.append({
@@ -405,12 +394,12 @@ def admin_get_all_psychologists(
     """Get list of ALL individual clinical psychologists, regardless of verification status."""
     if current_user.role != UserRole.super_admin:
         raise HTTPException(status_code=403, detail="Only super admins can view this.")
-        
+
     psychologists = db.query(User).filter(
         User.role == UserRole.individual_psychologist,
         User.professional_domain.ilike("%clinical%")
     ).all()
-    
+
     result = []
     for p in psychologists:
         result.append({
@@ -425,43 +414,41 @@ def admin_get_all_psychologists(
 @router.post("/admin/request/{request_id}/reassign")
 def admin_reassign_request(
     request_id: str,
-    psychologist_id: str = None, # If None, runs algorithm
+    psychologist_id: str = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Manually force a re-assignment, optionally to a specific psychologist."""
     if current_user.role != UserRole.super_admin:
         raise HTTPException(status_code=403, detail="Only super admins can reassign.")
-        
+
     v_req = db.query(VerificationRequest).filter(VerificationRequest.id == request_id).first()
     if not v_req:
         raise HTTPException(status_code=404, detail="Request not found.")
-        
+
     if v_req.status in [VerificationRequestStatus.VERIFIED, VerificationRequestStatus.REJECTED]:
         raise HTTPException(status_code=400, detail="Cannot reassign a verified or rejected request.")
-        
+
     from app.services.verification_service import assign_verification_request
     from datetime import datetime, timezone
-    
+
     if psychologist_id:
-        # Manual assignment
+
         psychologist = db.query(User).filter(User.id == psychologist_id).first()
         if not psychologist:
             raise HTTPException(status_code=404, detail="Psychologist not found.")
-            
+
         v_req.assigned_psychologist_id = psychologist.id
         v_req.status = VerificationRequestStatus.ASSIGNED
         v_req.assigned_at = datetime.now(timezone.utc)
         v_req.assignment_attempts += 1
 
-        # Sync with Session record
         session_info = db.query(AssessmentSession).filter(AssessmentSession.id == v_req.session_id).first()
         if session_info:
             session_info.assigned_psychologist_id = psychologist.id
 
         db.commit()
-        
-        # Send email (optional, assuming we have the function)
+
         from app.services.email_service import email_service
         try:
             email_service.send_verification_assignment_email(
@@ -472,11 +459,10 @@ def admin_reassign_request(
             )
         except Exception as e:
             pass
-            
+
         return {"status": "success", "message": f"Manually assigned to {psychologist.first_name}"}
     else:
-        # Algorithmic assignment
-        # First reset the attempt counter or status so it picks someone new
+
         v_req.status = VerificationRequestStatus.EXPIRED
         db.commit()
         v_req = assign_verification_request(db, request_id=v_req.id)
@@ -491,31 +477,29 @@ def admin_cancel_request(
     """Cancel a verification request and refund the ₹100."""
     if current_user.role != UserRole.super_admin:
         raise HTTPException(status_code=403, detail="Only super admins can cancel requests.")
-        
+
     v_req = db.query(VerificationRequest).filter(VerificationRequest.id == request_id).first()
     if not v_req:
         raise HTTPException(status_code=404, detail="Request not found.")
-        
+
     if v_req.status in [VerificationRequestStatus.VERIFIED, VerificationRequestStatus.REJECTED]:
         raise HTTPException(status_code=400, detail="Cannot cancel a verified or already cancelled request.")
-        
+
     v_req.status = VerificationRequestStatus.REJECTED
-    
-    # Process refund
+
     session_info = db.query(AssessmentSession).filter(AssessmentSession.id == v_req.session_id).first()
     if session_info:
         session_info.validation_status = "Cancelled"
         session_info.assigned_psychologist_id = None
-        
-        # Refund 100 Rs (10000 paise) to the user who created the session
+
         from app.wallet.router import _get_wallet, _record_transaction, _get_target_user_id
         session_creator = db.query(User).filter(User.id == session_info.user_id).first()
         if session_creator:
             target_user_id = _get_target_user_id(session_creator, db)
             wallet = _get_wallet(target_user_id, db, lock=True)
-            
+
             wallet.balance_paise += 10000
-            
+
             from app.models.wallet import TransactionType
             _record_transaction(
                 wallet=wallet,
@@ -525,6 +509,6 @@ def admin_cancel_request(
                 db=db,
                 created_by_id=current_user.id
             )
-            
+
     db.commit()
     return {"status": "success", "message": "Request cancelled and ₹100 refunded."}

@@ -125,7 +125,7 @@ export function OrgSettingsPage() {
   };
 
   const currentModules = permissions[selectedStaffId] || {};
-  const isDirty = selectedStaffId && savedPermissions[selectedStaffId] 
+  const isDirty = selectedStaffId && savedPermissions[selectedStaffId]
     ? JSON.stringify(permissions[selectedStaffId]) !== JSON.stringify(savedPermissions[selectedStaffId])
     : false;
 
@@ -166,8 +166,8 @@ export function OrgSettingsPage() {
                 <Popover open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
                   <PopoverTrigger asChild>
                     <Button variant="outline" role="combobox" aria-expanded={isDropdownOpen} className="w-full md:w-1/2 justify-between bg-background h-12 font-normal">
-                      {selectedStaffId 
-                        ? `${staffList.find(s => s.id === selectedStaffId)?.first_name} ${staffList.find(s => s.id === selectedStaffId)?.last_name || ""}` 
+                      {selectedStaffId
+                        ? `${staffList.find(s => s.id === selectedStaffId)?.first_name} ${staffList.find(s => s.id === selectedStaffId)?.last_name || ""}`
                         : "Select staff member"}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
@@ -175,9 +175,9 @@ export function OrgSettingsPage() {
                   <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
                     <div className="flex items-center border-b px-3">
                       <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-                      <input 
-                        className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50" 
-                        placeholder="Search staff..." 
+                      <input
+                        className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                        placeholder="Search staff..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                       />
@@ -187,7 +187,7 @@ export function OrgSettingsPage() {
                         <div className="py-6 text-center text-sm text-muted-foreground">No staff found.</div>
                       ) : (
                         filteredStaff.map((staff) => (
-                          <div 
+                          <div
                             key={staff.id}
                             className={`relative flex cursor-default select-none items-center rounded-md px-2 py-1.5 text-sm outline-none transition-colors hover:bg-primary/10 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 ${selectedStaffId === staff.id ? 'bg-primary/15 text-primary' : ''}`}
                             onClick={() => {
@@ -291,21 +291,6 @@ export function OrgSettingsPage() {
               <Switch checked={!!currentModules.candidates} onCheckedChange={() => toggleModule('candidates')} disabled={!selectedStaffId} />
             </div>
 
-            {/* WhatsApp Messaging is disabled/hidden
-            <div className="flex items-center justify-between space-x-4 p-4 border border-border/50 rounded-xl bg-background/50">
-              <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                  <MessageSquare className="h-5 w-5 text-blue-500" />
-                </div>
-                <div>
-                  <Label className="text-base font-bold">WhatsApp Messaging</Label>
-                  <p className="text-sm text-muted-foreground">Send automated SMS reminders</p>
-                </div>
-              </div>
-              <Switch checked={!!currentModules.whatsapp} onCheckedChange={() => toggleModule('whatsapp')} disabled={!selectedStaffId} />
-            </div>
-            */}
-
             <div className="flex items-center justify-between space-x-4 p-4 border border-border/50 rounded-xl bg-background/50">
               <div className="flex items-center gap-4">
                 <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
@@ -329,8 +314,8 @@ export function OrgSettingsPage() {
                   <p className="text-sm text-muted-foreground">Manage wallet balance, recharge, and transactions</p>
                 </div>
               </div>
-              <Switch 
-                checked={!!currentModules.can_view_wallet_history || !!currentModules.can_recharge} 
+              <Switch
+                checked={!!currentModules.can_view_wallet_history || !!currentModules.can_recharge}
                 onCheckedChange={(checked) => {
                   if (!selectedStaffId) return;
                   setPermissions(prev => ({
@@ -341,8 +326,8 @@ export function OrgSettingsPage() {
                       can_recharge: checked
                     }
                   }));
-                }} 
-                disabled={!selectedStaffId} 
+                }}
+                disabled={!selectedStaffId}
               />
             </div>
 
@@ -359,20 +344,6 @@ export function OrgSettingsPage() {
               <Switch checked={!!currentModules.remote_assessment_link_management} onCheckedChange={() => toggleModule('remote_assessment_link_management')} disabled={!selectedStaffId} />
             </div>
 
-            {/*
-            <div className="flex items-center justify-between space-x-4 p-4 border border-border/50 rounded-xl bg-background/50">
-              <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-full bg-orange-500/10 flex items-center justify-center">
-                  <Bell className="h-5 w-5 text-orange-500" />
-                </div>
-                <div>
-                  <Label className="text-base font-bold">Notifications</Label>
-                  <p className="text-sm text-muted-foreground">Email alerts and updates</p>
-                </div>
-              </div>
-              <Switch checked={!!currentModules.notifications} onCheckedChange={() => toggleModule('notifications')} disabled={!selectedStaffId} />
-            </div>
-            */}
           </div>
           <div className="flex justify-end mt-4">
             <AlertDialog>

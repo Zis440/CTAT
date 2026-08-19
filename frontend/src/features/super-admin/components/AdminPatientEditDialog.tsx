@@ -50,7 +50,7 @@ export function AdminPatientEditDialog({ patient, open, onOpenChange, onPatientU
     if (!patient) return;
     setIsSaving(true);
     try {
-      // Sanitize payload (convert empty strings to undefined)
+
       const payload: AdminUpdatePatientRequest = {
         first_name: formData.first_name?.trim() || undefined,
         last_name: formData.last_name?.trim() || undefined,
@@ -155,7 +155,6 @@ export function AdminPatientEditDialog({ patient, open, onOpenChange, onPatientU
       </DialogContent>
     </Dialog>
 
-    {/* Save Confirmation Dialog */}
     <AlertDialog open={showSaveConfirm} onOpenChange={setShowSaveConfirm}>
       <AlertDialogContent>
         <AlertDialogHeader>

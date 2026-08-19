@@ -15,7 +15,6 @@ import { useUIStore } from "@/store/useUIStore";
 import { NotificationBell } from "@/features/notifications/components/NotificationBell";
 import { getSessionHistoryRoute } from "@/lib/routeUtils";
 
-/** Convert a route path segment to a human-readable label */
 function pathToLabel(segment: string, userRole?: string): string {
   const isOrgAccount = userRole === "org_admin" || userRole === "org_staff";
   const targetLabel = isOrgAccount ? "Candidate" : "Patient";
@@ -65,19 +64,17 @@ interface BreadcrumbEntry {
   isUnclickable?: boolean;
 }
 
-/** Build a breadcrumb trail from the current pathname */
 function buildBreadcrumbs(pathname: string, userRole?: string): BreadcrumbEntry[] {
   const isOrgAccount = userRole === "org_admin" || userRole === "org_staff";
   const targetLabel = isOrgAccount ? "Candidate" : "Patient";
   const segments = pathname.split("/").filter(Boolean);
 
-  // ── Dashboard pages: Clinic / Org / Staff ───────────────────────────────
   if (["clinic", "clinic-staff", "org", "org-staff"].includes(segments[0])) {
     const crumbs: BreadcrumbEntry[] = [
       { label: "Dashboard", path: `/${segments[0]}/dashboard` },
     ];
     if (segments.length > 1 && segments[1] !== "dashboard") {
-      // OVERRIDE FOR REPORT / RESULT PAGES
+
       if (segments.includes("session") && (segments.includes("report") || segments.includes("result") || (segments.includes("history") && segments.length > 2))) {
         return [
           { label: "Dashboard", path: `/${segments[0]}/dashboard` },
@@ -110,7 +107,6 @@ function buildBreadcrumbs(pathname: string, userRole?: string): BreadcrumbEntry[
     return crumbs;
   }
 
-  // ── Admin pages: Admin / <page> ──────────────────────────────────────────
   if (segments[0] === "admin") {
     const crumbs: BreadcrumbEntry[] = [
       { label: "Admin", path: "/admin" },
@@ -131,7 +127,6 @@ function buildBreadcrumbs(pathname: string, userRole?: string): BreadcrumbEntry[
     return crumbs;
   }
 
-  // ── Wallet pages: Wallet / <sub-page> ────────────────────────────────────
   if (segments[0] === "wallet") {
     const crumbs: BreadcrumbEntry[] = [
       { label: "Wallet", path: "/wallet" },
@@ -145,9 +140,8 @@ function buildBreadcrumbs(pathname: string, userRole?: string): BreadcrumbEntry[
     return crumbs;
   }
 
-  // ── Session pages: Dashboard / Assessment / <session label> ───────────────────────────
   if (segments[0] === "session") {
-    // OVERRIDE FOR REPORT / RESULT PAGES
+
     if (segments.includes("report") || segments.includes("result") || (segments.includes("history") && segments.length > 2)) {
       return [
         { label: "Dashboard", path: "/dashboard" },
@@ -183,7 +177,6 @@ function buildBreadcrumbs(pathname: string, userRole?: string): BreadcrumbEntry[
     return crumbs;
   }
 
-  // ── Patients pages: Dashboard / Patients / <Patient> - Details ──────────
   if (segments[0] === "patients") {
     const crumbs: BreadcrumbEntry[] = [
       { label: "Dashboard", path: "/dashboard" },
@@ -205,14 +198,13 @@ function buildBreadcrumbs(pathname: string, userRole?: string): BreadcrumbEntry[
     return crumbs;
   }
 
-  // ── Default: Dashboard / <segment> / ... ─────────────────────────────────
   const crumbs: BreadcrumbEntry[] = [
     { label: "Dashboard", path: "/dashboard" },
   ];
   let currentPath = "";
   segments.forEach((seg) => {
     currentPath += `/${seg}`;
-    if (seg === "dashboard") return; // already added as root
+    if (seg === "dashboard") return;
     crumbs.push({ label: pathToLabel(seg, userRole), path: currentPath });
   });
 
@@ -227,14 +219,11 @@ export function AppTopBar() {
 
   const breadcrumbs = buildBreadcrumbs(location.pathname, user?.role);
 
-  // Removed complex history logic, relying on standard react-router-dom navigate
-
   return (
     <header className="h-[72px] border-b border-border/40 bg-background/80 backdrop-blur-md flex items-center px-4 gap-3 sticky top-0 z-40">
-      {/* Sidebar toggle */}
+
       <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
 
-      {/* Breadcrumbs (shadcn) */}
       <Breadcrumb className="flex-1 min-w-0">
         <BreadcrumbList>
           {breadcrumbs.map((crumb, i) => (
@@ -264,7 +253,7 @@ export function AppTopBar() {
 
       <div className="flex-1 flex items-center justify-end gap-2">
         <NotificationBell />
-        {/* Navigation Actions */}
+
         <button
           onClick={() => {
             if (topbarBackOverride) {
@@ -289,4 +278,3 @@ export function AppTopBar() {
     </header>
   );
 }
-

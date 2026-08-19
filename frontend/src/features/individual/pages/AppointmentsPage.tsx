@@ -91,8 +91,6 @@ import type { Appointment, AppointmentCreate, AppointmentUpdate } from "@/servic
 import { useBulkSelection } from "@/hooks/useBulkSelection";
 import React from "react";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 const STATUS_STYLES: Record<string, string> = {
   scheduled: "border-blue-500/30 text-blue-400 bg-blue-500/10",
   confirmed: "border-green-500/30 text-green-400 bg-green-500/10",
@@ -124,8 +122,6 @@ interface PatientRecord {
   phone_number?: string | null;
   email?: string | null;
 }
-
-// ── Calendar View ─────────────────────────────────────────────────────────────
 
 interface CalendarViewProps {
   appointments: Appointment[];
@@ -319,8 +315,6 @@ function CalendarView({ appointments, getPatientName }: CalendarViewProps) {
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
-
 const PAGE_SIZE = 30;
 
 export function AppointmentsPage() {
@@ -329,14 +323,12 @@ export function AppointmentsPage() {
   const currentPage = parseInt(pageId as string, 10) || 1;
   const queryClient = useQueryClient();
 
-  // Data state
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"date" | "patient_name" | "duration" | "status">("date");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
 
-  // Forms state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [form, setForm] = useState<AppointmentCreate>({
     patient_id: "",
@@ -356,7 +348,6 @@ export function AppointmentsPage() {
 
   const [deletingAppointment, setDeletingAppointment] = useState<Appointment | null>(null);
 
-  // Queries
   const { data: rawAppointments = [], isLoading, error } = useQuery({
     queryKey: ["appointments"],
     queryFn: () => getAppointments(),
@@ -381,7 +372,6 @@ export function AppointmentsPage() {
     });
   }, [patients, patientSearchQuery]);
 
-  // Mutations
   const createMutation = useMutation({
     mutationFn: (payload: AppointmentCreate) => createAppointment(payload),
     onSuccess: () => {
@@ -420,7 +410,6 @@ export function AppointmentsPage() {
     },
   });
 
-  // Handle click outside for patient dropdown
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (patientDropdownRef.current && !patientDropdownRef.current.contains(e.target as Node)) {
@@ -431,7 +420,6 @@ export function AppointmentsPage() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Helpers
   const getPatientName = useCallback((patientId: string) => {
     const p = patients.find((pt) => pt.id === patientId);
     if (!p) return patientId;
@@ -443,7 +431,6 @@ export function AppointmentsPage() {
     return p?.phone_number || "-";
   };
 
-  // Selection
   const {
     isSelectionMode,
     selectedItems,
@@ -455,7 +442,6 @@ export function AppointmentsPage() {
     exportSelectedToExcel,
   } = useBulkSelection<Appointment>();
 
-  // Filter & Sort
   const filteredAppointments = useMemo(() => {
     let list = [...rawAppointments];
 
@@ -496,7 +482,6 @@ export function AppointmentsPage() {
   const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
   const paginatedAppointments = filteredAppointments.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
-  // Handlers
   const handleResetFilters = () => {
     setFilterStatus("all");
     setSearchQuery("");
@@ -514,8 +499,6 @@ export function AppointmentsPage() {
     createMutation.mutate(form);
   };
 
-
-
   const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingAppointment) return;
@@ -528,7 +511,6 @@ export function AppointmentsPage() {
         <title>Appointments | PsyicHub - Psychological Intelligence</title>
       </Helmet>
 
-      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2">
@@ -684,7 +666,6 @@ export function AppointmentsPage() {
       <Card className="border-primary/10 bg-background/50 backdrop-blur-sm relative overflow-hidden pb-0">
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
 
-        {/* Selection mode banner OR filters */}
         {isSelectionMode ? (
           <div className="flex items-center justify-between p-4 bg-primary/10 border-b border-primary/20">
             <span className="text-base font-medium text-foreground">
@@ -1039,7 +1020,6 @@ export function AppointmentsPage() {
         </div>
       )}
 
-      {/* Edit Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -1095,7 +1075,6 @@ export function AppointmentsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
       <AlertDialog open={!!deletingAppointment} onOpenChange={(o) => !o && setDeletingAppointment(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

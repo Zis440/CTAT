@@ -53,7 +53,6 @@ import type {
 const MAX_FILE_SIZE_MB = 5;
 const ACCEPTED = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
 
-// ── Category display config ──────────────────────────────────────────────────
 const CATEGORY_CONFIG: Record<DocumentCategory, { label: string; icon: string; order: number }> = {
   business: { label: "Business Documents", icon: "🏢", order: 0 },
   identity: { label: "Identity Documents", icon: "🪪", order: 1 },
@@ -79,7 +78,6 @@ const CLINIC_SUBTYPE_LABELS: Record<string, string> = {
   other: "Other",
 };
 
-// ── Status badge component ───────────────────────────────────────────────────
 function VerificationStatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; color: string; icon: typeof ShieldCheck }> = {
     not_submitted: { label: "Not Submitted", color: "bg-muted text-muted-foreground", icon: ShieldCheck },
@@ -96,7 +94,6 @@ function VerificationStatusBadge({ status }: { status: string }) {
   );
 }
 
-// ── Document status badge ────────────────────────────────────────────────────
 function DocStatusBadge({ status }: { status: string }) {
   if (status === "approved") return (
     <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 dark:text-green-400">
@@ -115,7 +112,6 @@ function DocStatusBadge({ status }: { status: string }) {
   );
 }
 
-// ── Skeleton loader ──────────────────────────────────────────────────────────
 function VerificationSkeleton() {
   return (
     <div className="w-full space-y-6 animate-pulse">
@@ -139,7 +135,6 @@ function VerificationSkeleton() {
   );
 }
 
-// ── Single document upload slot ──────────────────────────────────────────────
 interface DocumentSlotProps {
   requirement: DocumentRequirement;
   uploadedDoc?: UploadedDocument;
@@ -182,7 +177,7 @@ function DocumentSlot({ requirement, uploadedDoc, onUpload, isUploading, uploadi
       transition={{ duration: 0.25 }}
       className="rounded-xl border border-primary/10 bg-background/60 p-4 space-y-2.5"
     >
-      {/* Label row */}
+
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2 min-w-0">
           <FileText className="h-4 w-4 text-primary/60 shrink-0" />
@@ -214,10 +209,9 @@ function DocumentSlot({ requirement, uploadedDoc, onUpload, isUploading, uploadi
         </div>
       </div>
 
-      {/* Upload area or uploaded file display */}
       {uploadedDoc && uploadedDoc.status !== "rejected" ? (
         uploadedDoc.original_filename === "digilocker_verified" ? (
-          /* ── DigiLocker verified display ──────────────────────────────── */
+
           <div className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-green-500/20 bg-green-500/5">
             <div className="flex items-center gap-2 min-w-0">
               <ShieldCheck className="h-4 w-4 text-green-500 shrink-0" />
@@ -238,7 +232,7 @@ function DocumentSlot({ requirement, uploadedDoc, onUpload, isUploading, uploadi
             </div>
           </div>
         ) : (
-          /* ── Manually uploaded file display ───────────────────────────── */
+
           <div className={cn(
             "flex flex-col gap-2 px-3 py-2.5 rounded-lg border",
             uploadedDoc.verification_notes && !isVerifiedAccount ? "bg-amber-500/5 border-amber-500/20" : "bg-green-500/5 border-green-500/10"
@@ -379,8 +373,8 @@ function RciProfileSection() {
   const [isSaving, setIsSaving] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [fileInputKey, setFileInputKey] = useState(0); // increment to reset file input
-  // Track what was last saved so the button enables on any change (including clearing)
+  const [fileInputKey, setFileInputKey] = useState(0);
+
   const [initialBio, setInitialBio] = useState("");
   const [initialCvFilename, setInitialCvFilename] = useState<string | null>(null);
 
@@ -399,20 +393,18 @@ function RciProfileSection() {
   }, []);
 
   const handleSave = async () => {
-    const originalFileName = cvFile?.name ?? null; // capture before clearing
+    const originalFileName = cvFile?.name ?? null;
     try {
       setIsSaving(true);
       const res = await saveRciProfile(cvFile || undefined, bio);
       toast.success("Profile submitted for review!");
-      // Use the original selected file name so the UI shows what the user actually uploaded,
-      // not the generic "cv.pdf" path the backend stores internally.
+
       setCvFilename(originalFileName ?? res.cv_filename);
       setInitialCvFilename(originalFileName ?? res.cv_filename);
       setInitialBio(bio);
-      setCvFile(null); // Clear selected file after upload
-      setFileInputKey(k => k + 1); // Reset file input element
+      setCvFile(null);
+      setFileInputKey(k => k + 1);
 
-      // Update global user state so sidebars/settings refresh instantly
       if (user) {
         setUser({
           ...user,
@@ -432,7 +424,6 @@ function RciProfileSection() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check type and size
     if (!["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/msword"].includes(file.type)) {
       toast.error("Please upload a PDF or Word document for your CV.");
       return;
@@ -607,13 +598,11 @@ function RciProfileSection() {
   );
 }
 
-// ── Main page component ──────────────────────────────────────────────────────
 export function DocVerificationPage() {
   const navigate = useNavigate();
   const { user, setUser } = useAuthStore();
   useTheme();
 
-  // State
   const [loading, setLoading] = useState(true);
   const [requirements, setRequirements] = useState<VerificationRequirementsResponse | null>(null);
   const [statusData, setStatusData] = useState<VerificationStatusResponse | null>(null);
@@ -628,7 +617,6 @@ export function DocVerificationPage() {
     }));
   }, []);
 
-  // ── Fetch data on mount ────────────────────────────────────────────────────
   useEffect(() => {
     let cancelled = false;
 
@@ -642,7 +630,7 @@ export function DocVerificationPage() {
         if (cancelled) return;
         setRequirements(reqs);
         setStatusData(status);
-        // Ensure store reflects the authoritative verification status from /verification/status
+
         setUser({ ...freshUser, verification_status: status.verification_status as typeof freshUser.verification_status });
       } catch (err) {
         if (!cancelled) toast.error("Failed to load verification requirements.");
@@ -655,13 +643,12 @@ export function DocVerificationPage() {
     return () => { cancelled = true; };
   }, []);
 
-  // ── Upload handler ─────────────────────────────────────────────────────────
   const handleUpload = useCallback(async (documentType: string, category: string, file: File) => {
     setIsUploading(true);
     setUploadingDocType(documentType);
     try {
       await uploadVerificationDocument(documentType, category, file);
-      // Re-fetch status
+
       const freshStatus = await getVerificationStatus();
       setStatusData(freshStatus);
       toast.success(`"${file.name}" uploaded successfully.`);
@@ -673,7 +660,6 @@ export function DocVerificationPage() {
     }
   }, []);
 
-  // ── DigiLocker popup handler ───────────────────────────────────────────────
   const handleDigilockerClick = useCallback(async (documentType: string) => {
     setIsUploading(true);
     setUploadingDocType(documentType);
@@ -690,7 +676,6 @@ export function DocVerificationPage() {
       const refId = initRes.reference_id || (initRes as any).ref_id;
       const txnId = initRes.txn_id;
 
-      // Helper: attempt backend callback to fetch verified data
       const tryCompleteVerification = async (rid: string) => {
         if (resolved) return;
         resolved = true;
@@ -711,7 +696,6 @@ export function DocVerificationPage() {
         }
       };
 
-      // Open popup
       const width = 500;
       const height = 650;
       const left = window.screenX + (window.outerWidth - width) / 2;
@@ -722,7 +706,6 @@ export function DocVerificationPage() {
         `width=${width},height=${height},left=${left},top=${top}`
       );
 
-      // Listen for message from redirect page
       const messageListener = async (event: MessageEvent) => {
         const data = event.data;
         if (data?.type === "DIGILOCKER_SUCCESS" && data?.ref_id) {
@@ -743,13 +726,12 @@ export function DocVerificationPage() {
 
       window.addEventListener("message", messageListener);
 
-      // Fallback: when popup closes, try completing with the init ref_id
       checkClosed = window.setInterval(() => {
         if (popup?.closed) {
           window.clearInterval(checkClosed);
           window.removeEventListener("message", messageListener);
           if (!resolved && refId) {
-            // Popup closed without postMessage — try fetching data anyway
+
             tryCompleteVerification(String(refId));
           } else if (!resolved) {
             setIsUploading(false);
@@ -765,7 +747,6 @@ export function DocVerificationPage() {
     }
   }, []);
 
-  // ── Delete handler ─────────────────────────────────────────────────────────
   const handleDelete = useCallback(async (documentType: string) => {
     setIsUploading(true);
     setUploadingDocType(documentType);
@@ -782,13 +763,12 @@ export function DocVerificationPage() {
     }
   }, []);
 
-  // ── Submit handler ─────────────────────────────────────────────────────────
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
     try {
       const res = await submitForVerification();
       toast.success(res.message);
-      // Update local state
+
       if (user) setUser({ ...user, verification_status: "pending" });
       const freshStatus = await getVerificationStatus();
       setStatusData(freshStatus);
@@ -799,7 +779,6 @@ export function DocVerificationPage() {
     }
   }, [user, setUser]);
 
-  // ── Derived values ─────────────────────────────────────────────────────────
   const verificationStatus = statusData?.verification_status || user?.verification_status || "not_submitted";
   const allRequirements = requirements ? [...requirements.required, ...requirements.optional] : [];
   const uploadedMap = new Map(statusData?.documents.map(d => [d.document_type, d]) || []);
@@ -808,7 +787,6 @@ export function DocVerificationPage() {
   const uploadedRequiredCount = statusData?.uploaded_required_count || 0;
   const progressPercent = requiredCount > 0 ? Math.round((uploadedRequiredCount / requiredCount) * 100) : 0;
 
-  // Group requirements by category
   const groupedRequirements = allRequirements.reduce<Record<string, DocumentRequirement[]>>((acc, req) => {
     if (!acc[req.category]) acc[req.category] = [];
     acc[req.category].push(req);
@@ -819,7 +797,6 @@ export function DocVerificationPage() {
     (a, b) => (CATEGORY_CONFIG[a as DocumentCategory]?.order || 0) - (CATEGORY_CONFIG[b as DocumentCategory]?.order || 0)
   );
 
-  // ── Dashboard Route Helper ──────────────────────────────────────────────────
   const getDashboardRoute = () => {
     if (!user) return "/dashboard";
     if (user.role === "super_admin") return "/admin";
@@ -830,10 +807,6 @@ export function DocVerificationPage() {
     return "/dashboard";
   };
 
-  // ── Auto-verified staff panel ──────────────────────────────────────────────
-  // clinic_staff and org_staff accounts are auto-verified at creation time by
-  // their respective admin (clinic_admin, org_admin, or super_admin). They
-  // should never see the document upload UI — show a read-only status panel.
   const isAutoVerifiedStaff =
     user?.role === "clinic_staff" || user?.role === "org_staff";
 
@@ -857,7 +830,6 @@ export function DocVerificationPage() {
           <title>Verification | PsyicHub - Psychological Intelligence</title>
         </Helmet>
 
-        {/* Header */}
         <div className="space-y-1">
           <h1 className="text-3xl font-extrabold tracking-tight">
             Account Verification
@@ -873,7 +845,7 @@ export function DocVerificationPage() {
           transition={{ duration: 0.45 }}
           className="w-full space-y-6"
         >
-          {/* Auto-Verified Status Card */}
+
           <Card className="border-green-500/20 bg-green-500/5 shadow-xl dark:shadow-sm">
             <CardContent className="pt-8 pb-8 flex flex-col items-center gap-5">
               <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center ring-4 ring-green-500/20">
@@ -891,7 +863,6 @@ export function DocVerificationPage() {
                 </p>
               </div>
 
-              {/* Details grid */}
               <div className="w-full max-w-sm mt-2 rounded-xl border border-green-500/15 bg-background/60 backdrop-blur-sm divide-y divide-green-500/10">
                 <div className="flex items-center justify-between px-5 py-3">
                   <span className="text-xs font-bold uppercase tracking-wider text-text/50">
@@ -956,7 +927,6 @@ export function DocVerificationPage() {
                 </div>
               </div>
 
-              {/* Info note */}
               <div className="flex items-start gap-2 mt-2 px-4 py-3 rounded-lg bg-primary/5 border border-primary/10 max-w-sm">
                 <Info className="h-4 w-4 text-primary/60 shrink-0 mt-0.5" />
                 <p className="text-xs text-text/50 leading-relaxed">
@@ -987,7 +957,6 @@ export function DocVerificationPage() {
         <title>Verification | PsyicHub - Psychological Intelligence</title>
       </Helmet>
 
-      {/* Header */}
       <div className="space-y-1">
         <h1 className="text-3xl font-extrabold tracking-tight">Account Verification</h1>
         <p className="text-muted-foreground">
@@ -1009,7 +978,6 @@ export function DocVerificationPage() {
         </p>
       </div>
 
-      {/* Loading state */}
       {loading ? (
         <div className="mt-16">
           <VerificationSkeleton />
@@ -1021,7 +989,7 @@ export function DocVerificationPage() {
           transition={{ duration: 0.45 }}
           className="w-full space-y-6"
         >
-          {/* Progress bar Card */}
+
           {verificationStatus !== "approved" && (
             <Card className="border-primary/10 bg-background/85 backdrop-blur-xl shadow-xl shadow-primary/5 dark:shadow-sm mb-6">
               <CardHeader className="pb-3">
@@ -1031,7 +999,7 @@ export function DocVerificationPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                {/* Progress bar */}
+
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-bold text-text/60">
@@ -1055,7 +1023,6 @@ export function DocVerificationPage() {
           <AnimatePresence mode="wait">
             <motion.div key="content" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
 
-              {/* ── Verified state ─────────────────────────────────────── */}
               {verificationStatus === "approved" && (
                 <Card className="border-green-500/20 bg-green-500/5 shadow-xl dark:shadow-sm mb-6">
                   <CardContent className="pt-8 pb-8 flex flex-col items-center gap-4">
@@ -1076,7 +1043,6 @@ export function DocVerificationPage() {
                 </Card>
               )}
 
-              {/* ── Pending state ──────────────────────────── */}
               {verificationStatus === "pending" && (
                 <Card className="border-yellow-500/20 bg-yellow-500/5 shadow-xl dark:shadow-sm mb-6">
                   <CardContent className="pt-8 pb-8 flex flex-col items-center gap-4">
@@ -1100,7 +1066,6 @@ export function DocVerificationPage() {
                 </Card>
               )}
 
-              {/* ── Document Categories ──────────────────────────── */}
               {sortedCategories.map((cat) => {
                 const config = CATEGORY_CONFIG[cat as DocumentCategory];
                 const docs = groupedRequirements[cat];
@@ -1160,7 +1125,6 @@ export function DocVerificationPage() {
                 <RciProfileSection />
               )}
 
-              {/* Submit + Skip buttons (only if not already pending and not verified) */}
               {verificationStatus !== "pending" && verificationStatus !== "approved" && (
                 <Card className="border-primary/10 bg-background/85 backdrop-blur-xl shadow-xl shadow-primary/5 dark:shadow-sm">
                   <CardContent className="pt-6 space-y-4">

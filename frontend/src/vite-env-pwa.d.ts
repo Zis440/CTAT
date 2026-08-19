@@ -1,4 +1,4 @@
-// Type declarations for virtual PWA modules
+
 declare module "virtual:pwa-register/react" {
   import type { Dispatch, SetStateAction } from "react";
 

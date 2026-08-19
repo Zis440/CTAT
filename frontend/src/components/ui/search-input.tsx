@@ -11,7 +11,7 @@ export interface SearchInputProps
 
 const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
   ({ className, value, defaultValue, onChange, onClear, ...props }, ref) => {
-    // If onClear is not provided, we try to create a fake event to pass to onChange
+
     const handleClear = (e: React.MouseEvent<HTMLButtonElement>) => {
       e.preventDefault()
       if (onClear) {

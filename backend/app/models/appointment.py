@@ -14,13 +14,11 @@ from sqlalchemy.sql import func
 from app.database import Base
 from app.utils.id_generator import generate_id
 
-
 class AppointmentStatus(str, enum.Enum):
     scheduled = "scheduled"
     completed = "completed"
     cancelled = "cancelled"
     no_show = "no_show"
-
 
 class Appointment(Base):
     __tablename__ = "appointments"
@@ -31,36 +29,29 @@ class Appointment(Base):
         default=lambda: generate_id("APT"),
     )
 
-    # ── Who is conducting the appointment ─────────────────────────
     psychologist_id = Column(
         String, ForeignKey("users.id"), nullable=False, index=True
     )
 
-    # ── Who the appointment is for ────────────────────────────────
     patient_id = Column(
         String, ForeignKey("patients.id"), nullable=False, index=True
     )
 
-    # ── Clinic scoping (nullable for individual psychologists) ────
     clinic_id = Column(String, nullable=True, index=True)
 
-    # ── Scheduling ────────────────────────────────────────────────
     appointment_date = Column(Date, nullable=False)
-    start_time = Column(String, nullable=False)          # HH:MM (24h)
+    start_time = Column(String, nullable=False)
     duration_minutes = Column(Integer, nullable=False, default=60)
 
-    # ── Status ────────────────────────────────────────────────────
     status = Column(
         SAEnum(AppointmentStatus, name="appointmentstatus"),
         default=AppointmentStatus.scheduled,
         nullable=False,
     )
 
-    # ── Details ───────────────────────────────────────────────────
-    purpose = Column(String, nullable=True)               # e.g. "TAT Assessment"
+    purpose = Column(String, nullable=True)
     notes = Column(Text, nullable=True)
 
-    # ── Timestamps ────────────────────────────────────────────────
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

@@ -25,18 +25,17 @@ def _get_image_base64(card_id: str) -> str:
         if not filename:
             logger.warning(f"No image mapping found for {card_id}")
             return None
-            
+
         filepath = os.path.abspath(os.path.join(
-            os.path.dirname(__file__), 
-            '..', '..', '..', '..', '..', '..', 'frontend', 'public', 'story_cards', 
+            os.path.dirname(__file__),
+            '..', '..', '..', '..', '..', '..', 'frontend', 'public', 'story_cards',
             filename
         ))
-        
+
         if not os.path.exists(filepath):
             logger.warning(f"Image not found on disk: {filepath}")
             return None
-            
-        # Attempt to convert WEBP to JPG if Pillow is installed
+
         if filepath.lower().endswith('.webp'):
             jpg_path = filepath.rsplit('.', 1)[0] + '.jpg'
             if not os.path.exists(jpg_path):
@@ -52,7 +51,7 @@ def _get_image_base64(card_id: str) -> str:
                     logger.warning(f"Failed to convert WEBP: {e}")
             else:
                 filepath = jpg_path
-                
+
         return filepath
     except Exception as e:
         logger.warning(f"Failed to resolve image for {card_id}: {e}")
@@ -62,26 +61,21 @@ def calculate_context_scores(dimensions: dict, patient_context: dict) -> dict:
     """Calculates all scores based on the Context-Aware Architecture formulas."""
     if not patient_context:
         patient_context = {}
-        
-    # Default parameters if not provided
+
     age_group = patient_context.get("age_group", "Adult")
     living_condition = patient_context.get("living_condition", "Neutral")
     environment = patient_context.get("environment_type", "Neutral")
     ses = patient_context.get("socioeconomic_status", "Middle")
-    
-    # 1. Base Story Score
+
     total_dim = 0
     for dim in STORY_DIMENSIONS:
         total_dim += dimensions.get(dim, 50)
     base_story_score = total_dim / max(1, len(STORY_DIMENSIONS))
-    
-    # 2. Age Congruence Score (Simplified approximation as LLM extracting themes is complex, 
-    # we'll use a placeholder heuristic or rely on LLM to provide 'Observed Age-Appropriate Themes')
+
     observed_themes = dimensions.get("Observed Age-Appropriate Themes", 50)
-    expected_themes = 100 # Normalization baseline
+    expected_themes = 100
     age_congruence_score = min(100, (observed_themes / expected_themes) * 100)
-    
-    # 3. Living Condition Stress Index
+
     lc_map = {
         "Highly Supportive": 20,
         "Moderately Supportive": 40,
@@ -92,10 +86,9 @@ def calculate_context_scores(dimensions: dict, patient_context: dict) -> dict:
         "With Roommates": 55,
         "Care Facility": 75
     }
-    # Find closest match or default to 50
+
     lc_index = lc_map.get(living_condition, 50)
-    
-    # 4. Environmental Pressure Score (EPS)
+
     env_map = {
         "Highly Supportive": 20,
         "Moderately Supportive": 40,
@@ -113,11 +106,9 @@ def calculate_context_scores(dimensions: dict, patient_context: dict) -> dict:
         "Clinical": 70
     }
     eps = env_map.get(environment, 50)
-    
-    # 5. Family Support Score (FSS)
-    fss = 100 - lc_index # Inverse relationship approximation
-    
-    # 6. Socioeconomic Adjustment
+
+    fss = 100 - lc_index
+
     ses_map = {
         "Low": 20,
         "Lower Middle": 40,
@@ -126,8 +117,7 @@ def calculate_context_scores(dimensions: dict, patient_context: dict) -> dict:
         "High": 100
     }
     ses_score = ses_map.get(ses, 60)
-    
-    # 7. Psychological Context Score (PCS)
+
     pcs = (
         (0.30 * lc_index) +
         (0.25 * eps) +
@@ -135,10 +125,9 @@ def calculate_context_scores(dimensions: dict, patient_context: dict) -> dict:
         (0.15 * fss) +
         (0.10 * ses_score)
     )
-    
-    # 8. Final Interpretation Score
+
     final_score = (0.80 * base_story_score) + (0.20 * pcs)
-    
+
     return {
         "BaseStoryScore": round(base_story_score, 2),
         "AgeCongruenceScore": round(age_congruence_score, 2),
@@ -160,16 +149,16 @@ def get_story_traits(stories_data: list, patient_context: dict = None) -> dict:
 
     combined_stories = ""
     images = []
-    
+
     for idx, data in enumerate(stories_data):
         card_id = data.get("card_id", f"card_{idx+1}")
         story = data.get("story_text", "").strip()
         if not story:
             continue
-            
-        combined_stories += f"--- Story {idx+1} (Based on Image {idx+1}) ---\n" \
+
+        combined_stories += f"--- Story {idx+1} (Based on Image {idx+1}) ---\n"\
                             f"USER'S WRITTEN STORY:\n{story}\n\n"
-        
+
         img_b64 = _get_image_base64(card_id)
         if img_b64:
             images.append(img_b64)
@@ -192,11 +181,9 @@ def get_story_traits(stories_data: list, patient_context: dict = None) -> dict:
         from ollama import Client
         ollama_host = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434")
         client = Client(host=ollama_host)
-        
+
         message = {'role': 'user', 'content': prompt}
-        # Removed images to dramatically speed up generation. 
-        # The projective text written by the user is sufficient for the analysis.
-            
+
         logger.info(f"Sending text to Ollama llama3 model for rapid analysis...")
         response = client.chat(model='llama3', messages=[message], format='json')
 
@@ -205,11 +192,10 @@ def get_story_traits(stories_data: list, patient_context: dict = None) -> dict:
         json_end = content.rfind('}') + 1
         if json_start != -1 and json_end > json_start:
             json_str = content[json_start:json_end]
-            # Try cleaning up invalid escape sequences like \' which LLMs often generate
+
             json_str = json_str.replace("\\'", "'")
             parsed = json.loads(json_str)
-            
-            # Ensure dimensions are present
+
             dimensions = {}
             for dim in STORY_DIMENSIONS + ["Observed Age-Appropriate Themes"]:
                 val = parsed.get(dim, 50)
@@ -217,12 +203,11 @@ def get_story_traits(stories_data: list, patient_context: dict = None) -> dict:
                     dimensions[dim] = int(val)
                 except:
                     dimensions[dim] = 50
-                    
+
             narrative = parsed.get("narrative_summary", "Analysis completed.")
-            
-            # Compute math scores
+
             scores = calculate_context_scores(dimensions, patient_context)
-            
+
             return {
                 "dimensions": dimensions,
                 "scores": scores,

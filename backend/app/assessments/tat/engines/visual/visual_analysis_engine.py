@@ -24,20 +24,18 @@ from PIL import Image
 
 logger = logging.getLogger(__name__)
 
-
 def _image_to_base64(image_path: str) -> str:
     """Read image file and return base64-encoded string."""
     with open(image_path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
 
-
 def _parse_vlm_json(content: str) -> dict:
     """Extract and parse JSON from a VLM response, handling markdown fences."""
     text = content.strip()
-    # Strip markdown fences if present
+
     if "```" in text:
         text = text.replace("```json", "").replace("```", "").strip()
-    # Find outermost JSON object
+
     start = text.find("{")
     end = text.rfind("}") + 1
     if start >= 0 and end > start:
@@ -47,11 +45,8 @@ def _parse_vlm_json(content: str) -> dict:
             pass
     return {"parse_error": True, "raw_response": content}
 
-
-# Supported image extensions (priority order)
 _IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp"]
 
-# Clinical annotation prompt for LLaVA
 _ANNOTATION_PROMPT = """You are a clinical psychologist analyzing a Thematic Apperception Test (TAT) card.
 This is a grayscale illustration from the 1930s-1940s used in psychological assessment.
 
@@ -103,7 +98,6 @@ try:
 except ImportError:
     _TORCH_AVAILABLE = False
 
-
 class VisualAnalysisEngine:
     """
     Hybrid engine for extracting objective visual facts from TAT cards.
@@ -115,7 +109,6 @@ class VisualAnalysisEngine:
     3. CNN (Faster R-CNN) — legacy fallback for unrecognized images
     """
 
-    # Lock to prevent concurrent writes to annotations file
     _save_lock = threading.Lock()
 
     def __init__(self, config, enable_cnn: bool = False,
@@ -128,14 +121,11 @@ class VisualAnalysisEngine:
         self.cache_dir = self.config.MODEL_CACHE_DIR / "vision_cache"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-        # VLM annotations (primary source)
-        # __file__ = backend/app/engines/visual/visual_analysis_engine.py → 4x parent = backend/
         self._backend_root = Path(__file__).parent.parent.parent.parent.resolve()
         self._cards_dir = self._backend_root / "data" / "tat_cards"
         self._annotations_file = self._backend_root / "data" / "tat_vision_annotations.json"
         self.vlm_annotations = self._load_vlm_annotations()
 
-        # CNN (only if explicitly enabled — saves ~200MB RAM)
         self.cnn_model = None
         self.cnn_weights = None
         self.cnn_categories = None
@@ -143,15 +133,10 @@ class VisualAnalysisEngine:
         if enable_cnn:
             self._initialize_cnn()
 
-        # Legacy cache for CNN results
         self._cnn_cache_file = self.cache_dir / "tat_vision_features.json"
         self._cnn_cache = {}
         if enable_cnn:
             self._load_cnn_cache()
-
-    # =========================================================================
-    # VLM ANNOTATION LOADING
-    # =========================================================================
 
     def _load_vlm_annotations(self) -> dict:
         """Load pre-computed VLM annotations from disk."""
@@ -170,10 +155,6 @@ class VisualAnalysisEngine:
             logger.info("No VLM annotations file found — using manual facts only")
         return {}
 
-    # =========================================================================
-    # AUTO-ANNOTATION (background thread)
-    # =========================================================================
-
     def start_auto_annotation(self):
         """
         Scan the cards directory for new or changed images and annotate them
@@ -189,7 +170,7 @@ class VisualAnalysisEngine:
         self._auto_annotate_thread = threading.Thread(
             target=self._auto_annotate_worker,
             name="vlm-auto-annotate",
-            daemon=True  # Won't block server shutdown
+            daemon=True
         )
         self._auto_annotate_thread.start()
         logger.info("[VLM] Auto-annotation started in background")
@@ -218,7 +199,6 @@ class VisualAnalysisEngine:
             print(f"  [VLM] Auto-annotation: {len(pending)} card(s) need annotation: "
                   f"{[c for c, _, _ in pending]}")
 
-            # Check Ollama + LLaVA availability before processing
             if not self._check_ollama_available():
                 print(f"  [WARN] Auto-annotation: Ollama not reachable at {self._ollama_url} - skipped")
                 logger.warning("Auto-annotation skipped: Ollama not reachable")
@@ -237,7 +217,6 @@ class VisualAnalysisEngine:
                     vlm_result = self._call_vlm(image_path)
                     annotation = self._build_annotation(card_id, image_path, current_hash, vlm_result)
 
-                    # Thread-safe update of in-memory + on-disk annotations
                     with VisualAnalysisEngine._save_lock:
                         self.vlm_annotations[card_id] = annotation
                         self._save_vlm_annotations()
@@ -264,8 +243,8 @@ class VisualAnalysisEngine:
             return cards
         for f in sorted(self._cards_dir.iterdir()):
             if f.suffix.lower() in _IMAGE_EXTENSIONS:
-                card_id = f.stem  # e.g., "Card_6"
-                if card_id not in cards:  # first match wins (priority order)
+                card_id = f.stem
+                if card_id not in cards:
                     cards[card_id] = str(f)
         return cards
 
@@ -378,7 +357,6 @@ class VisualAnalysisEngine:
         except IOError as e:
             logger.error(f"Failed to save VLM annotations: {e}")
 
-    # =========================================================================
     def _compute_file_hash(self, filepath: str) -> str:
         """Compute SHA-256 hash for change detection."""
         h = hashlib.sha256()
@@ -397,13 +375,9 @@ class VisualAnalysisEngine:
             return False
         stored_hash = annotation.get("file_hash", "")
         if not stored_hash:
-            return True  # No hash stored — trust the annotation
+            return True
         current_hash = self._compute_file_hash(image_path)
         return stored_hash == current_hash
-
-    # =========================================================================
-    # MAIN ANALYSIS METHOD
-    # =========================================================================
 
     def analyze_image(self, image_path: str, card_id: str) -> dict:
         """
@@ -416,13 +390,12 @@ class VisualAnalysisEngine:
         """
         card_id_str = str(card_id)
 
-        # --- Priority 1: VLM annotations ---
         if card_id_str in self.vlm_annotations:
             annotation = self.vlm_annotations[card_id_str]
-            # Hash check: if image changed since annotation, fall through
+
             if self._is_annotation_current(card_id_str, image_path):
                 result = self._vlm_to_result(annotation)
-                # Still supplement with manual facts (adds expected_figure_types)
+
                 result = self._supplement_with_manual_facts(card_id, result)
                 return result
             else:
@@ -431,15 +404,13 @@ class VisualAnalysisEngine:
                     f"Run: python scripts/annotate_tat_cards.py --card {card_id_str}"
                 )
 
-        # --- Priority 2: Manual facts only (no CNN needed) ---
         result = self._empty_result()
         result = self._supplement_with_manual_facts(card_id, result)
 
-        # If manual facts provided data, we're good
         if result["detected_entities"]:
             result["has_vision_data"] = True
             result["raw_detections"] = len(result["detected_entities"])
-            # Estimate people_count from manual facts
+
             people_keywords = {"boy", "girl", "man", "woman", "figure"}
             for entity in result["detected_entities"]:
                 name = entity.get("entity", "").lower()
@@ -447,15 +418,10 @@ class VisualAnalysisEngine:
                     result["people_count"] += 1
             return result
 
-        # --- Priority 3: CNN fallback (only if enabled) ---
         if self._enable_cnn and self.cnn_model:
             return self.analyze_image_cnn(image_path, card_id)
 
         return result
-
-    # =========================================================================
-    # VLM RESULT CONVERSION
-    # =========================================================================
 
     def _vlm_to_result(self, annotation: dict) -> dict:
         """Convert VLM annotation to the standard result format."""
@@ -464,22 +430,18 @@ class VisualAnalysisEngine:
             "people_count": annotation.get("people_count", 0),
             "raw_detections": annotation.get("raw_detections", 0),
             "has_vision_data": True,
-            # Rich VLM fields
+
             "people": annotation.get("people", []),
             "objects": annotation.get("objects", []),
             "scene": annotation.get("scene", {}),
             "interactions": annotation.get("interactions", []),
             "spatial_layout": annotation.get("spatial_layout", ""),
             "key_visual_elements": annotation.get("key_visual_elements", []),
-            # Metadata
+
             "source": "vlm",
             "model_used": annotation.get("model_used", "unknown"),
             "annotated_at": annotation.get("annotated_at", ""),
         }
-
-    # =========================================================================
-    # EMPTY RESULT
-    # =========================================================================
 
     def _empty_result(self) -> dict:
         return {
@@ -488,10 +450,6 @@ class VisualAnalysisEngine:
             "raw_detections": 0,
             "has_vision_data": False,
         }
-
-    # =========================================================================
-    # MANUAL FACTS (ALL 20 STANDARD TAT CARDS)
-    # =========================================================================
 
     def _supplement_with_manual_facts(self, card_id: str, result: dict) -> dict:
         """
@@ -502,7 +460,6 @@ class VisualAnalysisEngine:
         """
         card_id_str = str(card_id).lower().replace("card", "").replace("_", "").strip()
 
-        # === All 20 standard TAT cards: objects + expected figure types ===
         all_cards = {
             "1": {
                 "objects": ["violin", "boy"],
@@ -589,7 +546,7 @@ class VisualAnalysisEngine:
                 "expected_figure_types": ["Hero", "Symbolic Object"],
             },
             "16": {
-                "objects": [],  # blank card
+                "objects": [],
                 "expected_figure_types": [],
             },
             "17bm": {
@@ -621,7 +578,6 @@ class VisualAnalysisEngine:
         existing_names = {e["entity"].lower() for e in result["detected_entities"]}
         card_data = all_cards.get(card_id_str, {})
 
-        # Inject missing objects
         for item in card_data.get("objects", []):
             if item.lower() not in existing_names:
                 result["detected_entities"].append({
@@ -630,14 +586,9 @@ class VisualAnalysisEngine:
                     "source": "manual_fact"
                 })
 
-        # Add expected_figure_types for downstream cross-reference
         result["expected_figure_types"] = card_data.get("expected_figure_types", [])
 
         return result
-
-    # =========================================================================
-    # LEGACY CNN (OPTIONAL — only loaded if enable_cnn=True)
-    # =========================================================================
 
     def _initialize_cnn(self):
         """Load Faster R-CNN model (legacy mode)."""
@@ -654,7 +605,7 @@ class VisualAnalysisEngine:
             self.cnn_model.to(device)
             self.cnn_categories = self.cnn_weights.meta["categories"]
             self._cnn_device = device
-            
+
             self.validate_model_files()
             print("  [OK] CNN model loaded and validated (legacy fallback).")
         except Exception as e:
@@ -665,9 +616,9 @@ class VisualAnalysisEngine:
         """Explicitly validate model weights and expected input dimensions before inference."""
         if not self.cnn_model:
             raise RuntimeError("CNN model is not initialized.")
-        
+
         try:
-            # Explicit validation of expected input tensor (3 channels, 224x224 minimum)
+
             dummy_tensor = torch.zeros((1, 3, 224, 224), device=self._cnn_device)
             with torch.no_grad():
                 _ = self.cnn_model(dummy_tensor)
@@ -745,11 +696,6 @@ class VisualAnalysisEngine:
             print(f"  [WARN] CNN error analyzing {image_path}: {e}")
             return self._empty_result()
 
-
-# =========================================================================
-# PERCEPTUAL DISTORTION EVALUATION (standalone, unchanged)
-# =========================================================================
-
 def evaluate_perceptual_distortions(visual_data: dict, narrative_events: list, story_text: str) -> list:
     """
     Compares objective CNN visual data against the subjective patient narrative.
@@ -763,9 +709,6 @@ def evaluate_perceptual_distortions(visual_data: dict, narrative_events: list, s
 
     story_lower = story_text.lower()
 
-    # =========================================================================
-    # Check 1: People Count via NER (NLP-based, not keyword heuristic)
-    # =========================================================================
     actual_people = visual_data.get("people_count", 0)
 
     ner_persons = set()
@@ -799,9 +742,6 @@ def evaluate_perceptual_distortions(visual_data: dict, narrative_events: list, s
             )
         })
 
-    # =========================================================================
-    # Check 2: High-valence object omission (synonym-expanded)
-    # =========================================================================
     HIGH_VALENCE_SYNONYMS = [
         {"rifle", "gun", "revolver", "pistol", "firearm", "weapon", "shotgun"},
         {"knife", "blade", "dagger", "sword"},
@@ -831,9 +771,6 @@ def evaluate_perceptual_distortions(visual_data: dict, narrative_events: list, s
                     )
                 })
 
-    # =========================================================================
-    # Check 3: Gender mismatch (NER gender vs expected figure types)
-    # =========================================================================
     expected_types = visual_data.get("expected_figure_types", [])
     if expected_types:
         male_signals = sum(1 for ev in narrative_events for tok in ev.get("tokens", [])

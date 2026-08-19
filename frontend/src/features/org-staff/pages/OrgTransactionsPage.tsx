@@ -108,12 +108,12 @@ export function OrgTransactionsPage() {
     }, 500);
 
     return () => clearTimeout(delayDebounceFn);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [search]);
 
   useEffect(() => {
     fetchHistory(page, search);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [page, typeFilter, dateFrom, dateTo]);
 
   const clearFilters = () => {
@@ -127,7 +127,7 @@ export function OrgTransactionsPage() {
   let roleSuffix = "Psyichub";
   if (user?.role === "clinic_admin") roleSuffix = "Clinic Admin";
   if (user?.role === "clinic_staff") roleSuffix = "Clinic Staff";
-  
+
   const pageTitle = `Transactions | ${roleSuffix}`;
 
   return (
@@ -136,7 +136,6 @@ export function OrgTransactionsPage() {
         <title>{pageTitle}</title>
       </Helmet>
 
-      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2">
@@ -160,7 +159,6 @@ export function OrgTransactionsPage() {
         </div>
       </div>
 
-      {/* Main Content */}
       <Card className="border-primary/10 shadow-md bg-background/50 backdrop-blur-sm relative overflow-hidden pb-0">
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
 
@@ -191,14 +189,13 @@ export function OrgTransactionsPage() {
         ) : (
           <CardHeader className="pb-3 border-b border-border/50">
             <div className="flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between">
-              {/* Search */}
+
               <div className="flex w-full max-w-sm items-center space-x-2">
                 <div className="relative w-full">
                   <SearchInput placeholder="Search transactions..." value={search} onChange={(e) => setSearch(e.target.value)} onClear={() => setSearch("")} className="w-full sm:w-64" />
                 </div>
               </div>
 
-              {/* Filter controls */}
               <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto overflow-y-hidden pb-1 md:pb-0">
                 <Popover>
                   <PopoverTrigger asChild>
@@ -389,9 +386,9 @@ export function OrgTransactionsPage() {
                         </TableCell>
                         <TableCell className="text-right max-md:hidden">
                           {tx.type === "credit" && (
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               title="Download Invoice"
                               className="h-8 w-8 text-muted-foreground hover:text-primary"
                               onClick={async () => {
@@ -413,7 +410,6 @@ export function OrgTransactionsPage() {
         </CardContent>
       </Card>
 
-      {/* Pagination Controls */}
       {totalPages >= 0 && !isLoading && (
         <div className="pt-6 pb-10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground w-full sm:w-auto text-center sm:text-left">

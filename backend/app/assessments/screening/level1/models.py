@@ -12,25 +12,23 @@ class ScreeningUser(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     age = Column(String, nullable=False)
-    role = Column(String, default="employee")  # employee, institutional_admin, super_admin
+    role = Column(String, default="employee")
     organization_id = Column(String, nullable=True)
 
     assessments = relationship("ScreeningLevel1Session", back_populates="user", cascade="all, delete-orphan")
-
 
 class ScreeningLevel1Session(Base):
     __tablename__ = "screening_level1_sessions"
 
     id = Column(String, primary_key=True, default=lambda: generate_id("SCR"))
     user_id = Column(String, ForeignKey("screening_users.id"))
-    
-    # Mapping columns for embedded mode
+
     core_patient_id = Column(String, nullable=True, index=True)
     core_user_id = Column(String, nullable=True, index=True)
-    
+
     start_time = Column(DateTime, default=datetime.utcnow)
     end_time = Column(DateTime, nullable=True)
-    
+
     session_data_path = Column(String, nullable=True)
     pdf_filename = Column(String, nullable=True)
 
@@ -41,31 +39,28 @@ class ScreeningLevel1Session(Base):
     patient_context = Column(JSON, nullable=True)
     report = relationship("ScreeningReport", back_populates="assessment", uselist=False, cascade="all, delete-orphan")
 
-
 class ScreeningQuestionnaireResponse(Base):
     __tablename__ = "screening_questionnaire_responses"
 
     id = Column(String, primary_key=True, default=lambda: generate_id("SQR"))
     assessment_id = Column(String, ForeignKey("screening_level1_sessions.id"))
-    question_id = Column(String, index=True)  # e.g., "pss_1", "mbi_a_1"
+    question_id = Column(String, index=True)
     score = Column(String)
 
     assessment = relationship("ScreeningLevel1Session", back_populates="questionnaire_responses")
-
 
 class ScreeningGameMetric(Base):
     __tablename__ = "screening_game_metrics"
 
     id = Column(String, primary_key=True, default=lambda: generate_id("SGM"))
     assessment_id = Column(String, ForeignKey("screening_level1_sessions.id"))
-    game_type = Column(String)  # BD, SI, DS, MR, VC, AR, SS, VP, IN, CD
+    game_type = Column(String)
     score = Column(Float)
     movement_count = Column(String)
     completion_time_seconds = Column(Float)
     advanced_metrics = Column(JSON, nullable=True)
 
     assessment = relationship("ScreeningLevel1Session", back_populates="game_metrics")
-
 
 class ScreeningStoryAssessment(Base):
     __tablename__ = "screening_story_assessments"
@@ -78,7 +73,6 @@ class ScreeningStoryAssessment(Base):
     completion_time_seconds = Column(Float)
 
     assessment = relationship("ScreeningLevel1Session", back_populates="story_assessments")
-
 
 class ScreeningReport(Base):
     __tablename__ = "screening_reports"

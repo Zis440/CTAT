@@ -1,4 +1,3 @@
-// shadcn/ui Form component — wraps react-hook-form with accessible form fields
 
 import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"

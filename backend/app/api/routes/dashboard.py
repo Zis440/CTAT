@@ -17,35 +17,35 @@ def get_dashboard_stats(
     db: DBSession = Depends(get_db),
 ):
     """Individual Psychologist Dashboard Stats."""
-    
+
     target_clinic_id = current_user.clinic_id
     first_of_month = date.today().replace(day=1)
 
     if target_clinic_id:
         from app.models.org_request import OrgAssessmentRequest
         org_patient_ids_query = db.query(OrgAssessmentRequest.patient_id).filter(OrgAssessmentRequest.org_id == target_clinic_id)
-        
+
         total_patients = db.query(Patient).filter(
             (Patient.clinic_id == target_clinic_id) | (Patient.id.in_(org_patient_ids_query))
         ).count()
-        
+
         total_sessions = db.query(Session).join(Patient, Session.patient_id == Patient.id).filter(
             (Patient.clinic_id == target_clinic_id) | (Patient.id.in_(org_patient_ids_query))
         ).count()
-        
+
         patients_this_month = db.query(Patient).filter(
             (Patient.clinic_id == target_clinic_id) | (Patient.id.in_(org_patient_ids_query)),
             Patient.created_at >= first_of_month
         ).count()
-        
+
         sessions_this_month = db.query(Session).join(Patient, Session.patient_id == Patient.id).filter(
             (Patient.clinic_id == target_clinic_id) | (Patient.id.in_(org_patient_ids_query)),
             Session.created_at >= first_of_month
         ).count()
-        
+
         wallet = db.query(Wallet).filter(Wallet.user_id == target_clinic_id).first()
         wallet_balance_paise = wallet.balance_paise if wallet else 0
-        
+
         upcoming_appointments = db.query(Appointment).filter(
             Appointment.psychologist_id == current_user.id,
             Appointment.appointment_date >= date.today(),
@@ -54,20 +54,20 @@ def get_dashboard_stats(
     else:
         total_patients = db.query(Patient).filter(Patient.user_id == current_user.id).count()
         total_sessions = db.query(Session).filter(Session.user_id == current_user.id).count()
-        
+
         patients_this_month = db.query(Patient).filter(
             Patient.user_id == current_user.id,
             Patient.created_at >= first_of_month
         ).count()
-        
+
         sessions_this_month = db.query(Session).filter(
             Session.user_id == current_user.id,
             Session.created_at >= first_of_month
         ).count()
-        
+
         wallet = db.query(Wallet).filter(Wallet.user_id == current_user.id).first()
         wallet_balance_paise = wallet.balance_paise if wallet else 0
-        
+
         upcoming_appointments = db.query(Appointment).filter(
             Appointment.psychologist_id == current_user.id,
             Appointment.appointment_date >= date.today(),

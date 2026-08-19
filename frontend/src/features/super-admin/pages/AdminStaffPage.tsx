@@ -58,7 +58,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-// ── Local shape used by the UI ───────────────────────────────────────────────
 interface StaffItem {
   id: string;
   name: string;
@@ -71,7 +70,6 @@ interface StaffItem {
   can_assess?: boolean;
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
 function roleInfo(role: string, canAssess?: boolean): { label: string; icon: "shield" | "users" } {
   if (role === "clinic_admin" || role === "org_admin") return { label: role === "org_admin" ? "Org Admin" : "Clinic Admin", icon: "shield" };
   if (role === "individual_psychologist") return { label: "Psychologist", icon: "shield" };
@@ -79,19 +77,16 @@ function roleInfo(role: string, canAssess?: boolean): { label: string; icon: "sh
   return { label: "Staff View Only", icon: "users" };
 }
 
-// ── Component ────────────────────────────────────────────────────────────────
 export function AdminStaffPage() {
   const navigate = useNavigate();
   const { pageId } = useParams();
   const page = parseInt(pageId as string, 10) || 1;
   const pageSize = 30;
 
-  // Data
   const [staffList, setStaffList] = useState<StaffItem[]>([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Filters
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -102,7 +97,6 @@ export function AdminStaffPage() {
 
   const [staffTab, setStaffTab] = useState<"clinic" | "organization">("clinic");
 
-  // Bulk selection
   const {
     isSelectionMode,
     selectedItems,
@@ -114,15 +108,13 @@ export function AdminStaffPage() {
     exportSelectedToExcel,
   } = useBulkSelection<StaffItem>();
 
-  // ── Load data ─────────────────────────────────────────────────────────────
   const loadStaff = useCallback(async () => {
     setIsLoading(true);
     try {
       const filters: UserFilters = {
         page,
         page_size: pageSize,
-        // No role filter → fetch clinic_staff + clinic_admin + individual_psychologist
-        // We use account_type=clinic so we get all clinic-account users (staff of all kinds)
+
         ...(search.trim() ? { search: search.trim() } : {}),
         ...(roleFilter !== "all" ? { role: roleFilter } : {}),
         ...(statusFilter === "active" ? { is_active: true } : {}),
@@ -182,14 +174,12 @@ export function AdminStaffPage() {
     }
   };
 
-  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
       <Helmet>
         <title>Staff Management  | PsyicHub - Psychological Intelligence</title>
       </Helmet>
 
-      {/* Page header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2">
@@ -239,7 +229,6 @@ export function AdminStaffPage() {
           <Card className="border-primary/10 bg-background/50 backdrop-blur-sm relative overflow-hidden pb-0">
             <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
 
-            {/* Selection-mode banner / Search+filter bar */}
         {isSelectionMode ? (
           <div className="flex items-center justify-between p-4 bg-primary/10 border-b border-primary/20">
             <span className="text-base font-medium text-foreground">
@@ -295,7 +284,7 @@ export function AdminStaffPage() {
         ) : (
           <CardHeader className="pb-3 border-b border-border/50">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-              {/* Search */}
+
               <div className="flex w-full max-w-sm items-center space-x-2">
                 <div className="relative w-full">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -309,7 +298,6 @@ export function AdminStaffPage() {
                 </div>
               </div>
 
-              {/* Filter + Reset */}
               <div className="flex items-center gap-2 w-full md:w-auto">
                 <Popover>
                   <PopoverTrigger asChild>
@@ -329,7 +317,7 @@ export function AdminStaffPage() {
                         </Button>
                       </div>
                       <div className="grid gap-3">
-                        {/* Role filter */}
+
                         <Select value={roleFilter} onValueChange={setRoleFilter}>
                           <SelectTrigger className="w-full h-9">
                             <SelectValue placeholder="Permission / Role" />
@@ -340,7 +328,7 @@ export function AdminStaffPage() {
                             <SelectItem value="clinic_staff">Staff View Only</SelectItem>
                           </SelectContent>
                         </Select>
-                        {/* Status filter */}
+
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
                           <SelectTrigger className="w-full h-9">
                             <SelectValue placeholder="Account Status" />
@@ -540,7 +528,6 @@ export function AdminStaffPage() {
           <Card className="border-primary/10 bg-background/50 backdrop-blur-sm relative overflow-hidden pb-0">
             <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/40 via-primary/20 to-transparent" />
 
-            {/* Selection-mode banner / Search+filter bar */}
             {isSelectionMode ? (
               <div className="flex items-center justify-between p-4 bg-primary/10 border-b border-primary/20">
                 <span className="text-base font-medium text-foreground">
@@ -596,7 +583,7 @@ export function AdminStaffPage() {
             ) : (
               <CardHeader className="pb-3 border-b border-border/50">
                 <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                  {/* Search */}
+
                   <div className="flex w-full max-w-sm items-center space-x-2">
                     <div className="relative w-full">
                       <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -610,7 +597,6 @@ export function AdminStaffPage() {
                     </div>
                   </div>
 
-                  {/* Filter + Reset */}
                   <div className="flex items-center gap-2 w-full md:w-auto">
                     <Popover>
                       <PopoverTrigger asChild>
@@ -630,7 +616,7 @@ export function AdminStaffPage() {
                             </Button>
                           </div>
                           <div className="grid gap-3">
-                            {/* Role filter */}
+
                             <Select value={roleFilter} onValueChange={setRoleFilter}>
                               <SelectTrigger className="w-full h-9">
                                 <SelectValue placeholder="Permission / Role" />
@@ -641,7 +627,7 @@ export function AdminStaffPage() {
                                 <SelectItem value="org_staff">Staff View Only</SelectItem>
                               </SelectContent>
                             </Select>
-                            {/* Status filter */}
+
                             <Select value={statusFilter} onValueChange={setStatusFilter}>
                               <SelectTrigger className="w-full h-9">
                                 <SelectValue placeholder="Account Status" />
@@ -837,7 +823,6 @@ export function AdminStaffPage() {
       </TabsContent>
       </Tabs>
 
-      {/* Pagination */}
       {totalPages >= 0 && !isLoading && (
         <div className="pt-6 pb-10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground w-full sm:w-auto text-center sm:text-left">
@@ -891,7 +876,6 @@ export function AdminStaffPage() {
         </div>
       )}
 
-      {/* Delete Confirmation */}
       <AlertDialog open={!!deletingStaff} onOpenChange={(o) => !o && setDeletingStaff(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -916,7 +900,6 @@ export function AdminStaffPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Audit Logs Sheet */}
       <UserAuditLogsSheet
         userId={viewingLogsFor?.id || null}
         userName={viewingLogsFor?.name || null}

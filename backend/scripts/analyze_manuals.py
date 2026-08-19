@@ -4,13 +4,11 @@ Direct manual extraction using minimal dependencies
 import json
 from pathlib import Path
 
-# We'll create a simple implementation that reads what we can
 print("Starting manual analysis...")
 print("="*70)
 
 PROJECT_ROOT = Path(r"D:\TAT\project_root")
 
-# Define manuals to analyze
 manuals_info = {
     'Scoring Guide for Psychological Assessment': {
         'path': PROJECT_ROOT / "datasets" / "tat_scoring_manual" / "Scoring Guide for Psychological Assessment.pdf",
@@ -45,7 +43,6 @@ manuals_info = {
     }
 }
 
-# Create analysis report
 report = {
     'analysis_date': '2026-02-10',
     'manuals_analyzed': [],
@@ -64,9 +61,9 @@ for name, info in manuals_info.items():
         'key_content_areas': info['key_areas'],
         'extraction_method_needed': 'pdfplumber or pdf2image+tesseract'
     }
-    
+
     report['manuals_analyzed'].append(manual_data)
-    
+
     print(f"\n📄 {name}")
     print(f"   File: {info['path'].name}")
     print(f"   Exists: {'✅' if manual_data['file_exists'] else '❌'}")
@@ -76,7 +73,6 @@ for name, info in manuals_info.items():
     for area in info['key_areas']:
         print(f"      - {area}")
 
-# Add scoring system requirements based on manual analysis
 report['scoring_system_requirements'] = {
     'quantitative_metrics': [
         'Need achievement score',
@@ -104,7 +100,6 @@ report['scoring_system_requirements'] = {
     ]
 }
 
-# Save report
 output_path = PROJECT_ROOT / "outputs" / "manual_analysis_report.json"
 with open(output_path, 'w', encoding='utf-8') as f:
     json.dump(report, f, indent=2, ensure_ascii=False)
@@ -113,7 +108,6 @@ print(f"\n{'='*70}")
 print(f"✅ Analysis report saved to: {output_path}")
 print(f"{'='*70}\n")
 
-# Print recommendations
 print("\n📋 RECOMMENDATIONS FOR CLINICAL-GRADE SCORING SYSTEM\n")
 print("="*70)
 
@@ -156,7 +150,6 @@ for rec in recommendations:
     print(f"\n[{rec['priority']}] {rec['item']}")
     print(f"     → {rec['rationale']}")
 
-# Re-save with recommendations
 with open(output_path, 'w', encoding='utf-8') as f:
     json.dump(report, f, indent=2, ensure_ascii=False)
 

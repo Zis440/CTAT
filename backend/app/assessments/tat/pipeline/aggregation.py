@@ -1,6 +1,3 @@
-# ============================================================================
-# MULTI-CARD AGGREGATION
-# ============================================================================
 
 from app.utils.production_utils import (
     dual_layer_aggregate, round_metric, apply_global_bounds, validate_metrics,
@@ -23,7 +20,6 @@ def aggregate_multi_card_analysis(card_analyses_dict, multicard_engine):
     card_results_list = list(card_analyses_dict.values())
     aggregated = multicard_engine.aggregate(card_results_list)
 
-    # Merge averaged quantitative fields from per-card results
     quant_keys = [
         'anxiety_level', 'conflict_internal', 'conflict_interpersonal',
         'hero_ego_strength', 'overall_confidence', 'emotional_stability',
@@ -37,20 +33,19 @@ def aggregate_multi_card_analysis(card_analyses_dict, multicard_engine):
             qs = cr.get('quantitative_scores', {})
             v = qs.get(key)
             if v is not None:
-                # Default weight = equal across cards (1.0) unless explicitly varied
-                weight = 1.0 
+
+                weight = 1.0
                 val = float(v)
                 card_values.append(val)
                 weighted_sum += val * weight
                 total_weight += weight
-                
+
         if total_weight > 0 and card_values:
             agg_val = weighted_sum / total_weight
-            # Ensure aggregated value strictly falls within min/max bounds of components
+
             min_val, max_val = min(card_values), max(card_values)
             aggregated[key] = max(min_val, min(max_val, agg_val))
 
-    # --- PRODUCTION HARDENING: Dual-layer aggregation (§2) ---
     _aggregation_metadata = {}
     for key in quant_keys:
         card_values = []
@@ -61,17 +56,16 @@ def aggregate_multi_card_analysis(card_analyses_dict, multicard_engine):
                 card_values.append(float(v))
         if len(card_values) >= 2:
             dl = dual_layer_aggregate(card_values)
-            # Apply the dual-layer adjustment (additive, bounded)
+
             current = aggregated.get(key, dl['mean'])
             adjusted = round_metric(current + (dl['peak'] * dl['stability_coeff'] * 0.1))
-            # Keep within original min/max bounds
+
             if card_values:
                 adjusted = max(min(card_values), min(max(card_values), adjusted))
             aggregated[key] = adjusted
             _aggregation_metadata[key] = dl
     aggregated['_aggregation_metadata'] = _aggregation_metadata
 
-    # --- PRODUCTION CORRECTION: §4 Peak Anxiety Preservation Layer ---
     anxiety_values = []
     for cr in card_results_list:
         qs = cr.get('quantitative_scores', {})
@@ -82,17 +76,15 @@ def aggregate_multi_card_analysis(card_analyses_dict, multicard_engine):
         mean_anxiety = float(np.mean(anxiety_values))
         peak_anxiety = float(max(anxiety_values))
         volatility_anxiety = float(np.std(anxiety_values))
-        # Additive formula: always >= mean (preserves peaks, never suppresses)
-        # Stronger peak weight (0.4) ensures spikes are visible in multi-card sets
+
         final_anxiety = mean_anxiety + (0.4 * (peak_anxiety - mean_anxiety)) + (0.15 * volatility_anxiety)
-        # --- PRODUCTION CORRECTION: §6 Anxiety Escalation Modifier ---
-        if peak_anxiety >= 70:  # 70 on 0–100 scale = 7 on 0–10
-            final_anxiety += 5.0  # +0.5 on 0–10 scale = +5 on 0–100
-        # Clamp to [0, 100]
+
+        if peak_anxiety >= 70:
+            final_anxiety += 5.0
+
         aggregated['anxiety_level'] = round_metric(max(0, min(100, final_anxiety)))
         aggregated['peak_anxiety_index'] = round_metric(peak_anxiety)
 
-    # Merge averaged dimension_scores from per-card results
     all_dim_keys = set()
     for cr in card_results_list:
         ds = cr.get('dimension_scores', {})
@@ -120,30 +112,23 @@ def aggregate_multi_card_analysis(card_analyses_dict, multicard_engine):
                 merged_dims[dk] = max(min_val, min(max_val, agg_val))
         aggregated.setdefault('dimension_scores', merged_dims)
 
-    # Merge overall_score
     overall_scores = [cr.get('overall_score', 0) for cr in card_results_list]
     aggregated.setdefault('overall_score', sum(overall_scores) / len(overall_scores))
 
-    # Context Adjustment Extraction
     for cr in card_results_list:
         if 'context_adjustment' in cr:
             aggregated['context_adjustment'] = cr['context_adjustment']
             aggregated['base_psychological_score'] = cr.get('base_psychological_score')
             break
 
-    # Common needs/presses from aggregated murray (for PDF compatibility)
     murray_agg = aggregated.get('murray', {})
     aggregated.setdefault('common_needs', [n for n, _ in murray_agg.get('needs', [])])
     aggregated.setdefault('common_presses', [p for p, _ in murray_agg.get('presses', [])])
 
-    # --- PRODUCTION CORRECTION: §1 Global Metric Bounding ---
     aggregated = apply_global_bounds(aggregated)
-    # --- PRODUCTION CORRECTION: §8 Validation Layer ---
+
     aggregated = validate_metrics(aggregated)
 
-    # =================================================================
-    # RECALIBRATION v3.0: Psychometric Integrity Layer
-    # =================================================================
     card_dim_scores = [
         cr.get('dimension_scores', {}) for cr in card_results_list
         if cr.get('dimension_scores')
@@ -164,7 +149,7 @@ def aggregate_multi_card_analysis(card_analyses_dict, multicard_engine):
             t = t.get('themes', [])
         if isinstance(t, list):
             all_themes.extend(t)
-    # Extract theme labels from structured or plain themes
+
     theme_labels = []
     for th in all_themes:
         if isinstance(th, dict):
@@ -173,7 +158,7 @@ def aggregate_multi_card_analysis(card_analyses_dict, multicard_engine):
             label = str(th)
         if label:
             theme_labels.append(label)
-    # Deduplicate by frequency + quality filter (matches single-card path)
+
     _THEME_STOPWORDS = {
         'i', 'me', 'my', 'we', 'us', 'you', 'he', 'she', 'it', 'they',
         'do', 'did', 'does', 'know', 'said', 'say', 'get', 'go', 'went',
@@ -186,7 +171,7 @@ def aggregate_multi_card_analysis(card_analyses_dict, multicard_engine):
         lbl_clean = label.strip()
         if not lbl_clean or len(lbl_clean) < 4:
             continue
-        if '/' in lbl_clean:  # slash-separated LDA garbage like "it / do / know"
+        if '/' in lbl_clean:
             continue
         words = [w.strip('()[]{}.,!?/') for w in lbl_clean.lower().split()]
         meaningful = [w for w in words if len(w) >= 3 and w not in _THEME_STOPWORDS]
@@ -201,7 +186,6 @@ def aggregate_multi_card_analysis(card_analyses_dict, multicard_engine):
         n_cards, avg_wc, n_themes, internal_consistency=internal_consistency
     )
 
-    # Narrative complexity check per card
     complexity_checks = []
     for cr in card_results_list:
         wc = cr.get('word_count', len(cr.get('story_text', '').split()))
@@ -220,30 +204,24 @@ def aggregate_multi_card_analysis(card_analyses_dict, multicard_engine):
         'cards_analyzed': n_cards,
     }
 
-    # =================================================================
-    # RECALIBRATION v3.0: Cross-card Defense Consistency
-    # =================================================================
     all_defenses = []
     for cr in card_results_list:
         for d in cr.get('defense_mechanisms', []):
             all_defenses.append(d.get('defense', ''))
     defense_counts = Counter(all_defenses)
-    # Defenses appearing in >50% of cards get elevated cross-card consistency
+
     for cr in card_results_list:
         for d in cr.get('defense_mechanisms', []):
             name = d.get('defense', '')
             ratio = defense_counts.get(name, 0) / n_cards if n_cards > 0 else 0
             if ratio > 0.5:
                 d['cross_card_consistency'] = f"Persistent ({ratio:.0%} of cards)"
-                # Lift rigidity cap above 0.6 for cross-card persistent defenses
+
                 if d.get('rigidity_index', 0) >= 0.5:
                     d['rigidity_index'] = min(1.0, d['rigidity_index'] + 0.2)
             else:
                 d['cross_card_consistency'] = f"Isolated ({ratio:.0%} of cards)"
 
-    # =================================================================
-    # RECALIBRATION v3.0: Conflict Persistence Score
-    # =================================================================
     all_conflict_types = []
     for cr in card_results_list:
         for c in cr.get('conflict_structure', []):
@@ -255,9 +233,6 @@ def aggregate_multi_card_analysis(card_analyses_dict, multicard_engine):
             persistence = conflict_type_counts.get(ctype, 0) / n_cards if n_cards > 0 else 0
             c['conflict_persistence_score'] = round(persistence, 2)
 
-    # =================================================================
-    # ENHANCED SURFACE: Aggregated Conflict Structure
-    # =================================================================
     aggregated_conflicts = []
     seen_conflict_types = set()
     for cr in card_results_list:
@@ -274,7 +249,7 @@ def aggregate_multi_card_analysis(card_analyses_dict, multicard_engine):
             }
             aggregated_conflicts.append(conflict_entry)
             seen_conflict_types.add(ctype)
-    # Deduplicate by type: keep highest intensity per type, note all source cards
+
     conflict_by_type = {}
     for ac in aggregated_conflicts:
         ctype = ac['type']
@@ -310,9 +285,6 @@ def aggregate_multi_card_analysis(card_analyses_dict, multicard_engine):
         'persistent_types': [t for t, cnt in conflict_type_counts.items() if cnt > 1],
     }
 
-    # =================================================================
-    # ENHANCED SURFACE: Aggregated Defense Mechanisms
-    # =================================================================
     aggregated_defenses = []
     for cr in card_results_list:
         card_id = cr.get('card_id', 'unknown')
@@ -326,7 +298,7 @@ def aggregate_multi_card_analysis(card_analyses_dict, multicard_engine):
                 'personality_organization': d.get('personality_organization', {}),
                 'source_card': card_id,
             })
-    # Group by defense name for summary
+
     defense_summary = {}
     for ad in aggregated_defenses:
         name = ad['defense']
@@ -348,10 +320,10 @@ def aggregate_multi_card_analysis(card_analyses_dict, multicard_engine):
             if ad['source_card'] not in entry['source_cards']:
                 entry['source_cards'].append(ad['source_card'])
             entry['frequency'] += 1
-            # Update cross-card consistency to the more informative label
+
             if 'Persistent' in str(ad['cross_card_consistency']):
                 entry['cross_card_consistency'] = ad['cross_card_consistency']
-            # Carry personality_organization if not already present
+
             if not entry.get('personality_organization') and ad.get('personality_organization'):
                 entry['personality_organization'] = ad['personality_organization']
     aggregated['aggregated_defenses'] = sorted(
@@ -360,9 +332,6 @@ def aggregate_multi_card_analysis(card_analyses_dict, multicard_engine):
         reverse=True
     )
 
-    # =================================================================
-    # ENHANCED SURFACE: Aggregated Environment Classification
-    # =================================================================
     env_counts_detail = Counter()
     env_confidences = {}
     for cr in card_results_list:
@@ -384,9 +353,6 @@ def aggregate_multi_card_analysis(card_analyses_dict, multicard_engine):
         'distribution': dict(env_counts_detail),
     }
 
-    # =================================================================
-    # ENHANCED SURFACE: Aggregated Coping Mechanisms
-    # =================================================================
     coping_counts = Counter()
     for cr in card_results_list:
         for c in cr.get('coping_mechanisms', []):
@@ -396,15 +362,9 @@ def aggregate_multi_card_analysis(card_analyses_dict, multicard_engine):
         for name, freq in coping_counts.most_common(10)
     ]
 
-    # =================================================================
-    # ENHANCED SURFACE: Needs & Presses with Scores
-    # =================================================================
     aggregated['needs_with_scores'] = murray_agg.get('needs', [])[:10]
     aggregated['presses_with_scores'] = murray_agg.get('presses', [])[:10]
 
-    # =================================================================
-    # ENHANCED SURFACE: Aggregated Perceptual Distortions (CNN Vision)
-    # =================================================================
     aggregated_distortions = []
     for cr in card_results_list:
         card_id = cr.get('card_id', 'unknown')
@@ -413,9 +373,6 @@ def aggregate_multi_card_analysis(card_analyses_dict, multicard_engine):
             aggregated_distortions.append(dist)
     aggregated['aggregated_perceptual_distortions'] = aggregated_distortions
 
-    # =================================================================
-    # ENHANCED SURFACE: Per-Card Breakdown Summaries
-    # =================================================================
     per_card_summaries = []
     for cr in card_results_list:
         card_id = cr.get('card_id', 'unknown')
@@ -452,7 +409,6 @@ def aggregate_multi_card_analysis(card_analyses_dict, multicard_engine):
 
     return aggregated
 
-
 def build_single_card_aggregation(card_analysis, multicard_engine):
     """
     Build aggregated view for a single card (for compatibility).
@@ -482,7 +438,6 @@ def build_single_card_aggregation(card_analysis, multicard_engine):
 
     single_result = multicard_engine.aggregate([card_analysis])
 
-    # Normalize themes to label strings for frontend compatibility
     raw_themes = themes
     if isinstance(raw_themes, dict):
         raw_themes = raw_themes.get('themes', [])
@@ -494,9 +449,7 @@ def build_single_card_aggregation(card_analysis, multicard_engine):
             label = str(th)
         if label:
             theme_labels.append(label)
-    # Deduplicate preserving order + quality filter
-    # Reject degenerate labels: too short, pure pronouns/stopwords,
-    # or containing only common words that carry no psychological meaning.
+
     _THEME_STOPWORDS = {
         'i', 'me', 'my', 'we', 'us', 'you', 'he', 'she', 'it', 'they',
         'do', 'did', 'does', 'know', 'said', 'say', 'get', 'go', 'went',
@@ -509,10 +462,10 @@ def build_single_card_aggregation(card_analysis, multicard_engine):
         lbl_clean = lbl.strip()
         if not lbl_clean or lbl_clean in seen:
             continue
-        # Must be at least 4 chars
+
         if len(lbl_clean) < 4:
             continue
-        # Must have at least one word with ≥ 3 chars that isn't a stopword
+
         words = [w.strip('()[]{}.,!?/') for w in lbl_clean.lower().split()]
         meaningful = [w for w in words if len(w) >= 3 and w not in _THEME_STOPWORDS]
         if not meaningful:
@@ -538,21 +491,15 @@ def build_single_card_aggregation(card_analysis, multicard_engine):
         "dimension_scores": dims,
         "overall_score": card_analysis.get("overall_score", 0),
     }
-    
-    # Merge multicard dynamics BEFORE assigning the normalized unique_themes string array
-    # to prevent single_result['themes'] (which is a raw dict) from overwriting it.
+
     aggregated.update(single_result)
-    
-    # Assign the normalized string array
+
     aggregated["themes"] = unique_themes
 
-    # Context Adjustment Extraction
     if 'context_adjustment' in card_analysis:
         aggregated['context_adjustment'] = card_analysis['context_adjustment']
         aggregated['base_psychological_score'] = card_analysis.get('base_psychological_score')
 
-
-    # --- ENHANCED SURFACE: Single-card conflict, defense, environment, coping ---
     card_conflicts = card_analysis.get('conflict_structure', [])
     aggregated['aggregated_conflicts'] = [{
         'type': c.get('type', ''),
@@ -585,8 +532,7 @@ def build_single_card_aggregation(card_analysis, multicard_engine):
     card_env = card_analysis.get('environment_classification', {})
     secondary_env_type = card_env.get('secondary', None)
     is_mixed = card_env.get('is_mixed_environment', False)
-    # Only expose secondary when it actually exists AND is_mixed is True
-    # This prevents "Mixed environment, also Nurturing (0 cards)" ghost labels
+
     aggregated['aggregated_environment'] = {
         'dominant_type': card_env.get('primary', 'N/A'),
         'dominant_frequency': 1,
@@ -604,11 +550,9 @@ def build_single_card_aggregation(card_analysis, multicard_engine):
 
     aggregated['needs_with_scores'] = murray.get('needs', [])[:10]
     aggregated['presses_with_scores'] = murray.get('presses', [])[:10]
-    
-    # Vision Distortions
+
     aggregated['aggregated_perceptual_distortions'] = card_analysis.get('perceptual_distortions', [])
 
-    # Per-card summary (single card)
     aggregated['per_card_summaries'] = [{
         'card_id': card_analysis.get('card_id', 'unknown'),
         'needs': [{'name': n, 'score': round(s, 3)} for n, s in murray.get('needs', [])[:5]],
@@ -632,9 +576,8 @@ def build_single_card_aggregation(card_analysis, multicard_engine):
         'ego_strength': quant.get('hero_ego_strength', quant.get('ego_strength', 0)),
     }]
 
-    # --- PRODUCTION CORRECTION: §1 Global Metric Bounding ---
     aggregated = apply_global_bounds(aggregated)
-    # --- PRODUCTION CORRECTION: §8 Validation Layer ---
+
     aggregated = validate_metrics(aggregated)
 
     return aggregated

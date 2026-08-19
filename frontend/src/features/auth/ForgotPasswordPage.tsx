@@ -36,7 +36,6 @@ export function ForgotPasswordPage() {
         <title>Forgot Password | PsyicHub - Psychological Intelligence</title>
       </Helmet>
 
-      {/* ── Theme toggle ── */}
       <div className="absolute top-4 right-4 z-50">
         <Button
           variant="ghost"

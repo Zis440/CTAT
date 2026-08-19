@@ -11,12 +11,10 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-# revision identifiers, used by Alembic.
 revision: str = '7f4165505966'
 down_revision: Union[str, Sequence[str], None] = '88a743539ab8'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     """Upgrade schema.
@@ -28,8 +26,6 @@ def upgrade() -> None:
     """
     pass
 
-
 def downgrade() -> None:
     """Downgrade schema."""
     pass
-

@@ -5,7 +5,6 @@ import json
 from pathlib import Path
 from typing import Dict, Any
 
-
 def make_serializable(obj, depth=0):
     """Recursively convert numpy/torch/Path types to JSON-safe Python types."""
     if depth > 100:
@@ -32,14 +31,13 @@ def make_serializable(obj, depth=0):
     except (TypeError, ValueError):
         return str(obj)
 
-
 def compute_historical_comparison(
     current_agg: Dict[str, Any], past_agg: Dict[str, Any]
 ) -> Dict[str, Any]:
     """Compare current psychometrics with a previous session to track progress."""
     try:
         def get_val(agg, key):
-            # Try to fetch from root or from dimension_scores
+
             val = agg.get(key)
             if val is None and 'dimension_scores' in agg:
                 val = agg['dimension_scores'].get(key)
@@ -50,7 +48,6 @@ def compute_historical_comparison(
             except (ValueError, TypeError):
                 return 0.0
 
-        # Scale down if needed (same as report logic)
         def scale(val):
             return (val / 10.0) if val > 15 else val
 
@@ -68,7 +65,6 @@ def compute_historical_comparison(
             curr = scale(get_val(current_agg, key))
             past = scale(get_val(past_agg, key))
 
-            # Add a slight buffer to consider "No Change"
             diff = curr - past
             if abs(diff) < 0.2:
                 trend = "stable"
@@ -82,8 +78,8 @@ def compute_historical_comparison(
                 'current': round(curr, 2),
                 'past': round(past, 2),
                 'diff': round(diff, 2),
-                'trend': trend,               # 'up', 'down', 'stable'
-                'is_better': is_better        # True (good), False (bad), None (neutral/stable)
+                'trend': trend,
+                'is_better': is_better
             })
 
         return {'metrics': comparisons}

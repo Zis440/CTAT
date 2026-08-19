@@ -40,10 +40,8 @@ export function AdminPatientsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filters
   const [search, setSearch] = useState("");
 
-  // Add Patient form state
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -91,7 +89,6 @@ export function AdminPatientsPage() {
       setIsAddOpen(false);
       loadPatients();
 
-      // Reset form
       setName("");
       setLastName("");
       setPhone("");
@@ -148,7 +145,6 @@ export function AdminPatientsPage() {
     loadPatients();
   }, [loadPatients]);
 
-  // Handle Search Input (debounced slightly by natural typing, but we can just use enter/blur for simplicity or a manual filter button)
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (page !== 1) navigate('/admin/patients');
@@ -561,7 +557,6 @@ export function AdminPatientsPage() {
 
       </Card>
 
-      {/* Pagination */}
       {totalPages >= 0 && !isLoading && !error && (
         <div className="pt-6 pb-10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground w-full sm:w-auto text-center sm:text-left">
@@ -614,7 +609,6 @@ export function AdminPatientsPage() {
           </Pagination>
         </div>
       )}
-
 
     </div>
   );

@@ -16,9 +16,7 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# Template directory
 TEMPLATES_DIR = Path(__file__).parent / "email_templates"
-
 
 def _load_template(template_name: str) -> str:
     """Load an HTML email template from disk."""
@@ -27,7 +25,6 @@ def _load_template(template_name: str) -> str:
         return template_path.read_text(encoding="utf-8")
     logger.warning(f"Email template not found: {template_path}")
     return ""
-
 
 class EmailService:
     """Handles sending emails via Resend or console fallback."""
@@ -70,7 +67,7 @@ class EmailService:
                 logger.error(f"Failed to send email to {to_email}: {e}")
                 return False
         else:
-            # Console fallback for development
+
             print("\n" + "=" * 60)
             print("📧 EMAIL NOTIFICATION (Console Mode)")
             print("=" * 60)
@@ -94,7 +91,7 @@ class EmailService:
 
         template = _load_template("patient_added.html")
         if not template:
-            # Inline fallback template
+
             template = self._get_patient_added_fallback()
 
         html_body = template.replace("{{PATIENT_NAME}}", patient_name or "Patient")
@@ -160,8 +157,6 @@ class EmailService:
 
         subject = f"Action Required: New Report Verification Assigned ({assessment_name})"
         return self._send_email(psychologist_email, subject, html_body)
-
-    # ── Fallback Templates ────────────────────────────────────────────────────
 
     @staticmethod
     def _get_patient_added_fallback() -> str:
@@ -291,6 +286,4 @@ class EmailService:
 </html>"""
         return self._send_email(admin_email, subject, html_body)
 
-
-# Singleton instance
 email_service = EmailService()

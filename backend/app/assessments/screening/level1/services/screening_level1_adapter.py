@@ -15,11 +15,7 @@ class ScreeningLevel1Adapter:
         Creates a new screening session.
         In embedded mode, it validates and attaches the core_patient_id and core_user_id.
         """
-        # Enforce embedded mode
-        # In testing environments, we allow this to be null
-        # if not core_patient_id:
-        #    raise ValueError("core_patient_id is required in embedded mode to link the assessment to a patient.")
-            
+
         core_user_id = str(current_user.id) if current_user else None
         user_id = None
 
@@ -32,4 +28,3 @@ class ScreeningLevel1Adapter:
         db.commit()
         db.refresh(db_assessment)
         return db_assessment
-

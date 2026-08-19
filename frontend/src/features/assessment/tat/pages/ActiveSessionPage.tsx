@@ -64,7 +64,6 @@ export function ActiveSession() {
   const { user } = useAuthStore();
   const { balance, setBalance } = useWalletStore();
 
-  // Cost Calculation Logic
   const isIndividual = user?.account_type === "individual";
   const rate = isIndividual ? 30 : 20;
   const baseCost = rate * selectedCards.length;
@@ -88,7 +87,6 @@ export function ActiveSession() {
     { label: "Available Wallet Balance:", value: balance ? formatRupees(balance.balance_paise) : formatRupees(0), isBalance: true, isInsufficient: hasInsufficientBalance },
   ];
 
-  // Fetch balance on load and on window focus to ensure it's accurate
   useEffect(() => {
     async function fetchBalance() {
       try {
@@ -105,10 +103,8 @@ export function ActiveSession() {
     return () => window.removeEventListener("focus", onFocus);
   }, [setBalance]);
 
-  // v9.0: Card version state
   const [cardVersion, setCardVersion] = useState<CardVersion>("indianized");
 
-  // v9.0: Audio recording state
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
@@ -135,7 +131,6 @@ export function ActiveSession() {
 
   const currentCard = selectedCards[currentCardIndex];
 
-  // Build image URL based on selected version
   const getCardImageUrl = useCallback((filename: string) => {
     if (!filename) return "";
     if (cardVersion === "original") {
@@ -165,7 +160,6 @@ export function ActiveSession() {
           setBalance(b);
         }).catch(err => console.error("Failed to update wallet balance:", err));
 
-        // Let React Query finish propagating, then navigate to session results
         setTimeout(() => {
           const userState = useAuthStore.getState().user;
           navigate(getSessionResultRoute(userState?.role));
@@ -207,8 +201,6 @@ export function ActiveSession() {
     }
   }, [activePatientId, selectedCards, navigate]);
 
-  // ── Audio Recording ─────────────────────────────────────────────────────────
-
   const startRecording = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -243,7 +235,6 @@ export function ActiveSession() {
       mediaRecorderRef.current = mediaRecorder;
       setIsRecording(true);
 
-      // Timer
       setRecordingSeconds(0);
       recordingTimerRef.current = window.setInterval(() => {
         setRecordingSeconds(prev => prev + 1);
@@ -275,7 +266,7 @@ export function ActiveSession() {
       });
 
       if (data.text) {
-        // Append verbatim transcription to existing text (never replace)
+
         setStories(prev => {
           const existing = prev[currentCard] || "";
           const separator = existing.trim() ? " " : "";
@@ -297,7 +288,6 @@ export function ActiveSession() {
     }
   }, [currentCard, selectedLanguage]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
@@ -426,8 +416,6 @@ export function ActiveSession() {
         <title>Active Session | PsyicHub - Psychological Intelligence</title>
       </Helmet>
 
-
-
       <div className="max-w-3xl mx-auto space-y-6 w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="flex justify-between items-end text-sm mb-2 px-1">
           <span className="font-semibold text-foreground">
@@ -455,7 +443,6 @@ export function ActiveSession() {
           </CardHeader>
           <CardContent className="space-y-4">
 
-            {/* v9.0: TAT Card Version Toggle */}
             <div className="flex items-center gap-1.5 p-1 bg-muted/50 rounded-lg border w-fit">
               {versionButtons.map(({ key, label, icon }) => (
                 <button
@@ -485,7 +472,6 @@ export function ActiveSession() {
                 }}
               />
 
-              {/* Rotation & Fullscreen Controls */}
               <div className="absolute bottom-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm p-1 rounded-lg border shadow-sm">
                 <Button variant="ghost" size="icon" onClick={() => setRotation(r => r - 90)} title="Rotate Left 90°">
                   <RotateCcw className="h-5 w-5" />
@@ -499,7 +485,6 @@ export function ActiveSession() {
                 </Button>
               </div>
 
-              {/* Version badge overlay */}
               {cardVersion !== "original" && (
                 <div className="absolute top-3 right-3">
                   <Badge className="bg-primary/90 text-primary-foreground text-[10px] uppercase tracking-wider">
@@ -509,7 +494,6 @@ export function ActiveSession() {
               )}
             </div>
 
-            {/* Descriptive prompt */}
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 flex items-start gap-3 my-4">
               <Info className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
               <div className="space-y-1">
@@ -528,7 +512,7 @@ export function ActiveSession() {
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-medium">Patient Narrative Input</label>
                 <div className="flex items-center gap-2">
-                  {/* Language Selector Dropdown */}
+
                   <div className="relative">
                     <button
                       onClick={() => setIsLangDropdownOpen(prev => !prev)}
@@ -581,7 +565,6 @@ export function ActiveSession() {
                   disabled={mutation.isPending || isTranscribing}
                 />
 
-                {/* v9.0: Audio Recording Button */}
                 <div className="absolute bottom-3 right-3 flex flex-col items-center gap-1.5">
                   {isRecording ? (
                     <button
@@ -682,7 +665,6 @@ export function ActiveSession() {
               )}
             </div>
 
-            {/* Story Submission Confirmation Dialog (Always shows first) */}
             <AlertDialog open={showAnalyzeConfirm} onOpenChange={setShowAnalyzeConfirm}>
               <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
                 <AlertDialogHeader>
@@ -696,7 +678,7 @@ export function ActiveSession() {
                       <div className="bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 dark:text-yellow-500 rounded-lg p-3 text-xs mt-2 font-medium flex gap-2">
                         <AlertTriangle className="h-4 w-4 shrink-0" />
                         <div>
-                          <strong className="block mb-0.5 text-sm">Important:</strong> 
+                          <strong className="block mb-0.5 text-sm">Important:</strong>
                           Once submitted, you will not be able to edit this story. Please review it carefully before continuing.
                         </div>
                       </div>
@@ -712,7 +694,6 @@ export function ActiveSession() {
               </AlertDialogContent>
             </AlertDialog>
 
-            {/* Final Payment Confirmation Dialog (Shows after story confirmation on last card) */}
             <PaymentConfirmationModal
               isOpen={showPayConfirm}
               onOpenChange={setShowPayConfirm}
@@ -739,7 +720,6 @@ export function ActiveSession() {
               }}
             />
 
-            {/* Share Link Payment Confirmation Dialog */}
             <PaymentConfirmationModal
               isOpen={showShareConfirm}
               onOpenChange={setShowShareConfirm}
@@ -752,7 +732,7 @@ export function ActiveSession() {
               description={
                 <div className="space-y-4 text-left mt-2">
                   <p className="text-sm text-muted-foreground">
-                    You are about to generate a one-time secure link for this session. 
+                    You are about to generate a one-time secure link for this session.
                   </p>
 
                   <div className="bg-primary/5 border border-primary/20 text-primary rounded-lg p-3 text-sm mt-2 font-medium flex gap-3 shadow-sm">
@@ -776,7 +756,6 @@ export function ActiveSession() {
           </CardContent>
         </Card>
 
-        {/* Fullscreen Overlay */}
         {isFullscreen && (
           <div
             className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-8 animate-in fade-in duration-300"
@@ -800,7 +779,6 @@ export function ActiveSession() {
           </div>
         )}
 
-        {/* Link Dialog */}
         <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>

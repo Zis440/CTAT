@@ -62,34 +62,31 @@ def get_clinic_stats(
     actual_clinic_id = current_user.clinic_id or current_user.id
     if not actual_clinic_id:
         raise HTTPException(status_code=400, detail="No clinic associated with this account")
-    
+
     from app.models.user import UserRole
     from app.models.appointment import Appointment
     from app.models.org_request import OrgAssessmentRequest
     from sqlalchemy import extract
-    
+
     total_staff = db.query(User).filter(User.clinic_id == actual_clinic_id, User.role.in_([UserRole.clinic_staff, UserRole.org_staff])).count()
-    
+
     org_patient_ids = db.query(OrgAssessmentRequest.patient_id).filter(OrgAssessmentRequest.org_id == actual_clinic_id)
     total_patients = db.query(Patient).filter(
         (Patient.clinic_id == actual_clinic_id) | (Patient.id.in_(org_patient_ids))
     ).count()
-    
+
     clinic_user_ids = [
         uid for (uid,) in
         db.query(User.id).filter(User.clinic_id == actual_clinic_id).all()
     ]
-    
-    # Wallet balance
+
     wallet = db.query(Wallet).filter(Wallet.user_id == actual_clinic_id).first()
     wallet_balance_paise = wallet.balance_paise if wallet else 0
 
-    # Total Sessions
     total_sessions = db.query(app_models_session).filter(
         (app_models_session.user_id.in_(clinic_user_ids)) | (app_models_session.patient_id.in_(org_patient_ids))
     ).count()
 
-    # Monthly Growth (Patients)
     current_year = datetime.now().year
     monthly_counts = (
         db.query(
@@ -103,7 +100,7 @@ def get_clinic_stats(
         .group_by(extract('month', Patient.created_at))
         .all()
     )
-    month_names = {1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "May", 6: "Jun", 
+    month_names = {1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "May", 6: "Jun",
                    7: "Jul", 8: "Aug", 9: "Sep", 10: "Oct", 11: "Nov", 12: "Dec"}
     growth_dict = {month_names[i]: 0 for i in range(1, 13)}
     for row in monthly_counts:
@@ -112,21 +109,13 @@ def get_clinic_stats(
             growth_dict[month_names[month_idx]] = row.count
     monthly_growth = [{"month": k, "patients": v} for k, v in growth_dict.items()]
 
-    # Assessment Uses Breakdown
-    # Assuming sessions have an `assessment_type` or we just categorize them.
-    # We will simulate breakdown if no specific type is tracked in Session.
-    # Currently `Session` is `from app.models.patient import Session as app_models_session`
     assessment_uses = []
     if total_sessions > 0:
-        # Simplification: if Session doesn't have assessment_type, we mock the distribution
-        # Or if it does, we group by it.
-        # Let's check if session has assessment_type or module_name
-        # Actually, let's mock the distribution based on total_sessions for now:
+
         assessment_uses = [
             {"name": "Narrative Intelligence", "value": total_sessions, "color": "#d3e392"}
         ]
 
-    # Upcoming Appointments
     now = datetime.now()
     appointments = (
         db.query(Appointment, Patient, User)
@@ -152,7 +141,6 @@ def get_clinic_stats(
         for appt, pat, usr in appointments
     ]
 
-    # Recent Transactions
     clinic_wallet_ids = [
         wid for (wid,) in
         db.query(Wallet.id).filter(Wallet.user_id.in_(clinic_user_ids)).all()
@@ -190,8 +178,6 @@ def get_clinic_stats(
         recent_transactions=recent_txs
     )
 
-
-
 class ClinicWalletTransactionOut(BaseModel):
     id: str
     user_id: str
@@ -228,7 +214,7 @@ def get_clinic_income_overview(
         uid for (uid,) in
         db.query(User.id).filter(User.clinic_id == current_user.clinic_id).all()
     ]
-    
+
     clinic_wallet_ids = [
         wid for (wid,) in
         db.query(Wallet.id).filter(Wallet.user_id.in_(clinic_user_ids)).all()
@@ -250,7 +236,6 @@ def get_clinic_income_overview(
     start_of_month = datetime(now.year, now.month, 1)
     start_of_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    # Base query for credits (recharges) for these specific wallets
     base_query = db.query(func.sum(WalletTransaction.amount_paise)).filter(
         WalletTransaction.wallet_id.in_(clinic_wallet_ids),
         WalletTransaction.type == TransactionType.credit
@@ -261,7 +246,6 @@ def get_clinic_income_overview(
     weekly_revenue_paise = base_query.filter(WalletTransaction.created_at >= seven_days_ago).scalar() or 0
     today_revenue_paise = base_query.filter(WalletTransaction.created_at >= start_of_today).scalar() or 0
 
-    # Daily breakdown for charting
     daily_results = (
         db.query(
             func.date(WalletTransaction.created_at).label("date"),
@@ -282,7 +266,6 @@ def get_clinic_income_overview(
         for row in daily_results
     ]
 
-    # Recent transactions
     recent_txs_raw = (
         db.query(WalletTransaction, User)
         .join(Wallet, WalletTransaction.wallet_id == Wallet.id)
@@ -295,7 +278,7 @@ def get_clinic_income_overview(
         .limit(5)
         .all()
     )
-    
+
     recent_transactions = [
         ClinicWalletTransactionOut(
             id=tx.id,
@@ -322,8 +305,6 @@ def get_clinic_income_overview(
         daily_breakdown=daily_breakdown,
         recent_transactions=recent_transactions,
     )
-
-# ── Clinic Profile Routes ─────────────────────────────────────────────────────
 
 CLINIC_LOGOS_DIR = DATA_STORE_DIR / "uploads" / "clinic_logos"
 CLINIC_COVERS_DIR = DATA_STORE_DIR / "uploads" / "clinic_covers"
@@ -358,7 +339,7 @@ def get_clinic_profile(
 ):
     actual_clinic_id = current_user.clinic_id or current_user.id
     profile = _get_or_create_profile(db, actual_clinic_id, current_user)
-    
+
     needs_update = False
     if not profile.clinic_name and current_user.clinic_name:
         profile.clinic_name = current_user.clinic_name
@@ -366,7 +347,7 @@ def get_clinic_profile(
     if not profile.contact_email and current_user.email:
         profile.contact_email = current_user.email
         needs_update = True
-        
+
     if needs_update:
         db.commit()
         db.refresh(profile)
@@ -381,7 +362,7 @@ def update_clinic_profile(
 ):
     actual_clinic_id = current_user.clinic_id or current_user.id
     profile = _get_or_create_profile(db, actual_clinic_id, current_user)
-    
+
     if req.clinic_name is not None:
         profile.clinic_name = req.clinic_name
     if req.tagline is not None:
@@ -390,11 +371,10 @@ def update_clinic_profile(
         profile.contact_email = req.contact_email
     if req.support_phone is not None:
         profile.support_phone = req.support_phone
-        
+
     db.commit()
     db.refresh(profile)
-    
-    # Also update the User's clinic_name to keep it in sync
+
     if req.clinic_name is not None:
         db.query(User).filter(User.clinic_id == actual_clinic_id).update({"clinic_name": req.clinic_name})
         db.commit()
@@ -409,11 +389,11 @@ def upload_clinic_logo(
 ):
     actual_clinic_id = current_user.clinic_id or current_user.id
     profile = _get_or_create_profile(db, actual_clinic_id, current_user)
-    
+
     allowed_types = {"image/jpeg", "image/png", "image/jpg", "image/webp", "image/svg+xml"}
     if file.content_type not in allowed_types:
         raise HTTPException(status_code=415, detail="Invalid image type")
-        
+
     ext_map = {"image/jpeg": ".jpg", "image/jpg": ".jpg", "image/png": ".png", "image/webp": ".webp", "image/svg+xml": ".svg"}
     ext = ext_map.get(file.content_type, ".jpg")
     filename = f"{actual_clinic_id}{ext}"
@@ -442,11 +422,11 @@ def upload_clinic_cover(
 ):
     actual_clinic_id = current_user.clinic_id or current_user.id
     profile = _get_or_create_profile(db, actual_clinic_id, current_user)
-    
+
     allowed_types = {"image/jpeg", "image/png", "image/jpg", "image/webp"}
     if file.content_type not in allowed_types:
         raise HTTPException(status_code=415, detail="Invalid image type")
-        
+
     ext_map = {"image/jpeg": ".jpg", "image/jpg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
     ext = ext_map.get(file.content_type, ".jpg")
     filename = f"{actual_clinic_id}{ext}"

@@ -16,25 +16,21 @@ RECALIBRATION v3.0:
 
 from typing import Dict, Any, List
 
-
-# DSM-5 safeguard notice
 DSM_SAFEGUARD = (
     "No definitive diagnosis is warranted unless narrative pathology meets "
     "DSM-5 symptom clustering thresholds across multiple data sources. "
     "All formulations below are exploratory and require supervisory validation."
 )
 
-
 def _strip_np(val: str) -> str:
     """Strips internal 'n' or 'p' prefixes from Murray labels at display-level."""
     if isinstance(val, str):
-        # Handle older PascalCase like "nAchievement"
+
         if val.startswith('n') and len(val) > 1 and val[1].isupper():
             return val[1:]
         if val.startswith('p') and len(val) > 1 and val[1].isupper():
             return val[1:]
     return str(val)
-
 
 def generate_clinical_formulation(aggregated_data: Dict[str, Any]) -> str:
     """
@@ -44,18 +40,12 @@ def generate_clinical_formulation(aggregated_data: Dict[str, Any]) -> str:
     """
     lines = []
 
-    # =================================================================
-    # HEADER (Recalibration v3.0)
-    # =================================================================
     lines.append("CLINICAL FORMULATION (Non-Diagnostic)")
     lines.append("=" * 55)
     lines.append("")
     lines.append(f"⚠ {DSM_SAFEGUARD}")
     lines.append("")
 
-    # =================================================================
-    # DOMINANT MOTIVATIONAL ARCHITECTURE (Recalibration v3.0)
-    # =================================================================
     murray = aggregated_data.get('murray', {})
     needs_full = murray.get('needs_full_profile', [])
     dominant_needs = murray.get('dominant_needs', [])
@@ -80,40 +70,32 @@ def generate_clinical_formulation(aggregated_data: Dict[str, Any]) -> str:
         lines.append(f"  Suppressed needs: {', '.join([_strip_np(n) for n, _ in suppressed_needs[:3]])}")
     lines.append("")
 
-    # Murray full need hierarchy (preserved from original)
     if needs_full:
         lines.append("FULL NEED HIERARCHY:")
         for need, score in needs_full[:10]:
             lines.append(f"  {_strip_np(need)}: {score:.3f}")
         lines.append("")
 
-    # =================================================================
-    # CORE RELATIONAL STYLE (Recalibration v3.0)
-    # =================================================================
     rp = aggregated_data.get('relational_patterns', {})
     lines.append("CORE RELATIONAL STYLE:")
     lines.append("-" * 40)
 
-    # Attachment classification (from recalibrated relational engine)
     attachment = rp.get('attachment_classification', {})
     if attachment:
         lines.append(f"  Attachment style: {attachment.get('style', 'Mixed')}")
         lines.append(f"    Evidence: {attachment.get('evidence', 'N/A')}")
         lines.append(f"    Confidence: {attachment.get('confidence', 0):.0%}")
 
-    # Figure classifications (preserved)
     fig_class = rp.get('figure_classifications', {})
     if fig_class:
         lines.append("  Figure types identified:")
         for node, ftype in list(fig_class.items())[:5]:
             lines.append(f"    {node}: {ftype}")
 
-    # Authority figures (preserved)
     authority_figures = rp.get('authority_figures', [])
     if authority_figures:
         lines.append("  Authority figures: " + ", ".join([f"{n}" for n, _ in authority_figures]))
 
-    # Contemporary figures (v4.0)
     fig_class = rp.get('figure_classifications', {})
     contemporary_figures = [node for node, ftype in fig_class.items() if ftype == "Contemporary"]
     if contemporary_figures:
@@ -121,7 +103,6 @@ def generate_clinical_formulation(aggregated_data: Dict[str, Any]) -> str:
     elif not authority_figures:
         lines.append("  No authority or contemporary figures identified.")
 
-    # Interaction psychology (preserved)
     inter_psych = rp.get('interaction_psychology', {})
     if inter_psych:
         lines.append("  Interaction dynamics:")
@@ -129,9 +110,6 @@ def generate_clinical_formulation(aggregated_data: Dict[str, Any]) -> str:
             lines.append(f"    {node}: affect={metrics['affect']:.2f}, power={metrics['power_perception']:.2f}, dependency={metrics['dependency']:.2f}")
     lines.append("")
 
-    # =================================================================
-    # EMOTIONAL REGULATION PATTERN (Recalibration v3.0)
-    # =================================================================
     lines.append("EMOTIONAL REGULATION PATTERN:")
     lines.append("-" * 40)
 
@@ -141,7 +119,6 @@ def generate_clinical_formulation(aggregated_data: Dict[str, Any]) -> str:
         for e, cnt in emo[:5]:
             lines.append(f"    • {e} (frequency: {cnt})")
 
-    # Regulation metrics from dimension scores
     dims = aggregated_data.get('dimension_scores', {})
     em_stab = dims.get('emotional_stability', aggregated_data.get('emotional_stability', 50))
     affect_int = dims.get('affective_integration', aggregated_data.get('affective_integration', 5))
@@ -153,15 +130,12 @@ def generate_clinical_formulation(aggregated_data: Dict[str, Any]) -> str:
         lines.append(f"  Ego strength trajectory: {ego_traj.get('trend', 'stable')} (volatility {ego_traj.get('volatility', 0):.2f})")
     lines.append("")
 
-    # =================================================================
-    # DEFENSIVE ORGANIZATION (v3.0 — from defense inference engine)
-    # =================================================================
     lines.append("DEFENSIVE ORGANIZATION:")
     lines.append("-" * 40)
 
     agg_defenses = aggregated_data.get('aggregated_defenses', [])
     if agg_defenses:
-        # Primary defense cluster
+
         lines.append("  Primary defense mechanisms:")
         for d in agg_defenses[:3]:
             mat = d.get('maturity_level', 'Unknown')
@@ -170,7 +144,6 @@ def generate_clinical_formulation(aggregated_data: Dict[str, Any]) -> str:
             lines.append(f"    • {d.get('defense', 'Unknown')} [{mat}] — "
                          f"confidence: {conf:.2f}, rigidity: {rig:.2f}")
 
-        # Maturity distribution
         maturity_levels = [d.get('maturity_level', 'Unknown') for d in agg_defenses]
         mat_counts = {}
         for m in maturity_levels:
@@ -178,13 +151,12 @@ def generate_clinical_formulation(aggregated_data: Dict[str, Any]) -> str:
         maturity_str = ', '.join([f"{k}: {v}" for k, v in mat_counts.items()])
         lines.append(f"  Maturity distribution: {maturity_str}")
 
-        # Cross-card consistency (if multi-card)
         for d in agg_defenses[:3]:
             ccc = d.get('cross_card_consistency', 'N/A')
             if ccc and 'Persistent' in str(ccc):
                 lines.append(f"  ⚠ {d.get('defense', 'Unknown')}: {ccc} (fixed defensive style)")
     else:
-        # Fallback: try per-card defense_mechanisms
+
         card_defenses = []
         for card in aggregated_data.get('per_card_summaries', []):
             card_defenses.extend(card.get('defenses', []))
@@ -197,13 +169,12 @@ def generate_clinical_formulation(aggregated_data: Dict[str, Any]) -> str:
         else:
             lines.append("  No defense mechanisms currently available.")
 
-    # Personality organization (Kernberg) — from first defense with this field
     personality_org = None
     for d in agg_defenses:
         if 'personality_organization' in d:
             personality_org = d.get('personality_organization', {})
             break
-    # Fallback: check per_card_summaries → defense_mechanisms → personality_organization
+
     if not personality_org:
         for card in aggregated_data.get('per_card_summaries', []):
             for d in card.get('defenses', []):
@@ -223,7 +194,6 @@ def generate_clinical_formulation(aggregated_data: Dict[str, Any]) -> str:
     else:
         lines.append("  Personality organization: Data insufficient for classification.")
 
-    # Defensive flexibility assessment
     if agg_defenses:
         avg_rigidity = sum(d.get('max_rigidity', d.get('rigidity_index', 0)) for d in agg_defenses) / len(agg_defenses)
         if avg_rigidity > 0.7:
@@ -234,9 +204,6 @@ def generate_clinical_formulation(aggregated_data: Dict[str, Any]) -> str:
             lines.append("  ✓ Defensive Flexibility: FLEXIBLE — diverse defensive repertoire, adaptive capacity intact.")
     lines.append("")
 
-    # =================================================================
-    # NEED CONFLICT STRUCTURE (preserved)
-    # =================================================================
     need_conflicts = murray.get('need_conflicts', [])
     if need_conflicts:
         lines.append("NEED CONFLICT STRUCTURE:")
@@ -251,9 +218,6 @@ def generate_clinical_formulation(aggregated_data: Dict[str, Any]) -> str:
             lines.append(f"  - {n} vs {p} (intensity {i:.2f})")
         lines.append("")
 
-    # =================================================================
-    # THEMATIC ORGANIZATION (preserved)
-    # =================================================================
     themes = aggregated_data.get('themes', {})
     if isinstance(themes, dict):
         themes = themes.get('themes', [])
@@ -271,9 +235,6 @@ def generate_clinical_formulation(aggregated_data: Dict[str, Any]) -> str:
                     lines.append(f"    Internal conflict: {conflict_str}")
         lines.append("")
 
-    # =================================================================
-    # ADAPTIVE STRENGTHS (Recalibration v3.0)
-    # =================================================================
     lines.append("ADAPTIVE STRENGTHS:")
     lines.append("-" * 40)
     strengths = []
@@ -290,7 +251,6 @@ def generate_clinical_formulation(aggregated_data: Dict[str, Any]) -> str:
     if coherence >= 60:
         strengths.append(f"Coherent narrative organization ({coherence:.0f}/100)")
 
-    # Personality trait strengths
     traits = rp.get('personality_traits', {})
     if traits.get('affect_regulation', 0) > 0.6:
         strengths.append("Adequate affect regulation capacity")
@@ -304,9 +264,6 @@ def generate_clinical_formulation(aggregated_data: Dict[str, Any]) -> str:
         lines.append("  Assessment engagement itself indicates willingness to explore inner experience.")
     lines.append("")
 
-    # =================================================================
-    # GROWTH EDGES (Recalibration v3.0)
-    # =================================================================
     lines.append("GROWTH EDGES:")
     lines.append("-" * 40)
     edges = []
@@ -326,9 +283,6 @@ def generate_clinical_formulation(aggregated_data: Dict[str, Any]) -> str:
         lines.append("  No significant growth edges identified at this assessment level.")
     lines.append("")
 
-    # =================================================================
-    # PERSONALITY TRAITS (preserved)
-    # =================================================================
     if traits:
         lines.append("PERSONALITY TRAITS (from relational patterns):")
         for trait, value in traits.items():
@@ -338,9 +292,6 @@ def generate_clinical_formulation(aggregated_data: Dict[str, Any]) -> str:
                 lines.append(f"  {trait.replace('_', ' ').title()}: {value:.2f}")
         lines.append("")
 
-    # =================================================================
-    # CROSS-CARD STABILITY (v3.1: guarded for single-card N/A)
-    # =================================================================
     def _fmt_stability(val):
         """Format stability value, handling N/A for single-card."""
         if isinstance(val, str):
@@ -366,9 +317,6 @@ def generate_clinical_formulation(aggregated_data: Dict[str, Any]) -> str:
         lines.append(f"  Stability confidence: {_fmt_stability(sc)}")
     lines.append("")
 
-    # =================================================================
-    # PSYCHOMETRIC CONFIDENCE (Recalibration v3.0)
-    # =================================================================
     psych = aggregated_data.get('psychometric_integrity', {})
     if psych:
         lines.append("PSYCHOMETRIC CONFIDENCE:")
@@ -378,9 +326,6 @@ def generate_clinical_formulation(aggregated_data: Dict[str, Any]) -> str:
         lines.append(f"  Narrative adequacy: {psych.get('narrative_adequacy', 'N/A')}")
         lines.append("")
 
-    # =================================================================
-    # SUPERVISORY INTEGRATION RECOMMENDATION (Recalibration v3.0)
-    # =================================================================
     lines.append("SUPERVISORY INTEGRATION RECOMMENDATION:")
     lines.append("-" * 40)
     lines.append("  This formulation should be reviewed in the context of:")

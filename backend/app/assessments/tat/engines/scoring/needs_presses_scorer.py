@@ -12,10 +12,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, List, Any, Optional
 
-
-# ---------------------------------------------------------------------------
-# Result dataclass matching ClinicalReportGenerator expectations
-# ---------------------------------------------------------------------------
 @dataclass
 class NeedsPressesScore:
     """Structured Murray Needs-Presses scoring result."""
@@ -43,10 +39,6 @@ class NeedsPressesScore:
             "confidence": self.confidence,
         }
 
-
-# ---------------------------------------------------------------------------
-# NeedsPressesScorer — delegates to MurrayInferenceEngine when available
-# ---------------------------------------------------------------------------
 class NeedsPressesScorer:
     """
     Compute Murray Needs-Presses scores for a TAT story.
@@ -63,7 +55,6 @@ class NeedsPressesScorer:
         """
         self._engine = murray_engine
 
-        # Lazy import — avoids circular imports at module level
         if self._engine is None and config is not None:
             try:
                 from app.assessments.tat.engines.inference.murray_inference_engine import MurrayInferenceEngine
@@ -71,8 +62,6 @@ class NeedsPressesScorer:
             except Exception as e:
                 print(f"⚠ NeedsPressesScorer: Could not initialize MurrayInferenceEngine: {e}")
                 self._engine = None
-
-    # ------------------------------------------------------------------
 
     def score_story(self, story_text: str) -> NeedsPressesScore:
         """
@@ -85,29 +74,21 @@ class NeedsPressesScorer:
         if story_text is None:
             story_text = ""
 
-        # --- delegate to MurrayInferenceEngine if available ---
         if self._engine is not None:
             try:
                 return self._score_via_engine(story_text)
             except Exception as e:
                 print(f"⚠ NeedsPressesScorer: Engine scoring failed, using heuristics: {e}")
 
-        # --- fallback: keyword heuristics ---
         return self._score_heuristic(story_text)
-
-    # ------------------------------------------------------------------
-    # Engine-based scoring
-    # ------------------------------------------------------------------
 
     def _score_via_engine(self, story_text: str) -> NeedsPressesScore:
         """Delegate to full MurrayInferenceEngine."""
         result = self._engine.infer(story_text)
 
-        # MurrayInferenceEngine returns dict; map to NeedsPressesScore
         needs_raw = result.get("needs", [])
         presses_raw = result.get("presses", [])
 
-        # Needs can be list of tuples (name, score) or list of dicts
         needs = []
         for item in needs_raw:
             if isinstance(item, (list, tuple)) and len(item) == 2:
@@ -131,7 +112,7 @@ class NeedsPressesScorer:
             dominant_press = max(presses, key=lambda x: x.get("intensity", 0)).get("press_name", "")
 
         conflicts = result.get("conflicts", [])
-        # Normalize conflict format
+
         np_conflicts = []
         for c in conflicts:
             if isinstance(c, dict):
@@ -152,10 +133,6 @@ class NeedsPressesScorer:
             need_press_conflicts=np_conflicts,
             confidence=confidence,
         )
-
-    # ------------------------------------------------------------------
-    # Lightweight heuristic fallback (no external dependencies)
-    # ------------------------------------------------------------------
 
     _NEED_KEYWORDS = {
         "nAchievement": ["achieve", "success", "excel", "accomplish", "goal", "win", "compete"],
@@ -199,7 +176,7 @@ class NeedsPressesScorer:
         dominant_press = presses[0]["press_name"] if presses else "Unknown"
 
         word_count = len(words)
-        confidence = min(0.7, word_count / 80)  # cap at 0.7 for heuristics
+        confidence = min(0.7, word_count / 80)
 
         return NeedsPressesScore(
             dominant_need=dominant_need,

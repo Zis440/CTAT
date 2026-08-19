@@ -1,5 +1,3 @@
-// ─── ImageWithFallback ──────────────────────────────────────────────────────
-// Image component with loading skeleton and error fallback.
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
