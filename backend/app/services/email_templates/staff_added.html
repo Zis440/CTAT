@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f4f4f7;">
+<div style="max-width:560px;margin:40px auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+  <!-- Header -->
+  <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:32px 24px;text-align:center;">
+    <h1 style="color:#ffffff;font-size:22px;margin:0;font-weight:700;">Welcome to {{CLINIC_NAME}}</h1>
+    <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:8px 0 0;">You've been added as {{ROLE}}</p>
+  </div>
+
+  <!-- Body -->
+  <div style="padding:32px 24px;">
+    <p style="margin:0 0 16px;color:#1f2937;font-size:15px;">
+      Hello <strong>{{STAFF_NAME}}</strong>,
+    </p>
+    <p style="margin:0 0 16px;color:#4b5563;font-size:14px;line-height:1.6;">
+      You have been added as <strong>{{ROLE}}</strong> at <strong>{{CLINIC_NAME}}</strong>
+      on the {{APP_NAME}} platform.
+    </p>
+
+    <!-- Credentials box -->
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:20px;margin:20px 0;">
+      <p style="margin:0 0 12px;color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">
+        Your Login Details
+      </p>
+      <table style="width:100%;border-collapse:collapse;">
+        <tr>
+          <td style="padding:4px 0;color:#6b7280;font-size:13px;width:60px;">Email:</td>
+          <td style="padding:4px 0;color:#1f2937;font-size:14px;font-weight:600;">{{EMAIL}}</td>
+        </tr>
+      </table>
+      {{PASSWORD_SECTION}}
+    </div>
+
+    <!-- CTA -->
+    <div style="text-align:center;margin:28px 0 20px;">
+      <a href="https://psyichub.com/login"
+         style="display:inline-block;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#ffffff;text-decoration:none;padding:12px 32px;border-radius:8px;font-size:14px;font-weight:600;letter-spacing:0.02em;">
+        Sign In to {{APP_NAME}}
+      </a>
+    </div>
+
+    <!-- Info box -->
+    <div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:16px;border-radius:0 8px 8px 0;margin:24px 0;">
+      <p style="margin:0;color:#92400e;font-size:13px;line-height:1.5;">
+        <strong>Security Reminder:</strong> Please change your password after your first login
+        and never share your credentials with anyone.
+      </p>
+    </div>
+
+    <!-- Footer note -->
+    <p style="margin:24px 0 0;color:#9ca3af;font-size:12px;line-height:1.5;">
+      This is an automated notification from {{APP_NAME}}. If you did not expect this email,
+      please contact your clinic administrator. Do not reply to this email.
+    </p>
+  </div>
+
+  <!-- Footer bar -->
+  <div style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:16px 24px;text-align:center;">
+    <p style="margin:0;color:#9ca3af;font-size:11px;">
+      © 2026 {{APP_NAME}} — Clinical-Grade Assessment Platform
+    </p>
+  </div>
+</div>
+</body>
+</html>

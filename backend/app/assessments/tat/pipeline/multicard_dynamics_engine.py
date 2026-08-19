@@ -1,0 +1,319 @@
+"""
+Multicard Dynamics Engine
+-------------------------
+Aggregates across multiple TAT cards to produce dynamic personality profile.
+Now computes cross-card consistency metrics: need stability, conflict persistence,
+trait convergence, authority/peer pattern stability.
+"""
+
+import numpy as np
+from typing import List, Dict, Any, Tuple
+from collections import defaultdict
+from app.assessments.tat.engines.inference.murray_inference_engine import MurrayInferenceEngine
+from app.assessments.tat.engines.nlp.theme_detection_engine import ThemeDetectionEngine
+from app.assessments.tat.engines.graph.relational_field_engine import RelationalFieldEngine
+from app.assessments.tat.engines.inference.defense_inference_engine import DefenseInferenceEngine
+
+class MulticardDynamicsEngine:
+    """
+    Analyzes multiple cards to identify stable vs. variable psychological features.
+    """
+
+    def __init__(self, nlp_processor):
+        self.murray_engine = MurrayInferenceEngine(nlp_processor)
+        self.theme_engine = ThemeDetectionEngine(nlp_processor)
+        self.relational_engine = RelationalFieldEngine(nlp_processor)
+        self.defense_engine = DefenseInferenceEngine(nlp_processor)
+
+    def aggregate(self, card_results: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        card_results: list of dictionaries per card, each containing at least:
+            - "events": list of event dicts
+            - "story_text": string
+            - "murray": dict from MurrayInferenceEngine (now with full profile)
+            - "relational_patterns": dict from RelationalFieldEngine (if available)
+        Returns aggregated profile with cross-card stability metrics.
+        """
+        num_cards = len(card_results)
+
+        # Collect all events and stories
+        all_events = []
+        all_stories = []
+        per_card_murray = []
+        per_card_relational = []
+        for cr in card_results:
+            all_events.extend(cr.get("events", []))
+            all_stories.append(cr.get("story_text", ""))
+            per_card_murray.append(cr.get("murray", {}))
+            per_card_relational.append(cr.get("relational_patterns", {}))
+
+        # Collect new scoring data
+        per_card_conflicts_new = [cr.get("conflict_structure", []) for cr in card_results]
+        per_card_envs = [cr.get("environment_classification", {}) for cr in card_results]
+
+        # Murray needs/presses across all events
+        murray_all = self.murray_engine.infer_from_events(all_events)
+
+        # Theme detection across all stories
+        themes = self.theme_engine.extract_themes(all_stories)
+
+        # Relational patterns from all events
+        self.relational_engine.build_graph(all_events)
+        relational_patterns = self.relational_engine.get_relational_patterns()
+
+        # Defense mechanisms
+        defenses = self.defense_engine.infer_from_events(all_events, n_cards=num_cards)
+
+        # Emotional attractors: most frequent emotions across events
+        emotion_counts = defaultdict(int)
+        for event in all_events:
+            if event.get('emotion'):
+                emotion_counts[event['emotion']] += 1
+        top_emotions = sorted(emotion_counts.items(), key=lambda x: -x[1])[:5]
+
+        # Environment Dominance
+        env_counts = defaultdict(int)
+        for env in per_card_envs:
+            if env.get("primary"):
+                env_counts[env["primary"]] += 1
+        dominant_environment = sorted(env_counts.items(), key=lambda x: -x[1])[:1]
+        dominant_env_str = dominant_environment[0][0] if dominant_environment else "Ambiguous"
+
+        # --- v3.1 Fix 5: Stability requires ≥2 cards ---
+        if num_cards < 2:
+            need_stability = "N/A"
+            press_stability = "N/A"
+            conflict_persistence = "N/A"
+            authority_stability = "N/A"
+            contemporary_stability = "N/A"
+            peer_stability = "N/A"
+            trait_convergence = "N/A"
+            stability_confidence = "N/A"
+            convergence_confidence = "N/A"
+        else:
+            # Compute stability indices
+            need_stability = self._compute_stability([m.get("needs", []) for m in per_card_murray])
+            press_stability = self._compute_stability([m.get("presses", []) for m in per_card_murray])
+            conflict_persistence = self._compute_conflict_persistence(per_card_murray, per_card_conflicts_new, per_card_relational)
+            authority_stability = self._compute_authority_stability([rp.get("authority_figures", []) for rp in per_card_relational])
+            peer_stability = self._compute_peer_stability(per_card_relational)
+            contemporary_stability = self._compute_contemporary_stability(per_card_relational)
+            raw_trait_convergence = self._compute_trait_convergence([rp.get("personality_traits", {}) for rp in per_card_relational])
+
+            # --- v3.2 Fix 5: Constrain trait convergence by stability ---
+            if need_stability < 0.3:
+                trait_convergence = min(raw_trait_convergence, 0.6)
+            elif need_stability < 0.5:
+                trait_convergence = min(raw_trait_convergence, 0.75)
+            else:
+                trait_convergence = raw_trait_convergence
+
+            # Also constrain by press stability
+            if press_stability < 0.3:
+                trait_convergence = min(trait_convergence, 0.6)
+            elif press_stability < 0.5:
+                trait_convergence = min(trait_convergence, 0.75)
+
+            # Stability confidence increases with more cards
+            stability_confidence = min(0.95, 0.4 + num_cards * 0.1)
+
+            # Convergence confidence
+            convergence_confidence = min(0.9, 0.3 + (need_stability + press_stability) * 0.3)
+
+        # Ego strength trajectory (if available from quantitative scores)
+        ego_scores = [cr.get("quantitative_scores", {}).get("hero_ego_strength", cr.get("ego_strength", 50)) for cr in card_results]
+        ego_trajectory = self._compute_trajectory(ego_scores)
+
+        # --- PRODUCTION HARDENING: Volatility Detection (§2) ---
+        from app.utils.production_utils import compute_volatility
+        _internal_volatility = {}
+        for metric in ['anxiety_level', 'hero_ego_strength', 'conflict_internal', 'emotional_stability']:
+            scores = [cr.get("quantitative_scores", {}).get(metric, 50) for cr in card_results]
+            _internal_volatility[metric] = compute_volatility(scores)
+
+        return {
+            "num_cards": num_cards,
+            "murray": murray_all,
+            "themes": themes,
+            "relational_patterns": relational_patterns,
+            "defenses": defenses,
+            "emotional_attractors": top_emotions,
+            "need_stability": need_stability,
+            "press_stability": press_stability,
+            "conflict_persistence": conflict_persistence,
+            "dominant_environment": dominant_env_str,
+            "authority_pattern_stability": authority_stability,
+            "contemporary_pattern_stability": contemporary_stability,
+            "peer_pattern_stability": peer_stability,
+            "trait_convergence": trait_convergence,
+            "convergence_confidence": convergence_confidence,
+            "stability_confidence": stability_confidence,
+            "ego_trajectory": ego_trajectory,
+            "per_card_murray": per_card_murray,
+            "per_card_conflicts": per_card_conflicts_new,
+            "per_card_environments": per_card_envs,
+            # Production hardening fields (§2)
+            "_internal_volatility": _internal_volatility
+        }
+
+    def _compute_stability(self, per_card_scores: List[List[Tuple[str, float]]]) -> float:
+        """
+        Compute stability of needs/presses across cards.
+        Higher stability = low variance in top 3 items.
+        """
+        if not per_card_scores or len(per_card_scores) < 2:
+            return 1.0
+        # Get top 3 needs per card
+        top_sets = [set([need for need, _ in scores[:3]]) for scores in per_card_scores]
+        # Jaccard similarity between consecutive cards
+        similarities = []
+        for i in range(len(top_sets)-1):
+            inter = len(top_sets[i] & top_sets[i+1])
+            union = len(top_sets[i] | top_sets[i+1])
+            if union > 0:
+                similarities.append(inter/union)
+        return np.mean(similarities) if similarities else 1.0
+
+    def _compute_conflict_persistence(self, per_card_murray: List[Dict], per_card_structural_conflicts: List[List[Dict]], per_card_relational: List[Dict]) -> float:
+        """
+        Compute persistence of structural narrative patterns (Needs, Presses, Conflicts, Authority).
+        """
+        if len(per_card_murray) < 2:
+            return 1.0
+        
+        similarities = []
+        for i in range(len(per_card_murray) - 1):
+            murray_a = per_card_murray[i]
+            murray_b = per_card_murray[i+1]
+            
+            # Needs
+            needs_a = set(n[0] for n in murray_a.get('needs', [])[:3])
+            needs_b = set(n[0] for n in murray_b.get('needs', [])[:3])
+            need_sim = len(needs_a & needs_b) / max(1, len(needs_a | needs_b))
+            
+            # Presses
+            presses_a = set(p[0] for p in murray_a.get('presses', [])[:3])
+            presses_b = set(p[0] for p in murray_b.get('presses', [])[:3])
+            press_sim = len(presses_a & presses_b) / max(1, len(presses_a | presses_b))
+            
+            # Authority (by classification rather than name)
+            rel_a = per_card_relational[i] if i < len(per_card_relational) else {}
+            rel_b = per_card_relational[i+1] if i+1 < len(per_card_relational) else {}
+            auth_a = sum(1 for v in rel_a.get("figure_classifications", {}).values() if v in ("authority", "Authority Figure"))
+            auth_b = sum(1 for v in rel_b.get("figure_classifications", {}).values() if v in ("authority", "Authority Figure"))
+            auth_sim = 1.0 if (auth_a > 0 and auth_b > 0) else (1.0 if auth_a == 0 and auth_b == 0 else 0.0)
+            
+            # Contemporary presence similarity
+            contemp_a = sum(1 for v in rel_a.get("figure_classifications", {}).values() if v in ("contemporary", "Contemporary"))
+            contemp_b = sum(1 for v in rel_b.get("figure_classifications", {}).values() if v in ("contemporary", "Contemporary"))
+            contemp_sim = 1.0 if (contemp_a > 0 and contemp_b > 0) else (1.0 if contemp_a == 0 and contemp_b == 0 else 0.0)
+            
+            # Conflicts
+            conf_a = set()
+            for c in murray_a.get('conflicts', []):
+                if isinstance(c, tuple) and len(c) >= 2: conf_a.add(f"{c[0]}-{c[1]}")
+                elif isinstance(c, dict) and 'need_a' in c: conf_a.add(f"{c['need_a']}-{c['need_b']}")
+            
+            for sc in per_card_structural_conflicts[i] if i < len(per_card_structural_conflicts) else []:
+                if isinstance(sc, dict) and 'type' in sc: conf_a.add(sc['type'])
+                    
+            conf_b = set()
+            for c in murray_b.get('conflicts', []):
+                if isinstance(c, tuple) and len(c) >= 2: conf_b.add(f"{c[0]}-{c[1]}")
+                elif isinstance(c, dict) and 'need_a' in c: conf_b.add(f"{c['need_a']}-{c['need_b']}")
+                
+            for sc in per_card_structural_conflicts[i+1] if i+1 < len(per_card_structural_conflicts) else []:
+                if isinstance(sc, dict) and 'type' in sc: conf_b.add(sc['type'])
+            
+            # Fuzzy match for conflicts (Optimized string parsing)
+            c_score = 0.0
+            parts_a_list = [(ca, set(ca.replace('NP:', '').replace('NN:', '').replace('SC:', '').split('-'))) for ca in conf_a]
+            parts_b_list = [(cb, set(cb.replace('NP:', '').replace('NN:', '').replace('SC:', '').split('-'))) for cb in conf_b]
+            
+            for ca, p_a in parts_a_list:
+                for cb, p_b in parts_b_list:
+                    if ca == cb:
+                         c_score += 1.0
+                    elif p_a & p_b:
+                         c_score += 0.5
+            
+            max_cf = min(len(conf_a), len(conf_b))
+            conf_sim = min(1.0, c_score / max(1, max_cf)) if max_cf > 0 else 1.0
+            if len(conf_a) == 0 and len(conf_b) == 0: conf_sim = 1.0
+            
+            # Weighted Index calculation (updated to include contemporary)
+            weighted_sim = (need_sim * 0.25) + (press_sim * 0.25) + (auth_sim * 0.15) + (contemp_sim * 0.10) + (conf_sim * 0.25)
+            similarities.append(weighted_sim)
+            
+        return float(np.mean(similarities)) if similarities else 0.0
+
+    def _compute_authority_stability(self, per_card_authority: List[List[Tuple[str, float]]]) -> float:
+        """Stability of authority figures (nodes) across cards."""
+        if len(per_card_authority) < 2:
+            return 1.0
+        auth_sets = [set([node for node, _ in auth[:3]]) for auth in per_card_authority]
+        similarities = []
+        for i in range(len(auth_sets)-1):
+            inter = len(auth_sets[i] & auth_sets[i+1])
+            union = len(auth_sets[i] | auth_sets[i+1])
+            if union > 0:
+                similarities.append(inter/union)
+        return np.mean(similarities) if similarities else 1.0
+
+    def _compute_peer_stability(self, per_card_relational: List[Dict]) -> float:
+        """Stability of peer figures across cards."""
+        if len(per_card_relational) < 2:
+            return 0.8
+        peer_counts = []
+        for rp in per_card_relational:
+            figs = rp.get("figure_classifications", {})
+            peer_count = sum(1 for v in figs.values() if v in ("Peer", "peer"))
+            peer_counts.append(peer_count)
+        # If peer presence is consistent across cards
+        if all(c > 0 for c in peer_counts) or all(c == 0 for c in peer_counts):
+            return 0.9
+        return 0.5
+
+    def _compute_contemporary_stability(self, per_card_relational: List[Dict]) -> float:
+        """Stability of contemporary figures across cards."""
+        if len(per_card_relational) < 2:
+            return 1.0
+        contemp_counts = []
+        for rp in per_card_relational:
+            figs = rp.get("figure_classifications", {})
+            contemp_count = sum(1 for v in figs.values() if v in ("Contemporary", "contemporary"))
+            contemp_counts.append(contemp_count)
+        # Jaccard-like: consistency of presence
+        if all(c > 0 for c in contemp_counts) or all(c == 0 for c in contemp_counts):
+            return 0.9
+        return 0.4
+
+    def _compute_trait_convergence(self, per_card_traits: List[Dict]) -> float:
+        """Compute average variance of trait scores across cards; lower variance = higher convergence."""
+        if len(per_card_traits) < 2:
+            return 1.0
+        # Collect all trait keys
+        all_keys = set()
+        for traits in per_card_traits:
+            all_keys.update(traits.keys())
+        variances = []
+        for key in all_keys:
+            values = [traits.get(key, 0.5) for traits in per_card_traits]
+            # Skip non-numeric trait values (e.g. defensive_rigidity_label)
+            if any(not isinstance(v, (int, float)) for v in values):
+                continue
+            variances.append(np.var(values))
+        avg_var = np.mean(variances) if variances else 0
+        # Convert to convergence score (1 - normalized variance)
+        convergence = 1.0 / (1.0 + avg_var)
+        return float(convergence)
+
+    def _compute_trajectory(self, scores: List[float]) -> Dict[str, Any]:
+        """Compute trend and volatility of a metric."""
+        if len(scores) < 2:
+            return {"trend": "stable", "volatility": 0.0, "slope": 0.0}
+        x = np.arange(len(scores))
+        slope = np.polyfit(x, scores, 1)[0]
+        volatility = np.std(scores)
+        trend = "increasing" if slope > 1 else "decreasing" if slope < -1 else "stable"
+        return {"trend": trend, "volatility": volatility, "slope": slope}

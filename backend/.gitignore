@@ -1,0 +1,47 @@
+# Python virtual environments
+venv/
+.env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+
+# Env files
+.env
+
+# Logs
+*.log
+
+# IDE files
+.vscode/
+.idea/
+.DS_Store
+
+# OS files
+Thumbs.db
+
+# ── Runtime / generated data ──────────────────────────────────────────────────
+# Everything mutable lives under data_store/
+data_store/
+
+# Legacy paths (kept in case old files linger before migration)
+auth.db
+outputs/
+sessions/
+uploads/
+saved_learning/
+model_cache/
+patient_database.csv
+data/audio_temp/
+emoji_hits.txt
+audit_logs/
+scripts - temp/
+
+# ML model downloads
+*.bin
+*.safetensors
+
+alter_db.py

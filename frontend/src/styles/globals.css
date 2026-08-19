@@ -1,0 +1,397 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: "Helvetica", "Arial", sans-serif;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-text: var(--text);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --animate-shine: shine var(--duration) infinite linear;
+  --animate-blink-cursor: blink-cursor 1.2s step-end infinite;
+  --animate-shiny-text: shiny-text 8s infinite;
+  --animate-gradient: gradient 8s linear infinite;
+  @keyframes shine {
+    0% {
+      background-position: 0% 0%;
+    }
+    50% {
+      background-position: 100% 100%;
+    }
+    to {
+      background-position: 0% 0%;
+    }
+  }
+  @keyframes blink-cursor {
+    0%,
+    49% {
+      opacity: 1;
+    }
+    50%,
+    100% {
+      opacity: 0;
+    }
+  }
+  @keyframes shiny-text {
+  0%, 90%, 100% {
+    background-position: calc(-100% - var(--shiny-width)) 0;
+    }
+  30%, 60% {
+    background-position: calc(100% + var(--shiny-width)) 0;
+    }
+  }
+  @keyframes gradient {
+    to {
+      background-position: var(--bg-size, 300%) 0;
+    }
+  }
+}
+
+/* ===========================
+   COLORS – Light mode
+   =========================== */
+:root {
+  /* Core brand colors (500 = base) */
+  --text: #1b1408;
+  --background: #ededed;
+  --primary: #5d6d1c;          /* ← new olive green */
+  --secondary: #277a24;
+  --accent: #52cb7f;
+
+  /* Expanded palette – Text (warm brown-black) */
+  --text-50: #f5efe4;
+  --text-100: #e8dfcc;
+  --text-200: #d2c5a7;
+  --text-300: #b09e78;
+  --text-400: #8e7c55;
+  --text-500: #1b1408;
+  --text-600: #160f06;
+  --text-700: #110c05;
+  --text-800: #0c0803;
+  --text-900: #070502;
+  --text-950: #030201;
+
+  /* Background (neutral gray) */
+  --background-50: #ffffff;
+  --background-100: #f9f9f9;
+  --background-200: #f2f2f2;
+  --background-300: #e5e5e5;
+  --background-400: #d9d9d9;
+  --background-500: #ededed;
+  --background-600: #b8b8b8;
+  --background-700: #8a8a8a;
+  --background-800: #5c5c5c;
+  --background-900: #2e2e2e;
+  --background-950: #1c1c1c;
+
+  /* Primary (olive green) – regenerated */
+  --primary-50: #f6f8f2;
+  --primary-100: #ecf0db;
+  --primary-200: #dee6bc;
+  --primary-300: #d1de9c;
+  --primary-400: #c3d57b;
+  --primary-500: #5d6d1c;
+  --primary-600: #b2cb4d;
+  --primary-700: #8ba136;
+  --primary-800: #616f2a;
+  --primary-900: #3f471f;
+  --primary-950: #252914;
+
+  /* Secondary (deep green) – unchanged */
+  --secondary-50: #e6f3e4;
+  --secondary-100: #c3e2bf;
+  --secondary-200: #9bcf93;
+  --secondary-300: #6bb863;
+  --secondary-400: #46a33f;
+  --secondary-500: #277a24;
+  --secondary-600: #20631e;
+  --secondary-700: #1a4d18;
+  --secondary-800: #133912;
+  --secondary-900: #0c260c;
+  --secondary-950: #051305;
+
+  /* Accent (fresh green) – unchanged */
+  --accent-50: #e6f9ee;
+  --accent-100: #c2f0d6;
+  --accent-200: #94e5b8;
+  --accent-300: #65d798;
+  --accent-400: #4eca85;
+  --accent-500: #52cb7f;
+  --accent-600: #3ea769;
+  --accent-700: #2e8252;
+  --accent-800: #205e3c;
+  --accent-900: #133a25;
+  --accent-950: #071d10;
+
+  /* Shadcn UI semantic tokens – light (updated primary tokens) */
+  --radius: 0.625rem;
+  --foreground: #1b1408;
+  --card: #ffffff;
+  --card-foreground: #1b1408;
+  --popover: #ffffff;
+  --popover-foreground: #1b1408;
+  --primary-foreground: #ffffff;          /* white text on olive for contrast */
+  --secondary-foreground: #ffffff;
+  --muted: #f5f5f4;
+  --muted-foreground: #78716c;
+  --accent-foreground: #ffffff;
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: #d6d3d1;
+  --input: #d6d3d1;
+  --ring: #5d6d1c;                        /* match primary */
+  --chart-1: #5d6d1c;
+  --chart-2: #277a24;
+  --chart-3: #52cb7f;
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: #faf8f5;
+  --sidebar-foreground: #1b1408;
+  --sidebar-primary: #5d6d1c;
+  --sidebar-primary-foreground: #ffffff;  /* contrast on olive */
+  --sidebar-accent: #f0ede6;
+  --sidebar-accent-foreground: #1b1408;
+  --sidebar-border: #d6d3d1;
+  --sidebar-ring: #5d6d1c;
+}
+
+/* ===========================
+   COLORS – Dark mode
+   =========================== */
+.dark {
+  --text: #f7f0e4;
+  --background: #121212;
+  --primary: #d3e392;          /* ← new lime green */
+  --secondary: #88db85;
+  --accent: #34ad60;
+
+  /* Expanded palette – Text (light warm) */
+  --text-50: #faf6ef;
+  --text-100: #f2eadb;
+  --text-200: #e4d6bb;
+  --text-300: #cebc93;
+  --text-400: #b7a06c;
+  --text-500: #f7f0e4;
+  --text-600: #d4c9b0;
+  --text-700: #b1a281;
+  --text-800: #8e7b56;
+  --text-900: #6b5731;
+  --text-950: #473617;
+
+  /* Background (deep dark) */
+  --background-50: #2c2c2c;
+  --background-100: #242424;
+  --background-200: #1e1e1e;
+  --background-300: #191919;
+  --background-400: #151515;
+  --background-500: #121212;
+  --background-600: #0e0e0e;
+  --background-700: #0a0a0a;
+  --background-800: #070707;
+  --background-900: #040404;
+  --background-950: #020202;
+
+  /* Primary (lime green) – regenerated */
+  --primary-50: #f6f8f2;
+  --primary-100: #f0f4e1;
+  --primary-200: #e5eec4;
+  --primary-300: #dbe9a5;
+  --primary-400: #dae7a6;
+  --primary-500: #d3e392;
+  --primary-600: #bbd161;
+  --primary-700: #95ac39;
+  --primary-800: #68762d;
+  --primary-900: #464f22;
+  --primary-950: #2b3017;
+
+  /* Secondary (lighter green) – unchanged */
+  --secondary-50: #e8fae6;
+  --secondary-100: #c8f2c4;
+  --secondary-200: #a4e99d;
+  --secondary-300: #7ede74;
+  --secondary-400: #60cf58;
+  --secondary-500: #88db85;
+  --secondary-600: #5eb35e;
+  --secondary-700: #468b47;
+  --secondary-800: #2f6331;
+  --secondary-900: #1a3b1c;
+  --secondary-950: #0b190c;
+
+  /* Accent (vibrant green) – unchanged */
+  --accent-50: #e2f8ee;
+  --accent-100: #bcefd5;
+  --accent-200: #89e4b5;
+  --accent-300: #56d896;
+  --accent-400: #3bc578;
+  --accent-500: #34ad60;
+  --accent-600: #2b8f4f;
+  --accent-700: #22703d;
+  --accent-800: #19522c;
+  --accent-900: #10351c;
+  --accent-950: #071a0c;
+
+  /* Shadcn UI semantic tokens – dark (updated primary tokens) */
+  --foreground: #f7f0e4;
+  --card: #1e1e1e;
+  --card-foreground: #f7f0e4;
+  --popover: #1e1e1e;
+  --popover-foreground: #f7f0e4;
+  --primary-foreground: #121212;         /* dark bg on light lime for contrast */
+  --secondary-foreground: #121212;
+  --muted: #2a2a2a;
+  --muted-foreground: #a1a1aa;
+  --accent-foreground: #121212;
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: rgba(255,255,255,0.1);
+  --input: rgba(255,255,255,0.15);
+  --ring: #d3e392;                       /* match primary */
+  --chart-1: #d3e392;
+  --chart-2: #88db85;
+  --chart-3: #34ad60;
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: #121212;
+  --sidebar-foreground: #f7f0e4;
+  --sidebar-primary: #d3e392;
+  --sidebar-primary-foreground: #121212;  /* contrast on light lime */
+  --sidebar-accent: #1e1e1e;
+  --sidebar-accent-foreground: #f7f0e4;
+  --sidebar-border: rgba(255,255,255,0.1);
+  --sidebar-ring: #d3e392;
+}
+
+/* ===========================
+   Base layer & utilities
+   =========================== */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Helvetica", "Arial", sans-serif;
+  }
+  /* Hide number input spinners */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+  
+  /* Fix invisible typing caret in dark mode */
+  input, textarea, select {
+    caret-color: currentColor;
+  }
+
+  /* Fix Chrome/Edge autofill background in dark mode */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px var(--background) inset !important;
+    -webkit-text-fill-color: var(--text) !important;
+    caret-color: var(--text) !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+    border: 3px solid var(--background);
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
+    border: 3px solid var(--background);
+    background-clip: padding-box;
+  }
+  
+  /* For Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+}
+
+/* ===========================
+   Sonner Toast Progress Bar
+   =========================== */
+
+/* 
+  Use [data-content]::after to avoid conflicting with Sonner's built-in ::before/::after 
+  which it uses for hover bridges and swiping animations.
+*/
+[data-sonner-toast] [data-content]::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background-color: currentColor;
+  border-bottom-left-radius: var(--radius);
+  border-bottom-right-radius: var(--radius);
+  transform-origin: left;
+  z-index: 10;
+  /* The default duration in sonner is 4000ms */
+  animation: toast-progress 4000ms linear forwards;
+}
+
+/* Pause animation when hovering over the toaster container (matches Sonner's behavior) */
+[data-sonner-toaster]:hover [data-sonner-toast] [data-content]::after,
+[data-sonner-toast]:hover [data-content]::after {
+  animation-play-state: paused;
+}
+
+@keyframes toast-progress {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}

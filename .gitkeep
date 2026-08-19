@@ -1,0 +1,4 @@
+backend/data_store/uploads/avatars/.gitkeep
+backend/data_store/uploads/documents/.gitkeep
+backend/data_store/reports/.gitkeep
+backend/data_store/sessions/.gitkeep

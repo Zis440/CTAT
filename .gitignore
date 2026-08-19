@@ -1,0 +1,47 @@
+.env
+backend/.env
+backend/logs/
+backend/model_cache/
+backend/data_store/
+backend/saved_learning/
+backend/ollama_humanizer.log
+backend/patient_database.csv
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+dist/
+
+# SQLite databases
+*.db
+
+# Log files
+*.log
+
+# Generated audit logs
+backend/audit_logs/
+backend/test_audit_logs/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+#acc and pass
+/test_acc_pass.txt
+
+
+/new-changes me.txt
+/new-changes.txt
+ct_data.sql
+run_conversion.bat
+seed_db.sql
+
+
+/PRE SCREENING
+
+# Ignored scripts
+update_patients*.py
+check_assessments.py
+delete_duplicates.py
+
+credentials.txt

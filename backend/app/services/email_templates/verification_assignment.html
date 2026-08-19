@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f4f4f7;">
+<div style="max-width:560px;margin:40px auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+  <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:32px 24px;text-align:center;">
+    <h1 style="color:#ffffff;font-size:22px;margin:0;">New Verification Request</h1>
+  </div>
+  <div style="padding:32px 24px;">
+    <p style="margin:0 0 16px;color:#1f2937;font-size:15px;">Hello <strong>Dr. {{PSYCHOLOGIST_NAME}}</strong>,</p>
+    <p style="margin:0 0 16px;color:#4b5563;font-size:14px;line-height:1.6;">
+      You have been assigned a new psychological report for <strong>RCI Verification</strong> on {{APP_NAME}}.
+    </p>
+    <div style="background:#f0f4ff;border-left:4px solid #6366f1;padding:16px;border-radius:0 8px 8px 0;margin:24px 0;">
+      <p style="margin:0 0 8px;color:#4b5563;font-size:14px;"><strong>Assessment:</strong> {{ASSESSMENT_NAME}}</p>
+      <p style="margin:0 0 8px;color:#4b5563;font-size:14px;"><strong>Patient:</strong> {{PATIENT_NAME}}</p>
+      <p style="margin:0;color:#ef4444;font-size:13px;font-weight:600;">
+        Action Required: Please verify this report within the next 4 hours to avoid reassignment.
+      </p>
+    </div>
+    <div style="text-align:center;margin:32px 0;">
+      <a href="{{LOGIN_URL}}" style="background:#6366f1;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;display:inline-block;">View Request Queue</a>
+    </div>
+    <p style="margin:24px 0 0;color:#9ca3af;font-size:12px;">
+      This is an automated message from {{APP_NAME}}. Please do not reply to this email.
+    </p>
+  </div>
+</div>
+</body>
+</html>

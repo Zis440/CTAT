@@ -1,0 +1,49 @@
+# Virtual environment
+venv/
+.env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+
+# Runtime artifacts
+outputs/
+sessions/
+saved_learning/
+model_cache/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tests / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Docker build context exclusions
+.git
+.gitignore
+*.md
+docs/
+tests/
+scripts/
+notebook/
+temporary/
+
+# ML model files (downloaded at runtime)
+*.bin
+*.safetensors
+
+# Large data files (mounted as volume instead)
+data/tat_cards/
+data/tat_scoring_manual/
+data/tat_judging_manual/
+data/remedies_dataset/
