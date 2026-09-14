@@ -284,7 +284,7 @@ def _process_session_aggregation(
                 )
 
     from app.assessments.tat.pipeline.multicard_dynamics_engine import MulticardDynamicsEngine
-    request_engine = MulticardDynamicsEngine(engines['nlp_processor'])
+    request_engine = MulticardDynamicsEngine()
 
     if len(results) > 1:
         agg = aggregate_multi_card_analysis(results, request_engine)

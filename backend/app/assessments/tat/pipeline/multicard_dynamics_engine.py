@@ -6,35 +6,49 @@ Now computes cross-card consistency metrics: need stability, conflict persistenc
 trait convergence, authority/peer pattern stability.
 """
 
+import os
 import numpy as np
 from typing import List, Dict, Any, Tuple
-from collections import defaultdict
-from app.assessments.tat.engines.inference.murray_inference_engine import MurrayInferenceEngine
-from app.assessments.tat.engines.nlp.theme_detection_engine import ThemeDetectionEngine
-from app.assessments.tat.engines.graph.relational_field_engine import RelationalFieldEngine
-from app.assessments.tat.engines.inference.defense_inference_engine import DefenseInferenceEngine
+from collections import defaultdict, Counter
 
 class MulticardDynamicsEngine:
     """
     Analyzes multiple cards to identify stable vs. variable psychological features.
+    Supports ultra-fast zero-memory aggregation for cloud/low-memory environments.
     """
 
-    def __init__(self, nlp_processor, murray_engine=None, theme_engine=None, relational_engine=None, defense_engine=None):
-        self.murray_engine = murray_engine or MurrayInferenceEngine(nlp_processor)
-        self.theme_engine = theme_engine or ThemeDetectionEngine(nlp_processor)
-        self.relational_engine = relational_engine or RelationalFieldEngine(nlp_processor)
-        self.defense_engine = defense_engine or DefenseInferenceEngine(nlp_processor)
+    def __init__(self, nlp_processor=None, murray_engine=None, theme_engine=None, relational_engine=None, defense_engine=None):
+        self.nlp_processor = nlp_processor
+        self.murray_engine = murray_engine
+        self.theme_engine = theme_engine
+        self.relational_engine = relational_engine
+        self.defense_engine = defense_engine
+
+    def _ensure_local_engines(self):
+        if self.nlp_processor is None:
+            return False
+        if self.murray_engine is None:
+            from app.assessments.tat.engines.inference.murray_inference_engine import MurrayInferenceEngine
+            self.murray_engine = MurrayInferenceEngine(self.nlp_processor)
+        if self.theme_engine is None:
+            from app.assessments.tat.engines.nlp.theme_detection_engine import ThemeDetectionEngine
+            self.theme_engine = ThemeDetectionEngine(self.nlp_processor)
+        if self.relational_engine is None:
+            from app.assessments.tat.engines.graph.relational_field_engine import RelationalFieldEngine
+            self.relational_engine = RelationalFieldEngine(self.nlp_processor)
+        if self.defense_engine is None:
+            from app.assessments.tat.engines.inference.defense_inference_engine import DefenseInferenceEngine
+            self.defense_engine = DefenseInferenceEngine(self.nlp_processor)
+        return True
 
     def aggregate(self, card_results: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
-        card_results: list of dictionaries per card, each containing at least:
-            - "events": list of event dicts
-            - "story_text": string
-            - "murray": dict from MurrayInferenceEngine (now with full profile)
-            - "relational_patterns": dict from RelationalFieldEngine (if available)
+        card_results: list of dictionaries per card.
         Returns aggregated profile with cross-card stability metrics.
         """
         num_cards = len(card_results)
+        if num_cards == 0:
+            return {}
 
         all_events = []
         all_stories = []
@@ -42,21 +56,64 @@ class MulticardDynamicsEngine:
         per_card_relational = []
         for cr in card_results:
             all_events.extend(cr.get("events", []))
-            all_stories.append(cr.get("story_text", ""))
+            all_stories.append(cr.get("story_text", cr.get("story", "")))
             per_card_murray.append(cr.get("murray", {}))
             per_card_relational.append(cr.get("relational_patterns", {}))
 
         per_card_conflicts_new = [cr.get("conflict_structure", []) for cr in card_results]
         per_card_envs = [cr.get("environment_classification", {}) for cr in card_results]
 
-        murray_all = self.murray_engine.infer_from_events(all_events)
+        # Fast 1-card path
+        if num_cards == 1:
+            cr = card_results[0]
+            events = cr.get("events", [])
+            emotion_counts = defaultdict(int)
+            for event in events:
+                if event.get('emotion'):
+                    emotion_counts[event['emotion']] += 1
+            top_emotions = sorted(emotion_counts.items(), key=lambda x: -x[1])[:5]
+            dom_env = cr.get("environment_classification", {}).get("primary", "Adaptive")
+            ego_scores = [cr.get("quantitative_scores", {}).get("hero_ego_strength", cr.get("ego_strength", 50))]
 
-        themes = self.theme_engine.extract_themes(all_stories)
+            return {
+                "num_cards": 1,
+                "murray": cr.get("murray", {}),
+                "themes": cr.get("themes", []),
+                "relational_patterns": cr.get("relational_patterns", {}),
+                "defenses": cr.get("defense_mechanisms", cr.get("defenses", [])),
+                "emotional_attractors": top_emotions,
+                "need_stability": "N/A",
+                "press_stability": "N/A",
+                "conflict_persistence": "N/A",
+                "dominant_environment": dom_env,
+                "authority_pattern_stability": "N/A",
+                "contemporary_pattern_stability": "N/A",
+                "peer_pattern_stability": "N/A",
+                "trait_convergence": "N/A",
+                "convergence_confidence": "N/A",
+                "stability_confidence": "N/A",
+                "ego_trajectory": self._compute_trajectory(ego_scores),
+                "per_card_murray": per_card_murray,
+                "per_card_conflicts": per_card_conflicts_new,
+                "per_card_environments": per_card_envs,
+                "_internal_volatility": {}
+            }
 
-        self.relational_engine.build_graph(all_events)
-        relational_patterns = self.relational_engine.get_relational_patterns()
+        is_low_mem = os.getenv("LOW_MEMORY_MODE", "false").lower() in ("true", "1") or bool(os.getenv("RENDER"))
+        has_precomputed = any(cr.get("murray") for cr in card_results)
 
-        defenses = self.defense_engine.infer_from_events(all_events, n_cards=num_cards)
+        if not is_low_mem and not has_precomputed and self._ensure_local_engines():
+            murray_all = self.murray_engine.infer_from_events(all_events)
+            themes = self.theme_engine.extract_themes(all_stories)
+            self.relational_engine.build_graph(all_events)
+            relational_patterns = self.relational_engine.get_relational_patterns()
+            defenses = self.defense_engine.infer_from_events(all_events, n_cards=num_cards)
+        else:
+            # Fast zero-overhead multi-card consolidation
+            murray_all = self._consolidate_murray(per_card_murray)
+            themes = self._consolidate_themes(card_results)
+            relational_patterns = self._consolidate_relational(card_results)
+            defenses = self._consolidate_defenses(card_results)
 
         emotion_counts = defaultdict(int)
         for event in all_events:
@@ -295,3 +352,89 @@ class MulticardDynamicsEngine:
         volatility = np.std(scores)
         trend = "increasing" if slope > 1 else "decreasing" if slope < -1 else "stable"
         return {"trend": trend, "volatility": volatility, "slope": slope}
+
+    def _consolidate_murray(self, per_card_murray: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Aggregate Murray needs and presses across cards without heavy ML."""
+        need_scores = defaultdict(list)
+        press_scores = defaultdict(list)
+        profile_scores = defaultdict(list)
+        for m in per_card_murray:
+            if not m or not isinstance(m, dict):
+                continue
+            for item in m.get("needs", []):
+                if isinstance(item, (list, tuple)) and len(item) > 1:
+                    need_scores[str(item[0])].append(float(item[1]))
+                elif isinstance(item, str):
+                    need_scores[item].append(0.7)
+            for item in m.get("presses", []):
+                if isinstance(item, (list, tuple)) and len(item) > 1:
+                    press_scores[str(item[0])].append(float(item[1]))
+                elif isinstance(item, str):
+                    press_scores[item].append(0.7)
+            for item in m.get("needs_full_profile", []):
+                if isinstance(item, dict) and "name" in item:
+                    profile_scores[str(item["name"])].append(float(item.get("score", 0.5)))
+
+        agg_needs = [[n, round(float(np.mean(vals)), 3)] for n, vals in need_scores.items()]
+        agg_needs.sort(key=lambda x: -x[1])
+
+        agg_presses = [[p, round(float(np.mean(vals)), 3)] for p, vals in press_scores.items()]
+        agg_presses.sort(key=lambda x: -x[1])
+
+        agg_profile = [{"name": n, "score": round(float(np.mean(vals)), 3)} for n, vals in profile_scores.items()]
+        agg_profile.sort(key=lambda x: -x["score"])
+
+        dominant = agg_needs[:3]
+        return {
+            "needs": agg_needs,
+            "presses": agg_presses,
+            "needs_full_profile": agg_profile if agg_profile else [{"name": n[0], "score": n[1]} for n in agg_needs],
+            "dominant_needs": dominant,
+            "latent_needs": agg_needs[3:6] if len(agg_needs) > 3 else [],
+            "suppressed_needs": agg_needs[-3:] if len(agg_needs) > 6 else [],
+            "conflicts": [],
+        }
+
+    def _consolidate_themes(self, card_results: List[Dict[str, Any]]) -> List[str]:
+        """Collect and frequency-sort themes across cards."""
+        theme_counts = Counter()
+        for cr in card_results:
+            raw_themes = cr.get("themes", [])
+            if isinstance(raw_themes, dict):
+                raw_themes = raw_themes.get("themes", [])
+            for th in (raw_themes if isinstance(raw_themes, list) else []):
+                label = th.get("label", th.get("theme", "")) if isinstance(th, dict) else str(th)
+                label = label.strip()
+                if label and len(label) >= 3:
+                    theme_counts[label] += 1
+        return [th for th, _ in theme_counts.most_common(15)]
+
+    def _consolidate_relational(self, card_results: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Collect and merge relational figures across cards."""
+        all_figures = []
+        seen_entities = set()
+        for cr in card_results:
+            rp = cr.get("relational_patterns", {})
+            figs = rp.get("valid_figure_types", []) if isinstance(rp, dict) else []
+            for f in figs:
+                if isinstance(f, dict):
+                    entity = f.get("entity", "")
+                    if entity and entity not in seen_entities:
+                        seen_entities.add(entity)
+                        all_figures.append(f)
+        return {
+            "valid_figure_types": all_figures,
+            "figures": [f.get("entity") for f in all_figures],
+        }
+
+    def _consolidate_defenses(self, card_results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Collect and merge defenses across cards."""
+        seen = {}
+        for cr in card_results:
+            for d in cr.get("defense_mechanisms", cr.get("defenses", [])):
+                if isinstance(d, dict):
+                    name = d.get("defense") or d.get("name")
+                    if name and name not in seen:
+                        seen[name] = d
+        return list(seen.values())
+

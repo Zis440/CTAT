@@ -9,8 +9,9 @@ No keyword lists – purely model-based.
 import numpy as np
 from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass
-from sentence_transformers import SentenceTransformer
-from app.assessments.tat.engines.nlp.enhanced_nlp import EnhancedNLPProcessor
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from app.assessments.tat.engines.nlp.enhanced_nlp import EnhancedNLPProcessor
 
 NEED_PROTOTYPES = {
     "nAchievement": [
