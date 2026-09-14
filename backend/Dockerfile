@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     tesseract-ocr \
     poppler-utils \
+    git \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -36,8 +37,11 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     tesseract-ocr \
     poppler-utils \
+    git \
     curl \
     && rm -rf /var/lib/apt/lists/*
+
+ENV GIT_PYTHON_REFRESH=quiet
 
 # Copy installed packages from builder
 COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages

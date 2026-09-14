@@ -15,6 +15,7 @@ ADDED:
 
 import os
 import sys
+os.environ["GIT_PYTHON_REFRESH"] = "quiet"
 os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
 os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -23,7 +24,10 @@ import spacy
 import torch
 import numpy as np
 from keybert import KeyBERT
-from pyabsa import AspectSentimentTripletExtraction as ASTE
+try:
+    from pyabsa import AspectSentimentTripletExtraction as ASTE
+except Exception:
+    ASTE = None
 from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from typing import List

@@ -1,4 +1,5 @@
 import os
+os.environ["GIT_PYTHON_REFRESH"] = "quiet"
 os.environ["USE_TF"] = "0"
 os.environ["USE_TORCH"] = "1"
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
