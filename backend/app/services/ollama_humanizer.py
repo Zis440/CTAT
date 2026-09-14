@@ -135,8 +135,9 @@ class OllamaHumanizer:
         except Exception as ge:
             logger.warning(f"Groq humanization attempt failed: {ge}")
 
-        # 2. Try Ollama if available
-        if ollama is not None:
+        # 2. Try Ollama if available (skip in low memory / cloud environments to avoid hanging)
+        is_cloud_mode = os.getenv("LOW_MEMORY_MODE", "false").lower() in ("true", "1") or bool(os.getenv("RENDER", ""))
+        if ollama is not None and not is_cloud_mode:
             for attempt in range(1, self.max_retries + 1):
                 try:
                     logger.info(f"Ollama call attempt {attempt} | type={response_type} | primary={self.model_name}")

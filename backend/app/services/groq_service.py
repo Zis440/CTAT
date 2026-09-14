@@ -15,9 +15,13 @@ GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 DEFAULT_GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 
 
+def _get_api_key() -> str:
+    return os.getenv("GROQ_API_KEY", "").strip()
+
+
 def is_groq_available() -> bool:
     """Check if Groq API key is configured."""
-    return bool(os.getenv("GROQ_API_KEY", "").strip())
+    return bool(_get_api_key())
 
 
 def call_groq_chat(
@@ -31,7 +35,7 @@ def call_groq_chat(
     Synchronous call to Groq API.
     Returns response content or None on failure.
     """
-    api_key = os.getenv("GROQ_API_KEY", "").strip()
+    api_key = _get_api_key()
     if not api_key:
         return None
 
@@ -39,6 +43,7 @@ def call_groq_chat(
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 CoreThematics/2.0",
     }
     payload = {
         "model": model_name,
@@ -69,7 +74,7 @@ async def call_groq_chat_async(
     Asynchronous call to Groq API.
     Returns response content or None on failure.
     """
-    api_key = os.getenv("GROQ_API_KEY", "").strip()
+    api_key = _get_api_key()
     if not api_key:
         return None
 
@@ -77,6 +82,7 @@ async def call_groq_chat_async(
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 CoreThematics/2.0",
     }
     payload = {
         "model": model_name,
