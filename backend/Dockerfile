@@ -48,6 +48,7 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONIOENCODING=utf-8 \
     GIT_PYTHON_REFRESH=quiet \
+    LOW_MEMORY_MODE=true \
     PORT=8000
 
 # Copy installed packages from builder

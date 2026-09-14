@@ -91,7 +91,7 @@ class EnhancedNLPProcessor:
                 try:
                     return spacy.load("en_core_web_sm")
                 except Exception:
-                    print("⚠ spaCy fallback → blank english")
+                    print("[INFO] spaCy fallback -> blank english")
                     return spacy.blank("en")
 
         self.nlp, self._model_status["spacy"] = safe_load("spaCy", load_spacy)
@@ -117,25 +117,27 @@ class EnhancedNLPProcessor:
             load_sentencebert
         )
 
-        # Share the sentence_bert instance with KeyBERT to save 150MB RAM!
-        if self.bert_embedder:
-            self.kw_model, self._model_status["keybert"] = safe_load(
-                "KeyBERT",
-                lambda: KeyBERT(model=self.bert_embedder)
-            )
-        else:
-            self.kw_model = None
-            self._model_status["keybert"] = False
-
         is_low_mem = getattr(self.config, "LOW_MEMORY_MODE", False)
 
         if is_low_mem:
-            logger.info("Low Memory Mode: Skipping heavy RoBERTa & GoEmotions local models (using Groq/VADER)")
+            logger.info("Low Memory Mode: Skipping heavy KeyBERT, RoBERTa & GoEmotions (using Groq/VADER)")
+            self.kw_model = None
+            self._model_status["keybert"] = False
             self.sentiment_pipeline = None
             self._model_status["roberta"] = False
             self.goemotions_pipeline = None
             self._model_status["goemotions"] = False
         else:
+            # Share the sentence_bert instance with KeyBERT to save RAM
+            if self.bert_embedder:
+                self.kw_model, self._model_status["keybert"] = safe_load(
+                    "KeyBERT",
+                    lambda: KeyBERT(model=self.bert_embedder)
+                )
+            else:
+                self.kw_model = None
+                self._model_status["keybert"] = False
+
             def load_roberta():
                 tokenizer = AutoTokenizer.from_pretrained(
                     self.config.ROBERTA_SENTIMENT_MODEL,
@@ -205,7 +207,8 @@ class EnhancedNLPProcessor:
         print("<<< DONE NLTK load")
 
     def _validate_core_models(self):
-        required = ["spacy", "keybert", "sentence_bert"]
+        is_low_mem = getattr(self.config, "LOW_MEMORY_MODE", False)
+        required = ["spacy", "sentence_bert"] if is_low_mem else ["spacy", "keybert", "sentence_bert"]
         missing = [m for m in required if not self._model_status.get(m)]
         if missing:
             raise RuntimeError(f"Critical NLP models missing: {missing}")
@@ -215,14 +218,24 @@ class EnhancedNLPProcessor:
             logger.debug(f"  {k:<15} {'READY' if v else 'DISABLED'}")
 
     def extract_keywords(self, text: str, top_n: int = 10):
-        if not self.kw_model:
+        if self.kw_model:
+            return self.kw_model.extract_keywords(
+                text,
+                keyphrase_ngram_range=(1, 2),
+                stop_words="english",
+                top_n=top_n
+            )
+        try:
+            import re
+            from collections import Counter
+            words = [w.lower() for w in re.findall(r'\b[a-zA-Z]{3,}\b', text)]
+            words = [w for w in words if w not in self.stopwords]
+            if not words:
+                return []
+            counts = Counter(words)
+            return [(w, round(c / len(words), 3)) for w, c in counts.most_common(top_n)]
+        except Exception:
             return []
-        return self.kw_model.extract_keywords(
-            text,
-            keyphrase_ngram_range=(1, 2),
-            stop_words="english",
-            top_n=top_n
-        )
 
     def get_sentiment(self, text: str):
         result = {'neg': 0, 'neu': 0, 'pos': 0, 'compound': 0}
@@ -299,7 +312,8 @@ class EnhancedNLPProcessor:
     def get_embeddings(self, sentences: List[str]):
         if not self.bert_embedder:
             return np.zeros((len(sentences), self.embedding_dim))
-        return self.bert_embedder.encode(sentences)
+        with torch.no_grad():
+            return self.bert_embedder.encode(sentences, show_progress_bar=False)
 
     def extract_aspect_sentiments(self, text: str):
         if not self.aspect_extractor:

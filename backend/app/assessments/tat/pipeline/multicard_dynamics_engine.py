@@ -19,11 +19,11 @@ class MulticardDynamicsEngine:
     Analyzes multiple cards to identify stable vs. variable psychological features.
     """
 
-    def __init__(self, nlp_processor):
-        self.murray_engine = MurrayInferenceEngine(nlp_processor)
-        self.theme_engine = ThemeDetectionEngine(nlp_processor)
-        self.relational_engine = RelationalFieldEngine(nlp_processor)
-        self.defense_engine = DefenseInferenceEngine(nlp_processor)
+    def __init__(self, nlp_processor, murray_engine=None, theme_engine=None, relational_engine=None, defense_engine=None):
+        self.murray_engine = murray_engine or MurrayInferenceEngine(nlp_processor)
+        self.theme_engine = theme_engine or ThemeDetectionEngine(nlp_processor)
+        self.relational_engine = relational_engine or RelationalFieldEngine(nlp_processor)
+        self.defense_engine = defense_engine or DefenseInferenceEngine(nlp_processor)
 
     def aggregate(self, card_results: List[Dict[str, Any]]) -> Dict[str, Any]:
         """

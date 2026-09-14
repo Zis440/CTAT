@@ -4,6 +4,10 @@ os.environ["USE_TF"] = "0"
 os.environ["USE_TORCH"] = "1"
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["LOW_MEMORY_MODE"] = os.getenv("LOW_MEMORY_MODE", "true")
 
 import sys
 from contextlib import asynccontextmanager
@@ -67,11 +71,29 @@ def _init_all_engines_sync():
         nlp_processor = EnhancedNLPProcessor(system_config)
         engines['nlp_processor'] = nlp_processor
 
+        from app.assessments.tat.engines.nlp.semantic_narrative_engine import SemanticNarrativeEngine
         engines['semantic_engine'] = SemanticNarrativeEngine(nlp_processor)
-        engines['murray_engine'] = MurrayInferenceEngine(nlp_processor)
-        engines['theme_engine'] = ThemeDetectionEngine(nlp_processor)
-        engines['relational_engine'] = RelationalFieldEngine(nlp_processor)
-        engines['multicard_engine'] = MulticardDynamicsEngine(nlp_processor)
+
+        from app.assessments.tat.engines.inference.defense_inference_engine import DefenseInferenceEngine
+        defense_engine = DefenseInferenceEngine(nlp_processor)
+        engines['defense_engine'] = defense_engine
+
+        murray_engine = MurrayInferenceEngine(nlp_processor)
+        engines['murray_engine'] = murray_engine
+
+        theme_engine = ThemeDetectionEngine(nlp_processor)
+        engines['theme_engine'] = theme_engine
+
+        relational_engine = RelationalFieldEngine(nlp_processor)
+        engines['relational_engine'] = relational_engine
+
+        engines['multicard_engine'] = MulticardDynamicsEngine(
+            nlp_processor,
+            murray_engine=murray_engine,
+            theme_engine=theme_engine,
+            relational_engine=relational_engine,
+            defense_engine=defense_engine,
+        )
         engines['quantitative_scorer'] = QuantitativeScorer(nlp_processor)
         if knowledge_graph:
             engines['scoring_engine'] = TATScoringEngine(system_config, knowledge_graph)
@@ -98,13 +120,6 @@ def _init_all_engines_sync():
         engines['session_manager'] = SessionManager(SESSION_DIR)
     except Exception as e:
         print(f"[WARN] SessionManager: {e}", flush=True)
-
-    if nlp_processor:
-        try:
-            from app.assessments.tat.engines.inference.defense_inference_engine import DefenseInferenceEngine
-            engines['defense_engine'] = DefenseInferenceEngine(nlp_processor)
-        except Exception as e:
-            print(f"[WARN] DefenseInferenceEngine: {e}", flush=True)
 
     try:
         from app.assessments.tat.engines.visual.visual_analysis_engine import VisualAnalysisEngine
@@ -156,6 +171,12 @@ def _init_all_engines_sync():
         backfill()
     except Exception as be:
         print(f"[WARN] Startup backfill: {be}", flush=True)
+
+    try:
+        import gc
+        gc.collect()
+    except Exception:
+        pass
 
     print(f"[OK] All engines initialized successfully ({len(engines)} loaded).", flush=True)
 

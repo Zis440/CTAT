@@ -20,7 +20,7 @@ class SystemConfig:
         self.MODEL_CACHE_DIR = self.PROJECT_ROOT / "model_cache"
         self.MODEL_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
-        self.LOW_MEMORY_MODE = os.getenv("LOW_MEMORY_MODE", "").lower() in ("1", "true", "yes") or bool(os.getenv("RENDER"))
+        self.LOW_MEMORY_MODE = os.getenv("LOW_MEMORY_MODE", "true").lower() in ("1", "true", "yes") or bool(os.getenv("RENDER"))
         self.SPACY_MODEL = os.getenv("SPACY_MODEL", "en_core_web_sm")
         self.SENTENCE_TRANSFORMER_MODEL = "all-MiniLM-L6-v2"
         self.ROBERTA_SENTIMENT_MODEL = "cardiffnlp/twitter-roberta-base-sentiment-latest"
