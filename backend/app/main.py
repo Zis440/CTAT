@@ -226,6 +226,12 @@ from app.middleware.rate_limiter import limiter, rate_limit_exceeded_handler
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
+@app.get("/")
+@app.head("/")
+def root():
+    """Root endpoint for status and Render health checks."""
+    return {"status": "ok", "service": "CTAT Backend API", "docs": "/docs", "health": "/health"}
+
 @app.get("/health")
 def health():
     """Docker/load-balancer health check."""
