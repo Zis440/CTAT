@@ -513,9 +513,10 @@ class ThemeDetectionEngine:
             sentences.extend([s.strip() for s in sents if len(s.strip()) > 10])
 
         min_size = getattr(self.config, 'THEME_MIN_SIZE', 3) if self.config else 3
-        if len(sentences) < min_size:
-
+        is_low_mem = getattr(self.config, 'LOW_MEMORY_MODE', True) if self.config else True
+        if is_low_mem or len(sentences) < min_size:
             return self._fallback_themes(stories, sentences)
+
 
         embeddings = self.sentence_model.encode(sentences, show_progress_bar=False)
 

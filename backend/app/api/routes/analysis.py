@@ -130,8 +130,18 @@ def analyze_card_endpoint(
 
         logger.info("Analysis complete for card %s, serializing response", req.cardId)
         serializable_res = make_serializable(res)
+        try:
+            import gc
+            gc.collect()
+        except Exception:
+            pass
         return serializable_res
     except Exception as e:
+        try:
+            import gc
+            gc.collect()
+        except Exception:
+            pass
         logger.error("analyze_card_endpoint failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
