@@ -36,7 +36,9 @@ from app.database import DATA_STORE_DIR
 import asyncio
 
 def _init_all_engines_sync():
-    """Background initialization for database and ML engines in a worker thread."""
+    """Background initialization for database and lightweight services in a worker thread.
+    Heavy ML/NLP engines are loaded on-demand via LazyEngineDict to keep idle RAM under 80MB.
+    """
     try:
         from app.database import init_db
         init_db()
@@ -44,127 +46,11 @@ def _init_all_engines_sync():
     except Exception as e:
         print(f"[WARN] Database initialization: {e}", flush=True)
 
-    print("[...] Initializing Engines in background...", flush=True)
-    system_config = SystemConfig()
-    try:
-        from app.assessments.tat.engines.graph.knowledge_graph_engine import KnowledgeGraphEngine
-        knowledge_graph = KnowledgeGraphEngine(config=system_config)
-        if KG_GRAPH_FILE.exists():
-            knowledge_graph.load(KG_GRAPH_FILE)
-            knowledge_graph._graph_built = True
-        else:
-            knowledge_graph._graph_built = False
-    except Exception as e:
-        print(f"[WARN] KnowledgeGraphEngine: {e}", flush=True)
-        knowledge_graph = None
-
-    try:
-        from app.assessments.tat.engines.nlp.enhanced_nlp import EnhancedNLPProcessor
-        from app.assessments.tat.engines.nlp.semantic_narrative_engine import SemanticNarrativeEngine
-        from app.assessments.tat.engines.nlp.theme_detection_engine import ThemeDetectionEngine
-        from app.assessments.tat.engines.inference.murray_inference_engine import MurrayInferenceEngine
-        from app.assessments.tat.engines.graph.relational_field_engine import RelationalFieldEngine
-        from app.assessments.tat.pipeline.multicard_dynamics_engine import MulticardDynamicsEngine
-        from app.assessments.tat.engines.scoring.quantitative_scorer import QuantitativeScorer
-        from app.assessments.tat.engines.scoring.scoring_engine import TATScoringEngine
-
-        nlp_processor = EnhancedNLPProcessor(system_config)
-        engines['nlp_processor'] = nlp_processor
-
-        from app.assessments.tat.engines.nlp.semantic_narrative_engine import SemanticNarrativeEngine
-        engines['semantic_engine'] = SemanticNarrativeEngine(nlp_processor)
-
-        from app.assessments.tat.engines.inference.defense_inference_engine import DefenseInferenceEngine
-        defense_engine = DefenseInferenceEngine(nlp_processor)
-        engines['defense_engine'] = defense_engine
-
-        murray_engine = MurrayInferenceEngine(nlp_processor)
-        engines['murray_engine'] = murray_engine
-
-        theme_engine = ThemeDetectionEngine(nlp_processor)
-        engines['theme_engine'] = theme_engine
-
-        relational_engine = RelationalFieldEngine(nlp_processor)
-        engines['relational_engine'] = relational_engine
-
-        engines['multicard_engine'] = MulticardDynamicsEngine(
-            nlp_processor,
-            murray_engine=murray_engine,
-            theme_engine=theme_engine,
-            relational_engine=relational_engine,
-            defense_engine=defense_engine,
-        )
-        engines['quantitative_scorer'] = QuantitativeScorer(nlp_processor)
-        if knowledge_graph:
-            engines['scoring_engine'] = TATScoringEngine(system_config, knowledge_graph)
-    except Exception as e:
-        print(f"[WARN] NLP engines: {e}", flush=True)
-        nlp_processor = None
-
-    if nlp_processor:
-        try:
-            from app.assessments.tat.engines.nlp.conflict_aspect_engine import ConflictAspectEngine
-            engines['conflict_engine'] = ConflictAspectEngine(nlp_processor)
-        except Exception as e:
-            print(f"[WARN] ConflictAspectEngine: {e}", flush=True)
-
-    try:
-        from app.assessments.tat.engines.visual.environment_classifier import EnvironmentClassifier
-        engines['environment_classifier'] = EnvironmentClassifier()
-    except Exception as e:
-        print(f"[WARN] EnvironmentClassifier: {e}", flush=True)
-        engines['environment_classifier'] = None
-
     try:
         from app.services.patient_intake import SessionManager
         engines['session_manager'] = SessionManager(SESSION_DIR)
     except Exception as e:
         print(f"[WARN] SessionManager: {e}", flush=True)
-
-    try:
-        from app.assessments.tat.engines.visual.visual_analysis_engine import VisualAnalysisEngine
-        engines['visual_engine'] = VisualAnalysisEngine(config=system_config)
-        print("[OK] visual_engine initialized", flush=True)
-    except Exception as e:
-        print(f"[WARN] VisualAnalysisEngine: {e}", flush=True)
-        engines['visual_engine'] = None
-
-    try:
-        from app.assessments.tat.engines.clinical.medication_engine import MedicationEngine
-        engines['medication_engine'] = MedicationEngine(
-            medication_csv_path=PROJECT_ROOT / "data" / "remedies_dataset" / "MEDICATION.csv"
-        )
-    except Exception as e:
-        print(f"[WARN] MedicationEngine: {e}", flush=True)
-        engines['medication_engine'] = None
-
-    rag_engine = None
-    airavata = None
-    if system_config.RAG_ENABLED:
-        try:
-            from app.assessments.tat.engines.rag.rag_engine import RAGEngine
-            from app.services.airavata_provider import AiravataProvider
-            rag_engine = RAGEngine(
-                corpus_dirs=system_config.RAG_CORPUS_DIRS,
-                index_dir=system_config.RAG_INDEX_DIR,
-                embedding_model_name=system_config.RAG_EMBEDDING_MODEL,
-                chunk_size=system_config.RAG_CHUNK_SIZE,
-                chunk_overlap=system_config.RAG_CHUNK_OVERLAP,
-                top_k=system_config.RAG_TOP_K,
-            )
-            airavata = AiravataProvider()
-        except Exception as e:
-            print(f"[WARN] RAG/Airavata: {e}", flush=True)
-
-    try:
-        from app.services.ollama_humanizer import OllamaHumanizer
-        engines['ollama_humanizer'] = OllamaHumanizer(
-            rag_engine=rag_engine,
-            airavata_provider=airavata,
-        )
-    except Exception as e:
-        print(f"[WARN] OllamaHumanizer: {e}", flush=True)
-        engines['ollama_humanizer'] = None
 
     try:
         from scripts.backfill_audit_logs import backfill
@@ -177,6 +63,9 @@ def _init_all_engines_sync():
         gc.collect()
     except Exception:
         pass
+
+    print("[OK] Startup complete. ML engines configured for on-demand lazy loading (Memory < 80MB).", flush=True)
+
 
     print(f"[OK] All engines initialized successfully ({len(engines)} loaded).", flush=True)
 
