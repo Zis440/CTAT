@@ -14,7 +14,7 @@ RECALIBRATION v3.0:
 - Added Supervisory Integration Recommendation
 """
 
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Tuple, Optional
 
 DSM_SAFEGUARD = (
     "No definitive diagnosis is warranted unless narrative pathology meets "
@@ -32,6 +32,23 @@ def _strip_np(val: str) -> str:
             return val[1:]
     return str(val)
 
+def _normalize_name_score(item, default_score: float = 0.5) -> Tuple[str, float]:
+    """Safely extract (name, float_score) from dict, tuple, list, or string."""
+    if isinstance(item, dict):
+        name = item.get('name') or item.get('need') or item.get('press') or item.get('label') or 'Unknown'
+        raw_score = item.get('score', item.get('intensity', default_score))
+    elif isinstance(item, (list, tuple)):
+        name = item[0] if len(item) > 0 else 'Unknown'
+        raw_score = item[1] if len(item) > 1 else default_score
+    else:
+        name = str(item)
+        raw_score = default_score
+    try:
+        score = float(raw_score)
+    except (TypeError, ValueError):
+        score = float(default_score)
+    return str(name), score
+
 def generate_clinical_formulation(aggregated_data: Dict[str, Any]) -> str:
     """
     aggregated_data is the output from MulticardDynamicsEngine.aggregate()
@@ -47,9 +64,12 @@ def generate_clinical_formulation(aggregated_data: Dict[str, Any]) -> str:
     lines.append("")
 
     murray = aggregated_data.get('murray', {})
-    needs_full = murray.get('needs_full_profile', [])
-    dominant_needs = murray.get('dominant_needs', [])
-    top_needs = dominant_needs[:3] if dominant_needs else [(n, s) for n, s in (needs_full or [])[:3]]
+    dominant_raw = murray.get('dominant_needs', [])
+    needs_full_raw = murray.get('needs_full_profile', [])
+    needs_raw = murray.get('needs', [])
+
+    source_top = dominant_raw[:3] if dominant_raw else (needs_full_raw[:3] if needs_full_raw else needs_raw[:3])
+    top_needs = [_normalize_name_score(item) for item in source_top]
 
     lines.append("DOMINANT MOTIVATIONAL ARCHITECTURE:")
     lines.append("-" * 40)
@@ -61,19 +81,22 @@ def generate_clinical_formulation(aggregated_data: Dict[str, Any]) -> str:
     else:
         lines.append("  No dominant motivational pattern identified.")
 
-    latent_needs = murray.get('latent_needs', [])
-    if latent_needs:
-        lines.append(f"  Latent/unexpressed needs: {', '.join([_strip_np(n) for n, _ in latent_needs[:3]])}")
+    latent_raw = murray.get('latent_needs', [])
+    if latent_raw:
+        latent_names = [_strip_np(_normalize_name_score(n)[0]) for n in latent_raw[:3]]
+        lines.append(f"  Latent/unexpressed needs: {', '.join(latent_names)}")
 
-    suppressed_needs = murray.get('suppressed_needs', [])
-    if suppressed_needs:
-        lines.append(f"  Suppressed needs: {', '.join([_strip_np(n) for n, _ in suppressed_needs[:3]])}")
+    suppressed_raw = murray.get('suppressed_needs', [])
+    if suppressed_raw:
+        suppressed_names = [_strip_np(_normalize_name_score(n)[0]) for n in suppressed_raw[:3]]
+        lines.append(f"  Suppressed needs: {', '.join(suppressed_names)}")
     lines.append("")
 
-    if needs_full:
+    if needs_full_raw:
         lines.append("FULL NEED HIERARCHY:")
-        for need, score in needs_full[:10]:
-            lines.append(f"  {_strip_np(need)}: {score:.3f}")
+        for item in needs_full_raw[:10]:
+            n_name, n_score = _normalize_name_score(item)
+            lines.append(f"  {_strip_np(n_name)}: {n_score:.3f}")
         lines.append("")
 
     rp = aggregated_data.get('relational_patterns', {})
