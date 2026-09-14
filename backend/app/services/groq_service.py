@@ -7,16 +7,30 @@ Compatible with Render deployment using GROQ_API_KEY.
 import os
 import logging
 from typing import List, Dict, Optional, Any
+from pathlib import Path
+from dotenv import load_dotenv
 import httpx
 
 logger = logging.getLogger(__name__)
+
+_env_file = Path(__file__).resolve().parent.parent.parent / ".env"
+if _env_file.exists():
+    load_dotenv(_env_file)
+else:
+    load_dotenv()
 
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 DEFAULT_GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 
 
 def _get_api_key() -> str:
-    return os.getenv("GROQ_API_KEY", "").strip()
+    key = os.getenv("GROQ_API_KEY", "").strip()
+    if not key:
+        # Fallback to checking local .env directly if loaded late
+        if _env_file.exists():
+            load_dotenv(_env_file, override=True)
+            key = os.getenv("GROQ_API_KEY", "").strip()
+    return key
 
 
 def is_groq_available() -> bool:

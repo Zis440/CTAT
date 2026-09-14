@@ -88,21 +88,36 @@ def analyze_card_endpoint(
             details={"patient_id": req.patientId, "card_id": req.cardId}
         )
 
-        res = analyze_card(
-            card_id=req.cardId,
-            story_text=req.story,
-            patient_profile=patient,
-            semantic_engine=engines['semantic_engine'],
-            murray_engine=engines['murray_engine'],
-            theme_engine=engines['theme_engine'],
-            relational_engine=engines['relational_engine'],
-            quantitative_scorer=engines['quantitative_scorer'],
-            scoring_engine=engines['scoring_engine'],
-            conflict_engine=engines['conflict_engine'],
-            environment_classifier=engines['environment_classifier'],
-            visual_engine=engines.get('visual_engine'),
-            defense_engine=engines.get('defense_engine'),
-        )
+        res = None
+        from app.services.groq_analysis_service import is_groq_analysis_available, analyze_card_with_groq
+        if is_groq_analysis_available():
+            try:
+                res = analyze_card_with_groq(
+                    card_id=req.cardId,
+                    story_text=req.story,
+                    patient_profile=patient,
+                )
+                logger.info(f"Card {req.cardId} analyzed successfully via fast Groq cloud pipeline")
+            except Exception as ge:
+                logger.warning(f"Groq card analysis failed: {ge}, falling back to local engines")
+                res = None
+
+        if res is None:
+            res = analyze_card(
+                card_id=req.cardId,
+                story_text=req.story,
+                patient_profile=patient,
+                semantic_engine=engines['semantic_engine'],
+                murray_engine=engines['murray_engine'],
+                theme_engine=engines['theme_engine'],
+                relational_engine=engines['relational_engine'],
+                quantitative_scorer=engines['quantitative_scorer'],
+                scoring_engine=engines['scoring_engine'],
+                conflict_engine=engines['conflict_engine'],
+                environment_classifier=engines['environment_classifier'],
+                visual_engine=engines.get('visual_engine'),
+                defense_engine=engines.get('defense_engine'),
+            )
 
         try:
             scores = res.get('scores', res.get('quantitative_scores', {}))

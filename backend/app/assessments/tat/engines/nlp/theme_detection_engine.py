@@ -106,7 +106,8 @@ def _is_psychological_construct_wn(word: str) -> bool:
     """Check if word relates to psychological/emotional constructs via WordNet.
     Looks for words whose hypernym chain includes emotion, feeling, trait,
     cognition, or motivation — the semantic families of psychological constructs."""
-    if not _WN_THEME_AVAILABLE:
+    is_low_mem = os.getenv("LOW_MEMORY_MODE", "true").lower() in ("1", "true", "yes") or bool(os.getenv("RENDER"))
+    if not _WN_THEME_AVAILABLE or is_low_mem:
         return word.lower() in PSYCHOLOGICAL_CONSTRUCTS
 
     if word.lower() in PSYCHOLOGICAL_CONSTRUCTS:
