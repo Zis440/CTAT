@@ -64,10 +64,8 @@ export const FormattedText: React.FC<{ text: unknown }> = ({ text }) => {
   if (!text) return null;
   const content = typeof text === 'string' ? text : JSON.stringify(text, null, 2);
   return (
-    <div className="text-foreground leading-relaxed text-[13px] font-['Helvetica',sans-serif]">
-      {content.split('\n').map((paragraph, idx) => (
-        <p key={idx} className="mb-2">{paragraph}</p>
-      ))}
+    <div className="text-foreground leading-relaxed text-[13px] font-sans whitespace-pre-wrap break-words space-y-1">
+      {content}
     </div>
   );
 };

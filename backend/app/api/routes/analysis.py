@@ -243,6 +243,15 @@ def _process_session_aggregation(
                     existing_data = json.load(f)
                 agg = existing_data.get("report_summary")
                 if agg:
+                    form = agg.get("clinical_formulation", "")
+                    if not form or ("DOMINANT MOTIVATIONAL ARCHITECTURE:" in form and len(form.strip()) < 400):
+                        agg["clinical_formulation"] = generate_clinical_formulation(agg)
+                        existing_data["report_summary"] = agg
+                        try:
+                            with open(json_path, "w", encoding="utf-8") as f:
+                                json.dump(existing_data, f, indent=2, default=str)
+                        except Exception:
+                            pass
 
                     agg["_db_metadata"] = {
                         "id": existing_session.id,
