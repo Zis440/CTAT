@@ -107,7 +107,7 @@ class MedicationEngine:
         if self.medication_csv_path.exists():
             self._load_database()
         else:
-            print(f"⚠️ Medication database not found: {medication_csv_path}")
+            print(f"[WARN] Medication database not found: {medication_csv_path}")
 
     def _load_database(self):
         """Load MEDICATION.csv into memory"""
@@ -172,10 +172,10 @@ class MedicationEngine:
                     for symptom in symptoms:
                         self.symptom_index[symptom.lower()].append(med_entry)
 
-            print(f"✅ Loaded {len(self.medications_db)} medication entries")
+            print(f"[OK] Loaded {len(self.medications_db)} medication entries")
 
         except Exception as e:
-            print(f"⚠️ Error loading medication database: {e}")
+            print(f"[WARN] Error loading medication database: {e}")
 
     def match_conditions(
         self,

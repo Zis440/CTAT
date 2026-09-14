@@ -150,40 +150,39 @@ class OllamaHumanizer:
                         options={"temperature": 0.3}
                     )
 
-                text = self._extract_response_text(response)
+                    text = self._extract_response_text(response)
 
-                if not text or len(text.strip()) < 20:
-                    if len(safe_prompt) > 1000:
-                        safe_prompt = safe_prompt[:1000]
-                        continue
-                    raise ValueError("Ollama returned empty or invalid content")
+                    if not text or len(text.strip()) < 20:
+                        if len(safe_prompt) > 1000:
+                            safe_prompt = safe_prompt[:1000]
+                            continue
+                        raise ValueError("Ollama returned empty or invalid content")
 
-                self._store_in_history(response_type, text)
-                return text
+                    self._store_in_history(response_type, text)
+                    return text
 
-            except Exception as e:
+                except Exception as e:
+                    if attempt == self.max_retries and self.fallback_model_name:
+                        logger.warning(f"Primary model {self.model_name} failed. Attempting fallback {self.fallback_model_name}...")
+                        try:
+                            fb_response = ollama.chat(
+                                model=self.fallback_model_name,
+                                messages=[
+                                    {"role": "system", "content": self._system_guardrails()},
+                                    {"role": "user", "content": safe_prompt}
+                                ],
+                                options={"temperature": 0.3}
+                            )
+                            fb_text = self._extract_response_text(fb_response)
+                            if fb_text and len(fb_text.strip()) >= 20:
+                                self._store_in_history(response_type, fb_text)
+                                return fb_text
+                        except Exception as fb_e:
+                            logger.error(f"Fallback model failed: {fb_e}")
 
-                if attempt == self.max_retries and self.fallback_model_name:
-                    logger.warning(f"Primary model {self.model_name} failed. Attempting fallback {self.fallback_model_name}...")
-                    try:
-                        fb_response = ollama.chat(
-                            model=self.fallback_model_name,
-                            messages=[
-                                {"role": "system", "content": self._system_guardrails()},
-                                {"role": "user", "content": safe_prompt}
-                            ],
-                            options={"temperature": 0.3}
-                        )
-                        fb_text = self._extract_response_text(fb_response)
-                        if fb_text and len(fb_text.strip()) >= 20:
-                            self._store_in_history(response_type, fb_text)
-                            return fb_text
-                    except Exception as fb_e:
-                        logger.error(f"Fallback model failed: {fb_e}")
-
-                delay = self.base_retry_delay * attempt
-                logger.warning(f"Ollama error: {e} | retrying in {delay}s")
-                time.sleep(delay)
+                    delay = self.base_retry_delay * attempt
+                    logger.warning(f"Ollama error: {e} | retrying in {delay}s")
+                    time.sleep(delay)
 
         logger.warning(f"Ollama failed. Falling back to templates.")
         return self._use_template(response_type)
