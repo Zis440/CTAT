@@ -450,7 +450,7 @@ export function VerificationQueuePage() {
             <TabsTrigger value="clinic-org" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold relative pr-10">
               <Building2 className="w-4 h-4 mr-2" /> Clinic / Org Verification
               {clinicOrgCount > 0 && (
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full bg-green-500 text-[10px] font-bold text-white dark:bg-[#D3E392] dark:text-black shadow-sm ring-2 ring-background animate-in zoom-in">
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow-sm ring-2 ring-background animate-in zoom-in">
                   {clinicOrgCount > 99 ? '99+' : clinicOrgCount}
                 </span>
               )}
@@ -458,7 +458,7 @@ export function VerificationQueuePage() {
             <TabsTrigger value="rci-psychologist" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold relative pr-10">
               <User className="w-4 h-4 mr-2" /> Individual Psychologists
               {individualCount > 0 && (
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full bg-green-500 text-[10px] font-bold text-white dark:bg-[#D3E392] dark:text-black shadow-sm ring-2 ring-background animate-in zoom-in">
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow-sm ring-2 ring-background animate-in zoom-in">
                   {individualCount > 99 ? '99+' : individualCount}
                 </span>
               )}

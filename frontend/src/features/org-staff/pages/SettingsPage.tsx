@@ -688,7 +688,7 @@ export function SettingsPage() {
                   <CardContent className="space-y-4 pt-0">
                     <div className="flex items-center justify-between p-4 rounded-xl bg-primary/5 border border-primary/10">
                       <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                         <div>
                           <p className="text-sm font-bold text-text">
                             Current Session

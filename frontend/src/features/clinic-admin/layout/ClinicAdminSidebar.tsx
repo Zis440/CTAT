@@ -158,7 +158,7 @@ export function ClinicAdminSidebar() {
             {item.notificationKey && pendingCounts?.[item.notificationKey] ? (
               <span className={cn(
                 "absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full text-[11px] font-bold shadow-sm ring-2 ring-background animate-in zoom-in",
-                "bg-green-500 text-white dark:bg-[#D3E392] dark:text-black"
+                "bg-primary text-primary-foreground"
               )}>
                 {pendingCounts[item.notificationKey] > 99 ? '99+' : pendingCounts[item.notificationKey]}
               </span>

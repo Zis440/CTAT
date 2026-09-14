@@ -1,15 +1,11 @@
-
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { RouterProvider } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { HelmetProvider } from "react-helmet-async";
-
-import { router } from "./router";
 import { TooltipProvider } from "@/components/ui/tooltip";
-
-import { PWAUpdatePrompt } from "./pwa";
-import { PWAInstallButton } from "./pwa";
+import { router } from "./router";
+import { PWAInstallButton, PWAUpdatePrompt } from "./pwa";
 
 type Theme = "dark" | "light" | "system";
 
@@ -112,7 +108,7 @@ function App() {
           <TooltipProvider>
             <RouterProvider router={router} />
           </TooltipProvider>
-          <Toaster position="top-right" richColors closeButton />
+          <Toaster position="top-right" closeButton />
           <PWAUpdatePrompt />
           <PWAInstallButton />
         </ThemeProvider>
