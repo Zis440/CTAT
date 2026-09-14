@@ -350,7 +350,7 @@ def apply_precision_score_cap(
     has_emotional_contradiction: bool = False,
 ) -> dict:
     """
-    Rule 3 (Psyichub Calibration v1.2): Anti-Perfection Score Cap.
+    Rule 3 (CoreTAT Calibration v1.2): Anti-Perfection Score Cap.
 
     No dimension may output 10.0 (or 100 on 0-100 scale) unless ALL criteria met:
       - word_count > 150

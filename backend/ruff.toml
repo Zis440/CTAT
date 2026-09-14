@@ -1,4 +1,4 @@
-# Ruff linter configuration for Psyichub backend
+# Ruff linter configuration for CoreThematics backend
 # https://docs.astral.sh/ruff/configuration/
 
 [lint]

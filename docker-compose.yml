@@ -19,7 +19,7 @@ services:
     image: ollama/ollama:0.3.14
     restart: unless-stopped
     volumes:
-      - /var/psyichub/model_cache:/root/.ollama
+      - /var/corethematics/model_cache:/root/.ollama
     ports:
       - "11434:11434"           # only needed if you want to call Ollama from outside
 
@@ -42,11 +42,11 @@ services:
       OLLAMA_BASE_URL: http://ollama:11434
     volumes:
       # Bind mounts → real paths on VPS disk, easy to backup
-      - /var/psyichub/uploads:/app/data_store/uploads
-      - /var/psyichub/reports:/app/data_store/reports
-      - /var/psyichub/sessions:/app/data_store/sessions
-      - /var/psyichub/audio_temp:/app/data_store/audio_temp
-      - /var/psyichub/saved_learning:/app/saved_learning
+      - /var/corethematics/uploads:/app/data_store/uploads
+      - /var/corethematics/reports:/app/data_store/reports
+      - /var/corethematics/sessions:/app/data_store/sessions
+      - /var/corethematics/audio_temp:/app/data_store/audio_temp
+      - /var/corethematics/saved_learning:/app/saved_learning
       # Static reference data (read-only — already baked into image, but
       # mount here if you want to update cards without rebuilding)
       - ./backend/data:/app/data:ro

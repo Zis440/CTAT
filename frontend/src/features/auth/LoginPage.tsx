@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate, Link, useLocation, Navigate } from "react-router-dom";
-import { useTheme } from "@/app/providers";
 import { Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -12,15 +11,12 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DotPattern } from "@/components/ui/dot-pattern";
-import { Backlight } from "@/components/ui/backlight";
 
 import { login } from "@/services/authService";
 import { useAuthStore, useAuthHydrated } from "@/store/useAuthStore";
-import { BrainAnalysisUI } from "./components/BrainAnalysisUI";
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { theme } = useTheme();
   const location = useLocation();
   const setAuth = useAuthStore((s) => s.setAuth);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -94,29 +90,16 @@ export function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col bg-background font-sans transition-colors duration-300 relative">
       <Helmet>
-        <title>Sign In | PsyicHub - Psychological Intelligence</title>
+        <title>Sign In | CoreTAT - Psychological Intelligence</title>
         <meta
           name="description"
-          content="Sign in to your Psyichub clinical dashboard."
+          content="Sign in to your CoreTAT clinical dashboard."
         />
       </Helmet>
 
       <LandingNavbar />
 
-      <svg width="0" height="0" className="absolute pointer-events-none">
-        <defs>
-          <filter id="tint-light" colorInterpolationFilters="sRGB">
-            <feColorMatrix type="saturate" values="0" />
 
-            <feColorMatrix type="matrix" values="
-              0.365 0 0 0 0
-              0 0.427 0 0 0
-              0 0 0.110 0 0
-              0 0 0 1 0
-            " />
-          </filter>
-        </defs>
-      </svg>
 
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/4 -left-32 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse" />
@@ -241,7 +224,7 @@ export function LoginPage() {
         </div>
 
         <div
-          className="hidden lg:flex lg:w-1/2 items-center justify-center relative overflow-hidden p-4"
+          className="hidden lg:flex lg:w-1/2 items-center justify-center relative overflow-hidden p-6"
           aria-hidden="true"
         >
 
@@ -266,28 +249,18 @@ export function LoginPage() {
 
             <div className="relative w-full max-w-xl xl:max-w-[650px] flex items-center justify-center">
 
-              <div className="absolute inset-0 z-15 pointer-events-none flex items-center justify-center">
-                <Backlight className="w-full h-full absolute inset-0" blur={40}>
-                  <div className="w-full h-full" style={{ WebkitMaskImage: 'linear-gradient(to bottom, transparent 65%, black 85%, transparent 100%)', maskImage: 'linear-gradient(to bottom, transparent 65%, black 85%, transparent 100%)' }}>
-                    <img src="/login-art.png" alt="" className="w-full object-contain opacity-80" style={theme === 'light' ? { filter: 'url(#tint-light)' } : undefined} />
-                  </div>
-                </Backlight>
+              <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center">
+                <div className="w-[450px] h-[450px] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(206,17,38,0.22)_0%,rgba(255,56,77,0.08)_40%,transparent_70%)] blur-3xl pointer-events-none" />
               </div>
 
-              <img
-                src="/login-art.png"
-                alt="Login Art"
-                className="w-full object-contain relative z-20 pointer-events-none"
-                style={{
-                  maskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)',
-                  WebkitMaskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)',
-                  ...(theme === 'light' ? { filter: 'url(#tint-light)' } : {})
-                }}
-              />
-
-              <div className="absolute inset-0 z-30 pointer-events-none">
-                <BrainAnalysisUI />
-              </div>
+              <picture className="w-full flex items-center justify-center relative z-20">
+                <source srcSet="/neural_laptop_animation.webp" type="image/webp" />
+                <img
+                  src="/neural_laptop_animation.gif"
+                  alt="CoreTAT Neural Platform"
+                  className="w-full object-contain pointer-events-none select-none"
+                />
+              </picture>
 
             </div>
           </div>

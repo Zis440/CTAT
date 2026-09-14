@@ -2,7 +2,7 @@
 API Routes Package
 ==================
 Registers all route modules as FastAPI APIRouters.
-Each module handles a specific domain of the Psyichub API.
+Each module handles a specific domain of the CoreTAT API.
 """
 from app.api.routes.patients import router as patients_router
 from app.api.routes.cards import router as cards_router

@@ -1,19 +1,19 @@
-# PsyicHub
+# CoreTAT
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com/)
 [![React 19](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
 
-A comprehensive full-stack platform for **automated psychometric assessments**. PsyicHub features a robust suite of **11 clinical tests and screening tools**, ranging from general health screenings to projective, self-report, behavioral, and psychoanalytic evaluations. The platform rigorously analyzes patient narratives and multi-informant data through deep learning, NLP, and AI to deliver structured clinical insights via an interactive dashboard and comprehensive PDF reports.
+A comprehensive full-stack platform for **automated psychometric assessments**. CoreTAT features a robust suite of **11 clinical tests and screening tools**, ranging from general health screenings to projective, self-report, behavioral, and psychoanalytic evaluations. The platform rigorously analyzes patient narratives and multi-informant data through deep learning, NLP, and AI to deliver structured clinical insights via an interactive dashboard and comprehensive PDF reports.
 
 ---
 
 ## 📖 Project Overview
 
-Clinical assessment interpretation has historically been a manual, highly subjective process requiring extensive clinical expertise. **PsyicHub** digitizes and standardizes this process across 11 distinct assessments by combining modern deep learning constructs with grounded psychological frameworks.
+Clinical assessment interpretation has historically been a manual, highly subjective process requiring extensive clinical expertise. **CoreTAT** digitizes and standardizes this process across 11 distinct assessments by combining modern deep learning constructs with grounded psychological frameworks.
 
-Through a hybrid architecture incorporating Large Language Models (LLMs), Computer Vision (Faster R-CNN / VLM LLaVA), and deterministic Knowledge Graphs, PsyicHub acts as an advanced clinical decision-support system to drastically reduce evaluation time while maintaining analytical rigor.
+Through a hybrid architecture incorporating Large Language Models (LLMs), Computer Vision (Faster R-CNN / VLM LLaVA), and deterministic Knowledge Graphs, CoreTAT acts as an advanced clinical decision-support system to drastically reduce evaluation time while maintaining analytical rigor.
 
 ---
 
@@ -100,7 +100,7 @@ Through a hybrid architecture incorporating Large Language Models (LLMs), Comput
 ## 📂 Project Structure
 
 ```
-PsyicHub/
+CoreTAT/
 ├── backend/
 │   ├── app/
 │   │   ├── main.py              # FastAPI app & lifespan orchestrator

@@ -33,7 +33,7 @@ export function ForgotPasswordPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background font-sans px-4 py-12 relative">
       <Helmet>
-        <title>Forgot Password | PsyicHub - Psychological Intelligence</title>
+        <title>Forgot Password | CoreTAT - Psychological Intelligence</title>
       </Helmet>
 
       <div className="absolute top-4 right-4 z-50">
@@ -83,7 +83,7 @@ export function ForgotPasswordPage() {
                   <CheckCircle2 className="h-8 w-8 text-primary" />
                 </div>
                 <p className="text-sm text-text/60 text-center leading-relaxed">
-                  If this email is associated with a Psyichub account, you'll
+                  If this email is associated with a CoreTAT account, you'll
                   receive a reset link within a few minutes. Check your spam folder
                   if you don't see it.
                 </p>

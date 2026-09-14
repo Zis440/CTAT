@@ -426,7 +426,7 @@ export function IntakeView() {
     <div className="w-full relative min-h-full isolate">
 
       <Helmet>
-        <title>{targetLabel} Intake | PsyicHub - Psychological Intelligence</title>
+        <title>{targetLabel} Intake | CoreTAT - Psychological Intelligence</title>
       </Helmet>
 
       <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">

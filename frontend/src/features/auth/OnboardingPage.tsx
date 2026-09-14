@@ -70,7 +70,7 @@ export function OnboardingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-text font-sans selection:bg-primary selection:text-background transition-colors duration-300">
       <Helmet>
-        <title>Onboarding | PsyicHub - Psychological Intelligence</title>
+        <title>Onboarding | CoreTAT - Psychological Intelligence</title>
       </Helmet>
       <LandingNavbar />
 

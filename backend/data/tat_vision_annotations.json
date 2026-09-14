@@ -1,7 +1,7 @@
 {
   "Card_1": {
     "file_hash": "sha256:13fc9d0e3f818e29",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card_1.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card_1.webp",
     "annotated_at": "2026-04-07T16:35:27.064561",
     "model_used": "llava:7b",
     "people": [],
@@ -19,7 +19,7 @@
   },
   "Card_10": {
     "file_hash": "sha256:3b554a12b04d3bd3",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card_10.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card_10.webp",
     "annotated_at": "2026-04-07T16:35:44.247879",
     "model_used": "llava:7b",
     "people": [],
@@ -37,7 +37,7 @@
   },
   "Card_11": {
     "file_hash": "sha256:1597e012ab7f4bba",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card_11.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card_11.webp",
     "annotated_at": "2026-04-07T16:36:13.926291",
     "model_used": "llava:7b",
     "people": [],
@@ -55,7 +55,7 @@
   },
   "Card_12": {
     "file_hash": "sha256:7d272cc134cb2ae2",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card_12.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card_12.webp",
     "annotated_at": "2026-04-07T16:36:31.702263",
     "model_used": "llava:7b",
     "people": [],
@@ -73,7 +73,7 @@
   },
   "Card_13": {
     "file_hash": "sha256:23dab03099571064",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card_13.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card_13.webp",
     "annotated_at": "2026-04-07T16:46:58.884233",
     "model_used": "llava:7b",
     "people": [],
@@ -91,7 +91,7 @@
   },
   "Card_2": {
     "file_hash": "sha256:166bd4f40c914758",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card_2.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card_2.webp",
     "annotated_at": "2026-04-07T16:47:21.593344",
     "model_used": "llava:7b",
     "people": [],
@@ -109,7 +109,7 @@
   },
   "Card_3": {
     "file_hash": "sha256:6114821663855c89",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card_3.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card_3.webp",
     "annotated_at": "2026-04-07T16:47:36.901895",
     "model_used": "llava:7b",
     "people": [],
@@ -127,7 +127,7 @@
   },
   "Card_4": {
     "file_hash": "sha256:c6a7782f3279c1e4",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card_4.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card_4.webp",
     "annotated_at": "2026-04-07T16:47:58.694353",
     "model_used": "llava:7b",
     "people": [],
@@ -145,7 +145,7 @@
   },
   "Card_5": {
     "file_hash": "sha256:50c1658fe79831d9",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card_5.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card_5.webp",
     "annotated_at": "2026-04-07T16:48:14.856917",
     "model_used": "llava:7b",
     "people": [],
@@ -163,7 +163,7 @@
   },
   "Card_6": {
     "file_hash": "sha256:66ddcb16ff2235b4",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card_6.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card_6.webp",
     "annotated_at": "2026-04-07T16:48:41.060273",
     "model_used": "llava:7b",
     "people": [],
@@ -181,7 +181,7 @@
   },
   "Card_7": {
     "file_hash": "sha256:cae1648c008deb40",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card_7.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card_7.webp",
     "annotated_at": "2026-04-07T16:49:23.470029",
     "model_used": "llava:7b",
     "people": [],
@@ -199,7 +199,7 @@
   },
   "Card_8": {
     "file_hash": "sha256:8214b21796cef2d8",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card_8.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card_8.webp",
     "annotated_at": "2026-04-07T16:49:44.512212",
     "model_used": "llava:7b",
     "people": [],
@@ -217,7 +217,7 @@
   },
   "Card_9": {
     "file_hash": "sha256:756ad9eaf608cc0f",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card_9.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card_9.webp",
     "annotated_at": "2026-04-07T16:50:11.410061",
     "model_used": "llava:7b",
     "people": [],
@@ -235,7 +235,7 @@
   },
   "Card 1": {
     "file_hash": "sha256:13fc9d0e3f818e29",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card 1.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card 1.webp",
     "annotated_at": "2026-05-05T01:14:44.320286",
     "model_used": "llava:7b",
     "people": [],
@@ -253,7 +253,7 @@
   },
   "Card 10": {
     "file_hash": "sha256:3b554a12b04d3bd3",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card 10.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card 10.webp",
     "annotated_at": "2026-05-05T01:15:03.038268",
     "model_used": "llava:7b",
     "people": [],
@@ -271,7 +271,7 @@
   },
   "Card 11": {
     "file_hash": "sha256:1597e012ab7f4bba",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card 11.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card 11.webp",
     "annotated_at": "2026-05-05T01:15:18.200277",
     "model_used": "llava:7b",
     "people": [],
@@ -289,7 +289,7 @@
   },
   "Card 12": {
     "file_hash": "sha256:7d272cc134cb2ae2",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card 12.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card 12.webp",
     "annotated_at": "2026-05-05T01:15:35.752117",
     "model_used": "llava:7b",
     "people": [],
@@ -307,7 +307,7 @@
   },
   "Card 13": {
     "file_hash": "sha256:23dab03099571064",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card 13.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card 13.webp",
     "annotated_at": "2026-05-05T01:15:50.186084",
     "model_used": "llava:7b",
     "people": [],
@@ -325,7 +325,7 @@
   },
   "Card 2": {
     "file_hash": "sha256:166bd4f40c914758",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card 2.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card 2.webp",
     "annotated_at": "2026-05-05T01:16:04.910338",
     "model_used": "llava:7b",
     "people": [],
@@ -343,7 +343,7 @@
   },
   "Card 3": {
     "file_hash": "sha256:6114821663855c89",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card 3.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card 3.webp",
     "annotated_at": "2026-05-05T01:16:24.747197",
     "model_used": "llava:7b",
     "people": [],
@@ -361,7 +361,7 @@
   },
   "Card 4": {
     "file_hash": "sha256:c6a7782f3279c1e4",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card 4.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card 4.webp",
     "annotated_at": "2026-05-05T01:16:43.617543",
     "model_used": "llava:7b",
     "people": [],
@@ -379,7 +379,7 @@
   },
   "Card 5": {
     "file_hash": "sha256:50c1658fe79831d9",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card 5.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card 5.webp",
     "annotated_at": "2026-05-05T01:17:02.449010",
     "model_used": "llava:7b",
     "people": [],
@@ -397,7 +397,7 @@
   },
   "Card 6": {
     "file_hash": "sha256:66ddcb16ff2235b4",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card 6.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card 6.webp",
     "annotated_at": "2026-05-05T01:17:18.110683",
     "model_used": "llava:7b",
     "people": [],
@@ -415,7 +415,7 @@
   },
   "Card 7": {
     "file_hash": "sha256:cae1648c008deb40",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card 7.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card 7.webp",
     "annotated_at": "2026-05-05T01:17:34.639806",
     "model_used": "llava:7b",
     "people": [],
@@ -433,7 +433,7 @@
   },
   "Card 8": {
     "file_hash": "sha256:8214b21796cef2d8",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card 8.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card 8.webp",
     "annotated_at": "2026-05-05T01:17:48.639014",
     "model_used": "llava:7b",
     "people": [],
@@ -451,7 +451,7 @@
   },
   "Card 9": {
     "file_hash": "sha256:756ad9eaf608cc0f",
-    "image_path": "D:\\Psyichub\\backend\\data\\tat_cards\\Card 9.webp",
+    "image_path": "D:\\CoreTAT v2\\backend\\data\\tat_cards\\Card 9.webp",
     "annotated_at": "2026-05-05T01:18:05.411511",
     "model_used": "llava:7b",
     "people": [],

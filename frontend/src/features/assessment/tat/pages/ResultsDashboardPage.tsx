@@ -388,7 +388,7 @@ export function AnalysisDashboard() {
       <div className="w-full relative min-h-full isolate">
 
         <Helmet>
-          <title>Dashboard | PsyicHub - Psychological Intelligence</title>
+          <title>Dashboard | CoreTAT - Psychological Intelligence</title>
         </Helmet>
 
         <div className="w-full max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -420,7 +420,7 @@ export function AnalysisDashboard() {
                     <ShieldAlert className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-primary">Apply for Psyichub's Verified Psychologist Program</h3>
+                    <h3 className="font-bold text-primary">Apply for CoreTAT's Verified Psychologist Program</h3>
                     <p className="text-sm text-muted-foreground">
                       {user?.verification_status === "pending"
                         ? "Your application is currently under review by our super admins."
@@ -677,7 +677,7 @@ export function AnalysisDashboard() {
     return (
       <div className="w-full relative min-h-full">
         <Helmet>
-          <title>Dashboard | PsyicHub - Psychological Intelligence</title>
+          <title>Dashboard | CoreTAT - Psychological Intelligence</title>
         </Helmet>
         <div className="max-w-6xl mx-auto pb-16">
           <ScreeningReportUI
@@ -858,7 +858,7 @@ export function AnalysisDashboard() {
       }
     >
       <Helmet>
-        <title>Dashboard | PsyicHub - Psychological Intelligence</title>
+        <title>Dashboard | CoreTAT - Psychological Intelligence</title>
       </Helmet>
 
       <div className="bg-background p-6 md:p-10 mx-auto max-w-5xl my-6 print:shadow-none print:border-none print:m-0 print:max-w-full">
@@ -946,7 +946,7 @@ export function AnalysisDashboard() {
             <SectionHeader title="4. Murray Need-Press Profile" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mt-6">
               <div>
-                <h4 className="text-[11px] font-bold text-[#238b40] uppercase tracking-wider mb-4 border-b border-gray-200 pb-2">Salient Needs</h4>
+                <h4 className="text-[11px] font-bold text-[#ce1126] uppercase tracking-wider mb-4 border-b border-gray-200 pb-2">Salient Needs</h4>
                 {report.needs_with_scores && report.needs_with_scores.length > 0 ? (
                   report.needs_with_scores.slice(0, 7).map((item: any, i: number) => {
                     const name = Array.isArray(item) ? item[0] : item.name || item;
@@ -965,7 +965,7 @@ export function AnalysisDashboard() {
                 )}
               </div>
               <div>
-                <h4 className="text-[11px] font-bold text-[#238b40] uppercase tracking-wider mb-4 border-b border-gray-200 pb-2">Perceived Presses (Environment)</h4>
+                <h4 className="text-[11px] font-bold text-[#ce1126] uppercase tracking-wider mb-4 border-b border-gray-200 pb-2">Perceived Presses (Environment)</h4>
                 {report.presses_with_scores && report.presses_with_scores.length > 0 ? (
                   report.presses_with_scores.slice(0, 7).map((item: any, i: number) => {
                     const name = Array.isArray(item) ? item[0] : item.name || item;
@@ -1037,8 +1037,8 @@ export function AnalysisDashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                 <div className="p-5 border border-[#50d3a7]/30 rounded-lg bg-[#50d3a7]/5">
                   <div className="flex items-center justify-between mb-4">
-                    <span className="font-bold text-[14px] uppercase text-[#238b40] tracking-wider">{report.aggregated_environment.dominant_type}</span>
-                    <span className="text-[11px] font-bold text-[#238b40] bg-white px-2 py-1 rounded border border-[#238b40]/20">
+                    <span className="font-bold text-[14px] uppercase text-[#ce1126] tracking-wider">{report.aggregated_environment.dominant_type}</span>
+                    <span className="text-[11px] font-bold text-[#ce1126] bg-white px-2 py-1 rounded border border-[#ce1126]/20">
                       {report.aggregated_environment.dominant_frequency}/{report.per_card_summaries?.length || 1} CARDS
                     </span>
                   </div>
@@ -1141,7 +1141,7 @@ export function AnalysisDashboard() {
           </p>
           <div className="flex justify-between items-center w-full print:w-auto print:flex-col print:items-end gap-1">
             <span className="font-bold uppercase tracking-widest text-foreground">CONFIDENTIAL</span>
-            <span>{new Date().getFullYear()} @ PsyicHub - Psychological Intelligence</span>
+            <span>{new Date().getFullYear()} @ CoreTAT - Psychological Intelligence</span>
           </div>
         </div>
       </div>

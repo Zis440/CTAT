@@ -19,7 +19,7 @@ async def apply_for_network(
     db: Session = Depends(get_db),
 ):
     """
-    Apply for Psyichub Network by uploading RCI License and E-Signature.
+    Apply for CoreTAT Network by uploading RCI License and E-Signature.
     Sets verification status to pending.
     """
     if current_user.account_type.value != "individual":

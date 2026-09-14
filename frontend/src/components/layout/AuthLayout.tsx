@@ -11,7 +11,8 @@ export function Layout() {
       <header className="sticky top-0 z-50 w-full border-b backdrop-blur-md bg-background/80 transition-colors">
         <div className="container mx-auto px-4 sm:px-6 lg:px-10 h-16 flex items-center justify-between max-w-[1440px]">
           <Link to="/" className="flex items-center gap-2">
-            <img src="/psyichub-logo-v2.png" alt="Psyichub Logo" className="h-8 w-auto dark:filter-none" style={{ filter: "brightness(0) saturate(100%) invert(33%) sepia(43%) saturate(935%) hue-rotate(70deg) brightness(100%) contrast(83%)" }} />
+            <img src="/coretat-logo.png" alt="CoreTAT Logo" className="h-8 w-auto hidden dark:block" />
+            <img src="/coretat-report-logo.png" alt="CoreTAT Logo" className="h-8 w-auto block dark:hidden" />
           </Link>
 
           <div className="flex items-center gap-4">
@@ -37,7 +38,7 @@ export function Layout() {
 
       <footer className="border-t py-6 bg-background/50">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          Psyichub © {new Date().getFullYear()}
+          CoreTAT © {new Date().getFullYear()}
         </div>
       </footer>
     </div>

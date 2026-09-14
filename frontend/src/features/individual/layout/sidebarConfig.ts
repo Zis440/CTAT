@@ -43,7 +43,7 @@ export const INDIVIDUAL_NAV: NavGroup[] = [
     items: [
       { label: "Contact Support", icon: LifeBuoy, to: "/support" },
       { label: "Verification", icon: ShieldCheck, to: "/verification", hideIfVerified: true, rciClinicalOnly: true },
-      { label: "RCI Verification Queue", icon: ShieldCheck, to: "/verification-queue", verificationRequired: true, rciOnly: true, psyichubVerifiedOnly: true, notificationKey: "report_verifications" },
+      { label: "RCI Verification Queue", icon: ShieldCheck, to: "/verification-queue", verificationRequired: true, rciOnly: true, coretatVerifiedOnly: true, notificationKey: "report_verifications" },
     ],
   },
 ];

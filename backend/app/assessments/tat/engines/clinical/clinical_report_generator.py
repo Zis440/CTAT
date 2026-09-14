@@ -83,7 +83,7 @@ def generate_radar_chart(metrics: Dict[str, float], out_dir: Path, filename: str
 
     fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
     ax.fill(angles, values, alpha=0.25, color='#50d3a7')
-    ax.plot(angles, values, marker='o', color='#238b40')
+    ax.plot(angles, values, marker='o', color='#ce1126')
     ax.set_xticks(angles[:-1])
 
     wrapped_labels = [textwrap.fill(c.replace('_', ' ').title(), width=12) for c in categories]
@@ -148,7 +148,7 @@ def generate_needs_bar_chart(needs: List[Tuple[str, float]], out_dir: Path, file
     labels = [textwrap.fill(_strip_np(n[0]), width=20) for n in needs[:10]]
     values = [float(n[1]) for n in needs[:10]]
     fig, ax = plt.subplots(figsize=(6, 4))
-    bars = ax.barh(labels, values, color='#238b40')
+    bars = ax.barh(labels, values, color='#ce1126')
     ax.set_xlabel("Intensity", fontsize=8)
     ax.set_title("Murray Need Profile", fontsize=10)
     ax.tick_params(axis='both', which='major', labelsize=8)
@@ -179,7 +179,7 @@ def generate_trajectory_plot(history: List[Dict], metrics: List[str], out_dir: P
     return filepath
 
 HEADER_STYLE = TableStyle([
-    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#238b40')),
+    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#ce1126')),
     ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
     ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
     ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
@@ -230,7 +230,7 @@ def generate_report(
             rightMargin=54, leftMargin=54,
             topMargin=54, bottomMargin=54,
             title=output_path.name,
-            author="Psyichub Psychological Analysis System"
+            author="CoreTAT Psychological Analysis System"
         )
         styles = getSampleStyleSheet()
         story = []
@@ -245,11 +245,11 @@ def generate_report(
         )
         h2 = ParagraphStyle(
             'H2', fontName='Helvetica-Bold', fontSize=10,
-            textColor=colors.HexColor('#238b40'), spaceBefore=18, spaceAfter=8,
+            textColor=colors.HexColor('#ce1126'), spaceBefore=18, spaceAfter=8,
         )
         h3 = ParagraphStyle(
             'H3', fontName='Helvetica-Bold', fontSize=8,
-            textColor=colors.HexColor('#238b40'), spaceBefore=10, spaceAfter=6,
+            textColor=colors.HexColor('#ce1126'), spaceBefore=10, spaceAfter=6,
         )
         body = ParagraphStyle(
             'Body', fontName='Helvetica', fontSize=8.5,
@@ -258,10 +258,10 @@ def generate_report(
         small = ParagraphStyle('Small', parent=body, fontSize=8, textColor=colors.grey)
 
         true_root = Path(__file__).resolve().parents[6]
-        psyichub_logo_path = true_root / "frontend" / "public" / "psyichub-report-logo.png"
-        if not psyichub_logo_path.exists():
+        coretat_logo_path = true_root / "frontend" / "public" / "coretat-report-logo.png"
+        if not coretat_logo_path.exists():
 
-            psyichub_logo_path = Path(__file__).resolve().parents[5].parent / "frontend" / "public" / "psyichub-report-logo.png"
+            coretat_logo_path = Path(__file__).resolve().parents[5].parent / "frontend" / "public" / "coretat-report-logo.png"
 
         clinic_logo_path = None
         if clinic_info and clinic_info.get("logo_path"):
@@ -270,22 +270,22 @@ def generate_report(
             if c_logo.exists():
                 clinic_logo_path = c_logo
 
-        story.append(HRFlowable(width="100%", thickness=12, color=colors.HexColor('#238b40'), spaceBefore=-20, spaceAfter=20))
+        story.append(HRFlowable(width="100%", thickness=12, color=colors.HexColor('#ce1126'), spaceBefore=-20, spaceAfter=20))
 
         left_content = []
-        if psyichub_logo_path.exists():
+        if coretat_logo_path.exists():
             try:
-                left_content.append(Image(str(psyichub_logo_path), width=1.5*inch, height=0.83*inch))
+                left_content.append(Image(str(coretat_logo_path), width=1.5*inch, height=0.83*inch))
             except Exception as e:
-                print(f"[WARN] Could not embed psyichub logo: {e}")
+                print(f"[WARN] Could not embed coretat logo: {e}")
         else:
-            print(f"[WARN] Logo not found at {psyichub_logo_path}")
+            print(f"[WARN] Logo not found at {coretat_logo_path}")
 
         if clinic_info:
             left_content.append(Spacer(1, 0.05*inch))
             c_name = clinic_info.get("clinic_name", "")
             if c_name:
-                left_content.append(Paragraph(c_name.upper(), ParagraphStyle('CName', fontName='Helvetica-Bold', fontSize=9, textColor=colors.HexColor('#238b40'), alignment=0, spaceAfter=2)))
+                left_content.append(Paragraph(c_name.upper(), ParagraphStyle('CName', fontName='Helvetica-Bold', fontSize=9, textColor=colors.HexColor('#ce1126'), alignment=0, spaceAfter=2)))
 
             c_address = clinic_info.get("address", "")
             c_phone = clinic_info.get("phone", "")
@@ -326,7 +326,7 @@ def generate_report(
         story.append(letterhead_table)
 
         story.append(Spacer(1, 0.05*inch))
-        story.append(Table([['']], colWidths=[7.2*inch], style=[('LINEABOVE', (0,0), (-1,-1), 1.5, colors.HexColor('#238b40'))]))
+        story.append(Table([['']], colWidths=[7.2*inch], style=[('LINEABOVE', (0,0), (-1,-1), 1.5, colors.HexColor('#ce1126'))]))
         story.append(Spacer(1, 0.2*inch))
 
         story.append(Paragraph("NARRATIVE INTELLIGENCE ASSESSMENT REPORT", title_style))
@@ -822,7 +822,7 @@ def generate_report(
             ]
             t = Table(comp_data, colWidths=[2.0*inch, 4.5*inch], hAlign='LEFT')
             t.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#238b40')),
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#ce1126')),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                 ('FONTSIZE', (0, 0), (-1, 0), 9),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
@@ -1530,7 +1530,7 @@ def generate_report(
             date_str = validation_info.get('validation_date', datetime.now().strftime('%d-%m-%Y'))
             e_sig_path = validation_info.get('signature_path', '')
 
-            sig_flowable = Paragraph("<i>Digitally Verified via Psyichub</i>", body)
+            sig_flowable = Paragraph("<i>Digitally Verified via CoreTAT</i>", body)
 
             if e_sig_path:
                 from app.database import DATA_STORE_DIR
@@ -1538,7 +1538,7 @@ def generate_report(
                 if full_sig_path.exists():
                     try:
                         sig_img = Image(str(full_sig_path), width=1.8*inch, height=0.6*inch, kind='proportional')
-                        sig_text = Paragraph("<font size=7 color='#6b7280'><i>Digitally signed by PsyicHub</i></font>", body)
+                        sig_text = Paragraph("<font size=7 color='#6b7280'><i>Digitally signed by CoreTAT</i></font>", body)
                         sig_flowable = Table(
                             [[sig_img, sig_text]],
                             colWidths=[2.0*inch, 2.0*inch],
@@ -1577,7 +1577,7 @@ def generate_report(
         if verification_audit:
             story.append(Paragraph("System Verification & Digital Signature", h2))
             story.append(Paragraph(
-                "This practitioner's credentials have been verified by the Psyichub Super Admin team. "
+                "This practitioner's credentials have been verified by the CoreTAT Super Admin team. "
                 "The digital signature below serves as a cryptographic proof of this verification event.", body
             ))
             story.append(Spacer(1, 0.1*inch))
@@ -1612,7 +1612,7 @@ def generate_report(
 
         gen_time = datetime.now().strftime('%d-%m-%Y, %I:%M %p')
         story.append(Paragraph(
-            f"Report generated by Psyichub Psychological Analysis System on {gen_time}", small_disc
+            f"Report generated by CoreTAT Psychological Analysis System on {gen_time}", small_disc
         ))
 
         story.append(Spacer(1, 30))

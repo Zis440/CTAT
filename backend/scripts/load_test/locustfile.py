@@ -2,7 +2,7 @@ import os
 import random
 from locust import HttpUser, task, between
 
-class PsyicHubUser(HttpUser):
+class CoreTATUser(HttpUser):
 
     wait_time = between(1, 3)
 
@@ -12,7 +12,7 @@ class PsyicHubUser(HttpUser):
         We will try to log in if credentials are provided via environment variables.
         """
         self.token = None
-        self.email = os.environ.get("LOAD_TEST_EMAIL", "admin@psyichub.com")
+        self.email = os.environ.get("LOAD_TEST_EMAIL", "admin@coretat.com")
         self.password = os.environ.get("LOAD_TEST_PASSWORD", "password123")
 
         if self.email and self.password:

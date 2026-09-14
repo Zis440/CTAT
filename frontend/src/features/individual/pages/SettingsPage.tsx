@@ -274,7 +274,7 @@ export function SettingsPage() {
   return (
     <div className="w-full">
       <Helmet>
-        <title>Settings | PsyicHub - Psychological Intelligence</title>
+        <title>Settings | CoreTAT - Psychological Intelligence</title>
       </Helmet>
 
       <div className="space-y-8 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -557,17 +557,17 @@ export function SettingsPage() {
                       <div>
                         <h3 className="font-bold text-text text-lg">
                           {(user?.verification_status === "approved" && user?.cv_path && user?.bio)
-                            ? "Psyichub Verified Psychologist"
-                            : "Apply for Psyichub Verified Psychologist"}
+                            ? "CoreTAT Verified Psychologist"
+                            : "Apply for CoreTAT Verified Psychologist"}
                         </h3>
                         <p className="text-sm text-text/50">
                           {(user?.verification_status === "approved" && user?.cv_path && user?.bio)
-                            ? "Your profile is verified. You are a Psyichub Verified Psychologist."
+                            ? "Your profile is verified. You are a CoreTAT Verified Psychologist."
                             : user?.verification_status === "pending"
                               ? "Your RCI credentials are under review by our team."
                               : user?.verification_status === "rejected"
                                 ? "RCI Verification rejected. Please resubmit your documents."
-                                : "Upload your CV and Bio to become a Psyichub Verified Psychologist and review reports."}
+                                : "Upload your CV and Bio to become a CoreTAT Verified Psychologist and review reports."}
                         </p>
                         {user?.professional_domain && (
                           <p className="text-xs text-primary/70 font-semibold mt-1">Domain: {user.professional_domain}</p>

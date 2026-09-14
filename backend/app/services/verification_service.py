@@ -28,7 +28,7 @@ def _get_eligible_validators(db: Session, exclude_id: str = None) -> list[User]:
       - Role: individual_psychologist
       - Professional Domain: Clinical Psychologist
       - RCI number present (RCI Verified)
-      - Verification Status: approved (Psyichub Verified)
+      - Verification Status: approved (CoreTAT Verified)
       - Account is active
     """
     candidates = db.query(User).filter(
@@ -48,7 +48,7 @@ def _get_eligible_validators(db: Session, exclude_id: str = None) -> list[User]:
 def assign_verification_request(db: Session, request_id: str = None, session_id: str = None) -> VerificationRequest:
     """
     Assigns or re-assigns a VerificationRequest to the best available
-    Psyichub Verified Clinical Psychologist.
+    CoreTAT Verified Clinical Psychologist.
     """
     if not request_id and not session_id:
         raise ValueError("Must provide either request_id or session_id")
@@ -101,7 +101,7 @@ def assign_verification_request(db: Session, request_id: str = None, session_id:
         candidates = _get_eligible_validators(db)
 
     if not candidates:
-        logger.error("No eligible Psyichub Verified Clinical Psychologists found for assignment.")
+        logger.error("No eligible CoreTAT Verified Clinical Psychologists found for assignment.")
         return v_req
 
     candidates.sort(key=calculate_psychologist_score, reverse=True)

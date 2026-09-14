@@ -383,10 +383,10 @@ export function SignupPage() {
   return (
     <div className="min-h-screen flex flex-col bg-background font-sans transition-colors duration-300 relative">
       <Helmet>
-        <title>Create Account | PsyicHub - Psychological Intelligence</title>
+        <title>Create Account | CoreTAT - Psychological Intelligence</title>
         <meta
           name="description"
-          content="Create your Psyichub account as an Individual Psychologist or Clinic."
+          content="Create your CoreTAT account as an Individual Psychologist or Clinic."
         />
       </Helmet>
 
@@ -1146,7 +1146,7 @@ export function SignupPage() {
                     <span className="text-xs text-text/50 leading-relaxed group-hover:text-text/70 transition-colors">
                       I agree to the{" "}
                       <a
-                        href="https://psyichub.com/terms-conditions/"
+                        href="https://coretat.com/terms-conditions/"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary hover:text-primary/80 font-bold"
@@ -1156,7 +1156,7 @@ export function SignupPage() {
                       </a>{" "}
                       and{" "}
                       <a
-                        href="https://psyichub.com/privacy-policy"
+                        href="https://coretat.com/privacy-policy"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary hover:text-primary/80 font-bold"

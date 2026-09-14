@@ -199,7 +199,7 @@ export function DocsIntroduction({ onNavigate }: DocsIntroductionProps) {
     {
       icon: Brain,
       title: "Automated Assessment Analysis",
-      desc: "Psyichub uses an advanced clinical assessment engine to analyze patient narratives and identify psychological themes, defense mechanisms, and personality dynamics — automatically.",
+      desc: "CoreTAT uses an advanced clinical assessment engine to analyze patient narratives and identify psychological themes, defense mechanisms, and personality dynamics — automatically.",
     },
     {
       icon: BarChart3,
@@ -223,13 +223,13 @@ export function DocsIntroduction({ onNavigate }: DocsIntroductionProps) {
 
       <div className="space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider">
-          <BookOpen className="w-3 h-3" /> What is Psyichub?
+          <BookOpen className="w-3 h-3" /> What is CoreTAT?
         </div>
         <h1 className="text-4xl font-extrabold text-text tracking-tight lg:text-5xl">
-          Welcome to <span className="text-primary">Psyichub</span>
+          Welcome to <span className="text-primary">CoreTAT</span>
         </h1>
         <p className="text-lg text-text/70 leading-relaxed max-w-3xl">
-          Psyichub is a comprehensive platform for automated psychometric assessment.
+          CoreTAT is a comprehensive platform for automated psychometric assessment.
           It helps practitioners and researchers administer clinical tests and analyze
           patient data to uncover deep psychological insights — all powered by our intelligent assessment engine.
         </p>
@@ -239,7 +239,7 @@ export function DocsIntroduction({ onNavigate }: DocsIntroductionProps) {
         <h2 className="text-2xl font-bold text-text">Available Assessments</h2>
         <div className="p-6 rounded-2xl bg-secondary/30 border border-primary/10 space-y-4">
           <p className="text-text/80 leading-relaxed">
-            Currently, Psyichub includes two primary assessments, with many more clinical tests planned for the future:
+            Currently, CoreTAT includes two primary assessments, with many more clinical tests planned for the future:
           </p>
           <ul className="list-disc pl-6 space-y-3 text-text/80">
             <li>
@@ -250,7 +250,7 @@ export function DocsIntroduction({ onNavigate }: DocsIntroductionProps) {
             </li>
           </ul>
           <p className="text-text/80 leading-relaxed pt-2">
-            <strong>Psyichub</strong> digitizes and automates the entire psychological evaluation process — from intake and test administration to automated analysis and clinical report generation.
+            <strong>CoreTAT</strong> digitizes and automates the entire psychological evaluation process — from intake and test administration to automated analysis and clinical report generation.
           </p>
         </div>
       </section>
@@ -279,7 +279,7 @@ export function DocsIntroduction({ onNavigate }: DocsIntroductionProps) {
         <div className="flex-1 space-y-1">
           <h3 className="font-bold text-primary text-lg">Ready to learn how to use it?</h3>
           <p className="text-sm text-text/60">
-            Check out the step-by-step guide to get started with Psyichub.
+            Check out the step-by-step guide to get started with CoreTAT.
           </p>
         </div>
         <button
@@ -347,7 +347,7 @@ export function HowToUseGuide({ onNavigate }: HowToUseGuideProps) {
       icon: Brain,
       title: "AI Analyzes the Narrative",
       description:
-        "Once the story is submitted, Psyichub' AI engine processes the narrative through multiple specialized analysis pipelines — identifying defense mechanisms, psychological needs, emotional themes, and relational patterns.",
+        "Once the story is submitted, CoreTAT' AI engine processes the narrative through multiple specialized analysis pipelines — identifying defense mechanisms, psychological needs, emotional themes, and relational patterns.",
       detail:
         "The analysis runs automatically. You'll see a loading indicator while the system works. This typically takes a few moments. The AI computes Murray Need-Press profiles, thematic dominance scores, and psychometric indicators.",
     },
@@ -379,7 +379,7 @@ export function HowToUseGuide({ onNavigate }: HowToUseGuideProps) {
           <BookOpen className="w-3 h-3" /> Step-by-Step Guide
         </div>
         <h1 className="text-4xl font-extrabold text-text tracking-tight lg:text-5xl">
-          How to <span className="text-primary">Use Psyichub</span>
+          How to <span className="text-primary">Use CoreTAT</span>
         </h1>
         <p className="text-lg text-text/70 leading-relaxed max-w-3xl">
           Follow these simple steps to conduct a projective assessment session — from patient registration
@@ -422,7 +422,7 @@ export function HowToUseGuide({ onNavigate }: HowToUseGuideProps) {
         <div className="flex-1 space-y-1">
           <h3 className="font-bold text-primary text-lg">Want to learn more about the platform?</h3>
           <p className="text-sm text-text/60">
-            Go back and read about what Psyichub is and what makes it special.
+            Go back and read about what CoreTAT is and what makes it special.
           </p>
         </div>
         <button
@@ -449,7 +449,7 @@ export function DocsMethodology() {
         </h2>
         <p className="text-lg text-text/70 leading-relaxed max-w-3xl">
           Our Narrative Intelligence assessment is a projective psychological test inspired by
-          Henry Murray and Christiana Morgan at Harvard University in the 1930s. Psyichub
+          Henry Murray and Christiana Morgan at Harvard University in the 1930s. CoreTAT
           automates the analysis of projective narratives using modern NLP techniques.
         </p>
       </div>
@@ -523,7 +523,7 @@ export function DocsMethodology() {
         <div className="space-y-2">
           <h4 className="font-bold text-primary italic">Clinical Note</h4>
           <p className="text-sm text-text/70 italic leading-relaxed">
-            Psyichub automates the *identification* of these patterns but the final clinical
+            CoreTAT automates the *identification* of these patterns but the final clinical
             interpretation should always be performed by a licensed practitioner.
           </p>
         </div>
@@ -551,7 +551,7 @@ export function DocsArchitecture() {
           Architecture & <span className="text-primary">Flow</span>
         </h1>
         <p className="text-lg text-text/70 leading-relaxed max-w-3xl">
-          Psyichub is designed with a decoupled, high-performance architecture to handle
+          CoreTAT is designed with a decoupled, high-performance architecture to handle
           computationally intensive NLP pipelines while maintaining a responsive user interface.
         </p>
       </div>
@@ -598,7 +598,7 @@ export function DocsConfiguration({ onNavigate }: DocsConfigurationProps) {
         </h1>
         <p className="text-lg text-text/70 leading-relaxed max-w-3xl">
           Environment variables, system dependencies, storage modes, and runtime configurations
-          for running Psyichub in development or production.
+          for running CoreTAT in development or production.
         </p>
       </div>
 
@@ -684,7 +684,7 @@ export function DocsTATSystem({ onNavigate }: DocsTATSystemProps) {
         </h1>
         <p className="text-lg text-text/70 leading-relaxed max-w-3xl">
           The Narrative Intelligence test is a projective psychological test developed by
-          Henry Murray and Christiana Morgan at Harvard University in the 1930s. Psyichub
+          Henry Murray and Christiana Morgan at Harvard University in the 1930s. CoreTAT
           automates the analysis of projective narratives using modern NLP techniques.
         </p>
       </div>
@@ -717,10 +717,10 @@ export function DocsTATSystem({ onNavigate }: DocsTATSystemProps) {
 
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text flex items-center gap-3">
-          <Layers className="text-primary w-6 h-6" /> HOW PSYICHUB PROCESSES CARDS Cards
+          <Layers className="text-primary w-6 h-6" /> HOW CORETAT PROCESSES CARDS Cards
         </h2>
         <p className="text-text/70 max-w-3xl">
-          Unlike traditional manual scoring, Psyichub uses a fully automated pipeline. Each
+          Unlike traditional manual scoring, CoreTAT uses a fully automated pipeline. Each
           narrative goes through the following stages:
         </p>
         <div className="space-y-4">
@@ -762,7 +762,7 @@ export function DocsTATSystem({ onNavigate }: DocsTATSystemProps) {
           <BookOpen className="text-primary w-6 h-6" /> Card Catalog & Themes
         </h2>
         <p className="text-text/70 max-w-3xl">
-          Psyichub includes a curated set of high-resolution Image cards (Card 1 through
+          CoreTAT includes a curated set of high-resolution Image cards (Card 1 through
           Card 13). Each card is historically mapped to elicit specific psychological themes:
         </p>
         <div className="overflow-x-auto rounded-2xl border border-primary/10 bg-secondary/10">
@@ -802,7 +802,7 @@ export function DocsTATSystem({ onNavigate }: DocsTATSystemProps) {
         <div className="space-y-2">
           <h4 className="font-bold text-primary italic">Why No Keywords?</h4>
           <p className="text-sm text-text/70 italic leading-relaxed">
-            Psyichub deliberately avoids hardcoded keyword lists. All classification — event
+            CoreTAT deliberately avoids hardcoded keyword lists. All classification — event
             types, emotions, needs, defenses — is performed using sentence embeddings compared
             against clinical prototype sentences. This provides semantic understanding rather than
             surface-level pattern matching, enabling the system to capture nuance that keyword
@@ -866,14 +866,14 @@ export function DocsMurrayTheory({ onNavigate }: DocsMurrayTheoryProps) {
         </h1>
         <p className="text-lg text-text/70 leading-relaxed max-w-3xl">
           Henry Murray's Need-Press Theory (1938) is the psychological backbone of
-          Psyichub. It models human behavior as the interaction between internal
+          CoreTAT. It models human behavior as the interaction between internal
           motivations (<strong>Needs</strong>) and external environmental forces (<strong>Presses</strong>).
         </p>
       </div>
 
       <section className="space-y-6">
         <h2 className="text-2xl font-bold text-text flex items-center gap-3">
-          <Zap className="text-primary w-6 h-6" /> How Psyichub Infers Needs & Presses
+          <Zap className="text-primary w-6 h-6" /> How CoreTAT Infers Needs & Presses
         </h2>
         <div className="space-y-4">
           <div className="p-6 rounded-2xl bg-secondary/30 border border-primary/10 space-y-4">
@@ -973,7 +973,7 @@ export function DocsMurrayTheory({ onNavigate }: DocsMurrayTheoryProps) {
           <h4 className="font-bold text-primary italic">What is a Thema?</h4>
           <p className="text-sm text-text/70 italic leading-relaxed">
             Murray defined a <strong>Thema</strong> as the specific interaction between a Need and
-            a Press — for example, "Achievement thwarted by Loss." Psyichub detects these
+            a Press — for example, "Achievement thwarted by Loss." CoreTAT detects these
             thematic patterns by cross-referencing the top needs and presses inferred from each
             narrative, providing clinicians with a structured view of the patient's motivational landscape.
           </p>
@@ -1062,7 +1062,7 @@ export function DocsScoringLogic({ onNavigate }: DocsScoringLogicProps) {
           <span className="text-primary">Scoring</span> Logic
         </h1>
         <p className="text-lg text-text/70 leading-relaxed max-w-3xl">
-          Psyichub computes multi-dimensional psychological scores from narrative events.
+          CoreTAT computes multi-dimensional psychological scores from narrative events.
           Each narrative produces 8 dimension scores, confidence intervals, defense mechanism
           inferences, and a psychosis risk assessment.
         </p>
@@ -1322,7 +1322,7 @@ export function DocsSystemFlow({ onNavigate }: DocsSystemFlowProps) {
           System <span className="text-primary">Architecture</span> & Flow
         </h1>
         <p className="text-lg text-text/70 leading-relaxed max-w-3xl">
-          Psyichub uses an 11-step per-card analysis pipeline orchestrated by the
+          CoreTAT uses an 11-step per-card analysis pipeline orchestrated by the
           <code className="px-1.5 py-0.5 rounded bg-primary/10 text-primary font-bold text-xs mx-1">analyze_card()</code>
           function. Each engine operates independently and contributes data that downstream
           engines may consume.
@@ -1407,7 +1407,7 @@ export function DocsSystemFlow({ onNavigate }: DocsSystemFlowProps) {
         <div className="space-y-2">
           <h4 className="font-bold text-primary italic">RAG Subsystem</h4>
           <p className="text-sm text-text/70 italic leading-relaxed">
-            Psyichub includes a Retrieval-Augmented Generation (RAG) subsystem that
+            CoreTAT includes a Retrieval-Augmented Generation (RAG) subsystem that
             ingests scoring manuals (PDF and text) via built-in OCR. Documents
             are chunked (500 tokens, 50 overlap), embedded via high-dimensional vectors, and indexed
             in a secure vector store. At inference time, the top-k (default 5) most relevant
@@ -1437,7 +1437,7 @@ export function DocsDataModel({ onNavigate }: DocsDataModelProps) {
           <span className="text-primary">Data</span> Model
         </h1>
         <p className="text-lg text-text/70 leading-relaxed max-w-3xl">
-          Psyichub operates on structured data objects produced by each engine in the
+          CoreTAT operates on structured data objects produced by each engine in the
           pipeline. This page documents the core data structures, graph models, and storage
           patterns.
         </p>
@@ -1631,7 +1631,7 @@ export function DocsQuickstart({ onNavigate }: DocsQuickstartProps) {
           Quickstart <span className="text-primary">Guide</span>
         </h1>
         <p className="text-lg text-text/70 leading-relaxed max-w-3xl">
-          Get Psyichub running on your local machine in minutes. This guide covers
+          Get CoreTAT running on your local machine in minutes. This guide covers
           installation, dependency setup, and launching both the backend and frontend servers.
         </p>
       </div>
@@ -1671,7 +1671,7 @@ export function DocsQuickstart({ onNavigate }: DocsQuickstartProps) {
 
         <div className="space-y-4">
           <h3 className="text-lg font-bold text-text">Create a new workspace</h3>
-          <CodeBlock>{`npm create psyichub@latest my-app
+          <CodeBlock>{`npm create coretat@latest my-app
 cd my-app`}</CodeBlock>
 
           <h3 className="text-lg font-bold text-text">Start the Interactive Dashboard</h3>
@@ -1688,7 +1688,7 @@ cd my-app`}</CodeBlock>
         <h2 className="text-2xl font-bold text-text flex items-center gap-3">
           <CheckCircle className="text-primary w-6 h-6" /> Verify Installation
         </h2>
-        <CodeBlock>{`npx psyichub check-environment`}</CodeBlock>
+        <CodeBlock>{`npx coretat check-environment`}</CodeBlock>
         <p className="text-sm text-text/60">
           The RAG index builds automatically on first run (~60-90s). Subsequent runs load instantly
           from <code className="px-2 py-0.5 rounded bg-primary/10 text-primary font-bold text-xs">saved_learning/rag_index/</code>.

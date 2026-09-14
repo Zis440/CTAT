@@ -1,5 +1,5 @@
 """
-JWT utilities and password hashing for Psyichub auth system.
+JWT utilities and password hashing for CoreTAT auth system.
 """
 import os
 import warnings
@@ -9,12 +9,12 @@ from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-SECRET_KEY = os.getenv("CT_SECRET_KEY", "psyichub-dev-secret-change-in-production-32chars!")
+SECRET_KEY = os.getenv("CT_SECRET_KEY", "coretat-dev-secret-change-in-production-32chars!")
 ALGORITHM = os.getenv("CT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("CT_ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
 
 _KNOWN_PLACEHOLDERS = {
-    "psyichub-dev-secret-change-in-production-32chars!",
+    "coretat-dev-secret-change-in-production-32chars!",
     "generate_a_random_secret_here",
     "",
 }

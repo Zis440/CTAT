@@ -80,7 +80,7 @@ export function OAuthCallbackPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background font-sans">
       <Helmet>
-        <title>Signing in… | PsyicHub - Psychological Intelligence</title>
+        <title>Signing in… | CoreTAT - Psychological Intelligence</title>
       </Helmet>
 
       {status === "loading" ? (

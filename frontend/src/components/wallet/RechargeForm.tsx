@@ -51,7 +51,7 @@ export default function RechargeForm({ onSuccess }: RechargeFormProps) {
         key: order.key_id,
         amount: order.amount_paise,
         currency: order.currency,
-        name: "Psyichub",
+        name: "CoreTAT",
         description: "Wallet Recharge",
         order_id: order.order_id,
         handler: async (response: any) => {

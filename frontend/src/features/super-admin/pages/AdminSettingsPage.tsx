@@ -41,7 +41,7 @@ export function AdminSettingsPage() {
   return (
     <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
       <Helmet>
-        <title>Settings  | PsyicHub - Psychological Intelligence</title>
+        <title>Settings  | CoreTAT - Psychological Intelligence</title>
       </Helmet>
 
       <motion.div
@@ -104,7 +104,7 @@ export function AdminSettingsPage() {
                       type="email"
                       value={profileData.email}
                       onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
-                      placeholder="superadmin@psyichub.com"
+                      placeholder="superadmin@coretat.com"
                       className="h-12 bg-background/50 border-primary/20 focus-visible:ring-primary/30"
                     />
                   </div>

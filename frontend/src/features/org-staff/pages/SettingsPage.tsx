@@ -218,7 +218,7 @@ export function SettingsPage() {
   return (
     <div className="w-full">
       <Helmet>
-        <title>Settings | PsyicHub - Psychological Intelligence</title>
+        <title>Settings | CoreTAT - Psychological Intelligence</title>
       </Helmet>
 
       <div className="space-y-8 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -499,7 +499,7 @@ export function SettingsPage() {
                     <CardContent className="pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                       <div>
                         <h3 className="font-bold text-text text-lg">
-                          {user?.account_type === "individual" ? "Apply for Psyichub's RCI Verified Psychologist" : "Psyichub Verified Psychologist"}
+                          {user?.account_type === "individual" ? "Apply for CoreTAT's RCI Verified Psychologist" : "CoreTAT Verified Psychologist"}
                         </h3>
                         <p className="text-sm text-text/50">
                           {user?.verification_status === "approved"

@@ -1,4 +1,4 @@
-# PostgreSQL Setup Guide for Psyichub
+# PostgreSQL Setup Guide for CoreTAT
 
 ## Prerequisites
 
@@ -12,14 +12,14 @@
 
 1. Open pgAdmin in your browser
 2. Right-click on "Databases" → Create → Database
-3. Name: `psyichub`
+3. Name: `coretat`
 4. Owner: `postgres` (create if doesn't exist)
    - In pgAdmin: Tools → Query Tool
    - Run:
    ```sql
    CREATE USER postgres WITH PASSWORD 'user';
-   CREATE DATABASE psyichub OWNER postgres ENCODING 'UTF8';
-   GRANT ALL PRIVILEGES ON DATABASE psyichub TO postgres;
+   CREATE DATABASE coretat OWNER postgres ENCODING 'UTF8';
+   GRANT ALL PRIVILEGES ON DATABASE coretat TO postgres;
    ```
 
 ### Option B: Using psql (Command Line)
@@ -30,8 +30,8 @@ psql -U postgres
 
 # Run these commands in psql:
 CREATE USER postgres WITH PASSWORD 'user';
-CREATE DATABASE psyichub OWNER postgres ENCODING 'UTF8';
-GRANT ALL PRIVILEGES ON DATABASE psyichub TO postgres;
+CREATE DATABASE coretat OWNER postgres ENCODING 'UTF8';
+GRANT ALL PRIVILEGES ON DATABASE coretat TO postgres;
 \q
 ```
 
@@ -63,7 +63,7 @@ Expected output:
 ```
 PostgreSQL Database Verification
 
-DATABASE_URL: postgresql://postgres:user@localhost:5432/psyichub
+DATABASE_URL: postgresql://postgres:user@localhost:5432/coretat
 
 ✓ Database connection successful
 ✓ Table 'users' exists
@@ -127,7 +127,7 @@ curl -X POST http://localhost:8000/api/auth/register/individual \
 
 ```bash
 # Using psql
-psql -U postgres -d psyichub -h localhost
+psql -U postgres -d coretat -h localhost
 
 # Inside psql:
 SELECT id, email, first_name, last_name, created_at FROM users;
@@ -138,7 +138,7 @@ SELECT id, user_id, balance_paise FROM wallets WHERE user_id = 'usr_sadm_001';
 ### 3. Verify Wallet Was Created Automatically
 
 ```bash
-psql -U postgres -d psyichub -h localhost
+psql -U postgres -d coretat -h localhost
 SELECT * FROM wallets;
 \q
 ```
@@ -169,11 +169,11 @@ SELECT * FROM wallets;
 
 **Format:** `postgresql://username:password@hostname:port/database_name`
 
-**Your Setup:** `postgresql://postgres:user@localhost:5432/psyichub`
+**Your Setup:** `postgresql://postgres:user@localhost:5432/coretat`
 
 - **Hostname**: `localhost` (local machine)
 - **Port**: `5432` (default PostgreSQL port)
-- **Database**: `psyichub`
+- **Database**: `coretat`
 - **Username**: `postgres`
 - **Password**: `user`
 

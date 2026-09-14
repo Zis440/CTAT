@@ -160,7 +160,7 @@ export function AdminCandidatesPage() {
   return (
     <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
       <Helmet>
-        <title>Candidate Management | PsyicHub - Psychological Intelligence</title>
+        <title>Candidate Management | CoreTAT - Psychological Intelligence</title>
       </Helmet>
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

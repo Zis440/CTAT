@@ -263,7 +263,7 @@ export function SharedPatientDetails({ patientId, apiBasePath, backUrl, allowExp
     let currentY = 20;
 
     try {
-      const response = await fetch('/psyichub-report-logo.png');
+      const response = await fetch('/coretat-report-logo.png');
       const blob = await response.blob();
       const base64Data = await new Promise<string>((resolve) => {
         const reader = new FileReader();
@@ -308,7 +308,7 @@ export function SharedPatientDetails({ patientId, apiBasePath, backUrl, allowExp
         ["Clinical Notes", patient.notes || "N/A"],
       ],
       styles: { cellPadding: 4, fontSize: 10 },
-      headStyles: { fillColor: "#238b40" },
+      headStyles: { fillColor: "#ce1126" },
       columnStyles: { 0: { fontStyle: 'bold', cellWidth: 40 } }
     });
 
@@ -350,7 +350,7 @@ export function SharedPatientDetails({ patientId, apiBasePath, backUrl, allowExp
     return (
       <div className="w-full relative min-h-full isolate">
         <Helmet>
-          <title>Patient Details | PsyicHub - Psychological Intelligence</title>
+          <title>Patient Details | CoreTAT - Psychological Intelligence</title>
         </Helmet>
         <div className="w-full mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="flex items-center justify-between mb-4">
@@ -428,7 +428,7 @@ export function SharedPatientDetails({ patientId, apiBasePath, backUrl, allowExp
   return (
     <div className="w-full relative min-h-full isolate">
       <Helmet>
-        <title>Patient Details | PsyicHub - Psychological Intelligence</title>
+        <title>Patient Details | CoreTAT - Psychological Intelligence</title>
       </Helmet>
 
       <div className="w-full max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">

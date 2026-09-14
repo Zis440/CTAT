@@ -1,6 +1,6 @@
-# PsyicHub Load Testing
+# CoreTAT Load Testing
 
-This directory contains a Locust script to load test the PsyicHub backend. 
+This directory contains a Locust script to load test the CoreTAT backend. 
 It simulates concurrent users performing both lightweight requests (health checks) and heavy machine learning assessments.
 
 ## Prerequisites
@@ -23,7 +23,7 @@ $env:LOAD_TEST_EMAIL="your_test_user@example.com"
 $env:LOAD_TEST_PASSWORD="your_password"
 locust -f backend/scripts/load_test/locustfile.py --host=https://yourdomain.com --users 30 --spawn-rate 5
 
-$env:LOAD_TEST_EMAIL="superadmin@psyichub.com"
+$env:LOAD_TEST_EMAIL="superadmin@coretat.com"
 $env:LOAD_TEST_PASSWORD="admin123"
 locust -f "scripts/load_test/locustfile.py" --host=http://localhost:8000
  

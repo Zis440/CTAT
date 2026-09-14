@@ -14,8 +14,8 @@ export default defineConfig({
       registerType: 'prompt',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Psyichub',
-        short_name: 'Psyichub',
+        name: 'CoreTAT',
+        short_name: 'CoreTAT',
         description: 'AI-Powered Psychometric Assessment Platform',
         theme_color: '#000000',
         background_color: '#000000',

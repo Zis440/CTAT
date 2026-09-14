@@ -80,7 +80,7 @@ export function PsychologistApplyPage() {
             <ShieldCheck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <CardTitle>Not Eligible</CardTitle>
             <CardDescription>
-              Only RCI-certificated Clinical Psychologists are eligible for the Psyichub Verified Psychologist program.
+              Only RCI-certificated Clinical Psychologists are eligible for the CoreTAT Verified Psychologist program.
               Your professional domain is listed as "{user?.professional_domain || "Not specified"}".
             </CardDescription>
           </CardHeader>
@@ -121,7 +121,7 @@ export function PsychologistApplyPage() {
   return (
     <div className="w-full">
       <Helmet>
-        <title>Apply for PsyicHub - Psychological Intelligence's RCI Verified Psychologist</title>
+        <title>Apply for CoreTAT - Psychological Intelligence's RCI Verified Psychologist</title>
       </Helmet>
 
       <div className="space-y-8 w-full max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -132,7 +132,7 @@ export function PsychologistApplyPage() {
           className="space-y-2"
         >
           <h1 className="text-3xl font-extrabold text-text tracking-tight">
-            Apply for Psyichub's RCI Verified Psychologist
+            Apply for CoreTAT's RCI Verified Psychologist
           </h1>
           <p className="text-text/60 text-sm">
             Join our network of verified clinical psychologists. Please upload your credentials below.

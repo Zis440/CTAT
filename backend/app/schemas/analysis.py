@@ -1,5 +1,5 @@
 """
-Pydantic request/response schemas for the Psyichub API.
+Pydantic request/response schemas for the CoreTAT API.
 """
 from pydantic import BaseModel, Field, field_validator
 from typing import Dict, Any, Optional, Literal

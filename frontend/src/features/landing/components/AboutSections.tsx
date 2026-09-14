@@ -1,5 +1,5 @@
 
-import { HeartHandshake, Mail } from "lucide-react";
+import { Mail, Globe } from "lucide-react";
 
 function Github({ className }: { className?: string }) {
   return (
@@ -25,6 +25,7 @@ const people = [
     email: "mailto:szd0238@gmail.com",
     github: "https://github.com/Zis440",
     linkedin: "https://www.linkedin.com/in/saphalya-das-81a06b1b3/",
+    website: "https://saphalya-das.vercel.app/",
   },
   {
     name: "Anubhab Pal",
@@ -51,7 +52,7 @@ export function AboutSections() {
       <div className="mx-auto flex flex-col items-center max-w-[1440px] gap-16">
         <div className="max-w-3xl text-center">
           <h2 className="text-4xl font-extrabold tracking-tight text-text sm:text-5xl font-serif">
-            The Engine Behind Psyichub
+            The Engine Behind CoreTAT
           </h2>
           <p className="mt-6 text-lg/8 text-text/70 font-medium">
             We are a passionate team of developers and designers bridging
@@ -69,21 +70,11 @@ export function AboutSections() {
               key={`${person.name}-${i}`}
               className="bg-background border-2 border-primary/20 rounded-3xl p-6 shadow-sm flex flex-col transition-transform hover:-translate-y-1 hover:shadow-md w-full sm:w-[calc(50%-1.5rem)] lg:w-[calc(33.333%-1.5rem)] max-w-md"
             >
-              <div className="flex items-center gap-5 mb-4">
-                <div className="w-20 h-20 rounded-full overflow-hidden shrink-0 bg-primary/5 relative border-2 border-primary/20">
-                  <img
-                    alt={person.name}
-                    src={person.imageUrl}
-                    className="absolute inset-0 w-full h-full object-cover grayscale mix-blend-multiply dark:mix-blend-screen"
-                    style={{ objectPosition: "center top" }}
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <h3 className="text-lg font-extrabold tracking-tight text-text">
-                    {person.name}
-                  </h3>
-                  <p className="text-sm font-bold text-text/50">{person.role}</p>
-                </div>
+              <div className="flex flex-col mb-4">
+                <h3 className="text-xl font-extrabold tracking-tight text-text">
+                  {person.name}
+                </h3>
+                <p className="text-sm font-bold text-primary mt-0.5">{person.role}</p>
               </div>
 
               <div className="w-full h-px bg-primary/10 my-4"></div>
@@ -114,35 +105,22 @@ export function AboutSections() {
                 >
                   <Linkedin className="w-5 h-5 cursor-pointer fill-current" />
                 </a>
+                {(person as any).website && (
+                  <a
+                    href={(person as any).website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${person.name} Portfolio`}
+                    className="hover:text-primary transition-colors"
+                    title="Portfolio"
+                  >
+                    <Globe className="w-5 h-5 cursor-pointer" />
+                  </a>
+                )}
               </div>
             </li>
           ))}
         </ul>
-      </div>
-
-      <div className="w-full max-w-5xl mx-auto mt-12 bg-primary/10 border-l-4 border-primary rounded-r-2xl p-6 sm:p-8 flex flex-col sm:flex-row gap-6 items-start shadow-sm transition-colors relative overflow-hidden">
-        <div className="absolute right-0 top-0 w-32 h-32 bg-primary/20 rounded-full blur-2xl transform translate-x-1/2 -translate-y-1/2" />
-
-        <div className="bg-background rounded-full p-4 shrink-0 shadow-sm border border-primary/20">
-          <HeartHandshake className="w-8 h-8 text-primary" />
-        </div>
-
-        <div className="flex-1 z-10">
-          <h3 className="text-xl font-bold text-text mb-3 flex items-center gap-2">
-            Special Thanks
-          </h3>
-          <blockquote className="text-base/7 text-text/80 font-medium italic">
-            “This project would not have been possible without the invaluable guidance of{" "}
-            <span className="font-bold text-primary not-italic">
-              Sayonee Chatterjee
-            </span>
-            . We owe her a deep debt of gratitude for her dedicated mentorship,
-            her patience in teaching us the intricacies of Assessment, and her
-            continuous, meticulous analysis of our initial reports. Her clinical
-            expertise and unwavering support were the cornerstones that helped
-            turn Psyichub from a concept into reality.”
-          </blockquote>
-        </div>
       </div>
     </>
   );

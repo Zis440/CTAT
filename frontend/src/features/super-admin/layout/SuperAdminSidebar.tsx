@@ -174,8 +174,9 @@ export function SuperAdminSidebar() {
             to={logoLink}
             className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity justify-start shrink-0"
           >
-            <img src="/psyichub-logo-v2.png" alt="Psyichub" className="h-14 w-auto object-contain shrink-0 group-data-[collapsible=icon]:hidden dark:filter-none" style={{ filter: "brightness(0) saturate(100%) invert(33%) sepia(43%) saturate(935%) hue-rotate(70deg) brightness(100%) contrast(83%)" }} />
-            <img src="/apple-touch-icon.png" alt="Psyichub" className="h-8 w-8 object-contain shrink-0 hidden group-data-[collapsible=icon]:block mx-auto dark:filter-none" style={{ filter: "brightness(0) saturate(100%) invert(33%) sepia(43%) saturate(935%) hue-rotate(70deg) brightness(100%) contrast(83%)" }} />
+            <img src="/coretat-logo.png" alt="CoreTAT" className="h-14 w-auto object-contain shrink-0 group-data-[collapsible=icon]:hidden hidden dark:block" />
+            <img src="/coretat-report-logo.png" alt="CoreTAT" className="h-14 w-auto object-contain shrink-0 group-data-[collapsible=icon]:hidden block dark:hidden" />
+            <img src="/apple-touch-icon.png" alt="CoreTAT" className="h-8 w-8 object-contain shrink-0 hidden group-data-[collapsible=icon]:block mx-auto" />
           </Link>
           {user && (
             <div className="group-data-[collapsible=icon]:hidden flex shrink-0 mt-5">

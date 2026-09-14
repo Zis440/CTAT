@@ -79,7 +79,7 @@ export function AnonymousAssessmentPage() {
   if (error || !validation) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-        <Helmet><title>Invalid Link | PsyicHub - Psychological Intelligence</title></Helmet>
+        <Helmet><title>Invalid Link | CoreTAT - Psychological Intelligence</title></Helmet>
         <Card className="w-full max-w-md border-destructive/20 bg-destructive/5">
           <CardContent className="pt-6 flex flex-col items-center text-center">
             <div className="w-12 h-12 rounded-full bg-destructive/10 text-destructive flex items-center justify-center mb-4">
@@ -116,7 +116,7 @@ export function AnonymousAssessmentPage() {
   if (!hasConsent) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-        <Helmet><title>Assessment Consent | PsyicHub</title></Helmet>
+        <Helmet><title>Assessment Consent | CoreTAT</title></Helmet>
         <Card className="w-full max-w-lg border-primary/20">
           <CardHeader>
             <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-4">
@@ -179,7 +179,7 @@ export function AnonymousAssessmentPage() {
 
   return (
     <>
-      <Helmet><title>{validation.assessment_name} | PsyicHub</title></Helmet>
+      <Helmet><title>{validation.assessment_name} | CoreTAT</title></Helmet>
       {isEMHW ? (
         <AnonymousEMHWAssessment token={token!} validation={validation} onComplete={handleComplete} />
       ) : (

@@ -40,7 +40,7 @@ async def get_insight(
 
 @router.post("/start", response_model=schemas.AssessmentResponse)
 def start_assessment(
-    core_patient_id: str = Query(None, description="Required in embedded mode to link to CoreThematics patient"),
+    core_patient_id: str = Query(None, description="Required in embedded mode to link to CoreTAT patient"),
     db: Session = Depends(get_db),
     current_user = Depends(require_permission("assessments"))
 ):

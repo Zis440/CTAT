@@ -57,7 +57,7 @@ export function PWAUpdatePrompt() {
         </div>
         <div>
           <h4 className="font-bold text-sm">Update Available</h4>
-          <p className="text-xs text-text/70">A new version of Psyichub is ready.</p>
+          <p className="text-xs text-text/70">A new version of CoreTAT is ready.</p>
         </div>
       </div>
       <div className="flex justify-end gap-2 mt-1">

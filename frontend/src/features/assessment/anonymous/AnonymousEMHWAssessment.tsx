@@ -531,7 +531,8 @@ export const AnonymousEMHWAssessment = ({
     <div className="min-h-screen flex flex-col bg-background text-foreground font-['Inter',sans-serif] p-4 md:p-8 animate-in fade-in duration-500 overflow-y-auto overflow-x-hidden">
 
       <div className="mb-6 flex items-center gap-3">
-        <img src="/psyichub-logo-v2.png" alt="PsyicHub" className="h-10 w-auto object-contain dark:filter-none" style={{ filter: "brightness(0) saturate(100%) invert(33%) sepia(43%) saturate(935%) hue-rotate(70deg) brightness(100%) contrast(83%)" }} />
+        <img src="/coretat-logo.png" alt="CoreTAT" className="h-10 w-auto object-contain hidden dark:block" />
+        <img src="/coretat-report-logo.png" alt="CoreTAT" className="h-10 w-auto object-contain block dark:hidden" />
       </div>
 
       {isCompleted ? (

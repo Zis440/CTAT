@@ -165,7 +165,7 @@ export function AdminClinicDetailsPage() {
     return (
       <div className="w-full relative min-h-full isolate">
         <Helmet>
-          <title>Clinic Details  | PsyicHub - Psychological Intelligence</title>
+          <title>Clinic Details  | CoreTAT - Psychological Intelligence</title>
         </Helmet>
         <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="flex items-center justify-between mb-4">
@@ -222,7 +222,7 @@ export function AdminClinicDetailsPage() {
   return (
     <div className="w-full relative min-h-full isolate">
       <Helmet>
-        <title>{displayName} — Details  | PsyicHub - Psychological Intelligence</title>
+        <title>{displayName} — Details  | CoreTAT - Psychological Intelligence</title>
       </Helmet>
 
       <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">

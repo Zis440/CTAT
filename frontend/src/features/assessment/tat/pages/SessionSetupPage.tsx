@@ -169,7 +169,7 @@ export function SessionSetupView() {
   return (
     <div className="w-full">
       <Helmet>
-        <title>Session Setup | PsyicHub - Psychological Intelligence</title>
+        <title>Session Setup | CoreTAT - Psychological Intelligence</title>
       </Helmet>
 
       <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">

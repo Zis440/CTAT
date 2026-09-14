@@ -1,5 +1,5 @@
 """
-User model for Psyichub authentication system.
+User model for CoreTAT authentication system.
 
 Roles:
   - super_admin         : Full platform access, manages verification queue, sets pricing

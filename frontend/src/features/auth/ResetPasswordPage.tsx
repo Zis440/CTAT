@@ -67,7 +67,7 @@ export function ResetPasswordPage() {
   return (
     <div className="flex min-h-[80vh] items-center justify-center p-4">
       <Helmet>
-        <title>Set New Password | PsyicHub - Psychological Intelligence</title>
+        <title>Set New Password | CoreTAT - Psychological Intelligence</title>
       </Helmet>
 
       <Card className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-500">

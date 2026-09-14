@@ -99,7 +99,7 @@ export function OrgOrgProfilePage() {
   return (
     <div className="space-y-8 w-full max-w-6xl mx-auto pb-12">
       <Helmet>
-        <title>Organization Profile  | PsyicHub - Psychological Intelligence</title>
+        <title>Organization Profile  | CoreTAT - Psychological Intelligence</title>
       </Helmet>
 
       <motion.div
@@ -159,7 +159,7 @@ export function OrgOrgProfilePage() {
                 <Input
                   value={clinicName}
                   onChange={(e) => setClinicName(e.target.value)}
-                  placeholder="e.g. Psychub Care"
+                  placeholder="e.g. CoreTAT Care"
                   className="h-12 text-lg bg-background/50 border-primary/20 focus-visible:ring-primary/30"
                 />
               </div>

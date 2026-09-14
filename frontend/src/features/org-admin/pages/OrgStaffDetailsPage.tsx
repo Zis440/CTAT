@@ -203,7 +203,7 @@ export function OrgStaffDetailsPage() {
   if (isLoading) {
     return (
       <div className="w-full relative min-h-full isolate">
-        <Helmet><title>Staff Details | PsyicHub - Psychological Intelligence</title></Helmet>
+        <Helmet><title>Staff Details | CoreTAT - Psychological Intelligence</title></Helmet>
         <div className="w-full max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="flex justify-end"><Skeleton className="h-10 w-32 rounded-full" /></div>
           <Card className="border-primary/10">
@@ -239,7 +239,7 @@ export function OrgStaffDetailsPage() {
   return (
     <div className="w-full relative min-h-full isolate">
       <Helmet>
-        <title>Staff Details | PsyicHub - Psychological Intelligence</title>
+        <title>Staff Details | CoreTAT - Psychological Intelligence</title>
       </Helmet>
 
       <div className="w-full max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">

@@ -71,7 +71,7 @@ export function ClinicIncomePage() {
   return (
     <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
       <Helmet>
-        <title>Income Overview  | PsyicHub - Psychological Intelligence</title>
+        <title>Income Overview  | CoreTAT - Psychological Intelligence</title>
       </Helmet>
 
       <div>

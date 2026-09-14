@@ -5,8 +5,8 @@ from app.assessments.screening.level1 import models
 
 class ScreeningLevel1Adapter:
     """
-    Adapter layer bridging CoreThematics production system and the pre_screening module.
-    Enforces the CRITICAL ARCHITECTURAL RULE: CoreThematics is read-only.
+    Adapter layer bridging CoreTAT production system and the pre_screening module.
+    Enforces the CRITICAL ARCHITECTURAL RULE: CoreTAT is read-only.
     """
 
     @staticmethod

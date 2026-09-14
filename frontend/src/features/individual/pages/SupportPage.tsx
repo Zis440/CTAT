@@ -72,7 +72,7 @@ export function SupportPage() {
   return (
     <div className="w-full">
       <Helmet>
-        <title>Contact Support | PsyicHub - Psychological Intelligence</title>
+        <title>Contact Support | CoreTAT - Psychological Intelligence</title>
       </Helmet>
 
       <div className="space-y-8 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">

@@ -1,5 +1,5 @@
 """
-Shared utility functions for the Psyichub backend.
+Shared utility functions for the CoreTAT backend.
 """
 import json
 from pathlib import Path

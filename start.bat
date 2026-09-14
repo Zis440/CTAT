@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 echo ============================================
-echo   Psyichub : Starting Application
+echo   CoreThematics : Starting Application
 echo ============================================
 echo.
 
@@ -43,10 +43,10 @@ if "!OLLAMA_MODEL!"=="llama3" (
 start "Ollama Server" cmd /k "ollama run !OLLAMA_MODEL!"
 
 echo [2/3] Starting Backend...
-start "Psyichub Backend" cmd /k "cd /d %~dp0backend && call venv\Scripts\activate.bat && uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload"
+start "CoreThematics Backend" cmd /k "cd /d %~dp0backend && call venv\Scripts\activate.bat && uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload"
 
 echo [3/3] Starting Frontend...
-start "Psyichub Frontend" cmd /k "cd /d %~dp0frontend && npm run dev"
+start "CoreThematics Frontend" cmd /k "cd /d %~dp0frontend && npm run dev"
 
 echo.
 echo All servers are starting in separate windows.

@@ -10,7 +10,7 @@ export function AboutPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-text font-sans selection:bg-primary selection:text-background transition-colors duration-300">
       <Helmet>
-        <title>Our Team | PsyicHub - Psychological Intelligence</title>
+        <title>Our Team | CoreTAT - Psychological Intelligence</title>
       </Helmet>
       <LandingNavbar />
 

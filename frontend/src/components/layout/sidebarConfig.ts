@@ -9,7 +9,7 @@ export interface NavItem {
   hideIfVerified?: boolean;
   rciClinicalOnly?: boolean;
   rciOnly?: boolean;
-  psyichubVerifiedOnly?: boolean;
+  coretatVerifiedOnly?: boolean;
   notificationKey?: "account_verifications" | "report_verifications";
   children?: NavItem[];
 }

@@ -289,7 +289,7 @@ export function AdminStaffDetailsPage() {
   return (
     <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
       <Helmet>
-        <title>{displayName} — Staff Details  | PsyicHub - Psychological Intelligence</title>
+        <title>{displayName} — Staff Details  | CoreTAT - Psychological Intelligence</title>
       </Helmet>
 
       <div className="flex items-center justify-end">

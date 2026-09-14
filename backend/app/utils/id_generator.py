@@ -1,5 +1,5 @@
 """
-Centralized ID generator for all PsyicHub entities.
+Centralized ID generator for all CoreTAT entities.
 
 Format: <PREFIX>_<timestamp_hex>_<uuid_segment>
 Example: PAT_194a3b7c_8f4e2d1a9b3c

@@ -1,6 +1,7 @@
 import { Navigate } from "react-router-dom";
 
 import { AboutPage } from "@/features/landing/AboutPage";
+import { DeveloperPage } from "@/features/landing/DeveloperPage";
 import { DocsPage } from "@/features/landing/DocsPage";
 import { PrivacyPage } from "@/features/legal/PrivacyPage";
 import { TermsPage } from "@/features/legal/TermsPage";
@@ -17,6 +18,7 @@ import { AnonymousAssessmentPage } from "@/features/assessment/anonymous/Anonymo
 export const publicRoutes = [
   { path: "/", element: <Navigate to="/login" replace /> },
   { path: "/team", element: <AboutPage /> },
+  { path: "/developer", element: <DeveloperPage /> },
   { path: "/about", element: <DocsPage /> },
   { path: "/how-to-use", element: <DocsPage /> },
   { path: "/privacy", element: <PrivacyPage /> },

@@ -96,7 +96,7 @@ class BankVerificationService:
                     },
                 },
                 "notes": {
-                    "source": "Psyichub Signup Verification",
+                    "source": "CoreTAT Signup Verification",
                 },
             }
 

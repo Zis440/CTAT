@@ -1,6 +1,6 @@
 # VPS Deployment Guide — Ubuntu (16 GB RAM / 128 GB SSD)
 
-Complete step-by-step guide to deploy PsyicHub on a bare Ubuntu VPS
+Complete step-by-step guide to deploy CoreTAT on a bare Ubuntu VPS
 with Ollama + Airavata as the LLM runtime.
 
 > **Target spec:** Ubuntu 22.04 LTS, 16 GB RAM, 128 GB SSD
@@ -34,21 +34,21 @@ ssh root@YOUR_VPS_IP
 ### Create a deploy user (don't run the app as root)
 
 ```bash
-adduser psyichub
-usermod -aG sudo psyichub
+adduser coretat
+usermod -aG sudo coretat
 ```
 
 ### Set up SSH key authentication (from your local machine)
 
 ```bash
 # On your local machine
-ssh-copy-id psyichub@YOUR_VPS_IP
+ssh-copy-id coretat@YOUR_VPS_IP
 ```
 
 ### Switch to the deploy user
 
 ```bash
-su - psyichub
+su - coretat
 ```
 
 ### Update the system
@@ -167,16 +167,16 @@ From your local machine, copy the project to the VPS using `rsync` or `scp`:
 ```bash
 # Using rsync (recommended — skips .git, venv, __pycache__ automatically)
 rsync -av --exclude='.git' --exclude='backend/venv' --exclude='**/__pycache__' \
-  /path/to/PsyicHub/ psyichub@YOUR_VPS_IP:/home/psyichub/PsyicHub/
+  /path/to/CoreTAT/ coretat@YOUR_VPS_IP:/home/coretat/CoreTAT/
 
 # Or using scp (simple, slower)
-scp -r /path/to/PsyicHub psyichub@YOUR_VPS_IP:/home/psyichub/
+scp -r /path/to/CoreTAT coretat@YOUR_VPS_IP:/home/coretat/
 ```
 
 ### Create virtual environment
 
 ```bash
-cd /home/psyichub/PsyicHub/backend
+cd /home/coretat/CoreTAT/backend
 python3.10 -m venv venv
 source venv/bin/activate
 ```
@@ -203,13 +203,13 @@ python scripts/download_nltk.py
 ### Create the environment file
 
 ```bash
-cp /home/psyichub/PsyicHub/backend/.env.example /home/psyichub/PsyicHub/backend/.env
+cp /home/coretat/CoreTAT/backend/.env.example /home/coretat/CoreTAT/backend/.env
 ```
 
-Edit `/home/psyichub/PsyicHub/backend/.env` and fill in all required values — see `docs/config.md` for the full reference. At minimum set:
+Edit `/home/coretat/CoreTAT/backend/.env` and fill in all required values — see `docs/config.md` for the full reference. At minimum set:
 
 ```env
-DATABASE_URL=postgresql://DB_USER:DB_PASSWORD@localhost:5432/psyichub
+DATABASE_URL=postgresql://DB_USER:DB_PASSWORD@localhost:5432/coretat
 OLLAMA_BASE_URL=http://127.0.0.1:11434
 USE_GPU=false
 CT_SECRET_KEY=<generate a strong random key>
@@ -220,7 +220,7 @@ FRONTEND_URL=https://yourdomain.com
 ### Seed the database
 
 ```bash
-cd /home/psyichub/PsyicHub/backend
+cd /home/coretat/CoreTAT/backend
 source venv/bin/activate
 
 # Apply schema
@@ -230,13 +230,13 @@ python scripts/verify_db.py
 python scripts/seed_db.py
 
 # Create super admin (run SUPERADMIN.sql in pgAdmin or psql)
-# psql -U DB_USER -d psyichub -f /home/psyichub/PsyicHub/SUPERADMIN.sql
+# psql -U DB_USER -d coretat -f /home/coretat/CoreTAT/SUPERADMIN.sql
 ```
 
 ### Test that the backend starts
 
 ```bash
-cd /home/psyichub/PsyicHub/backend
+cd /home/coretat/CoreTAT/backend
 source venv/bin/activate
 uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
@@ -253,7 +253,7 @@ Wait for "Application startup complete", then `Ctrl+C` to stop.
 ### Build the production frontend
 
 ```bash
-cd /home/psyichub/PsyicHub/frontend
+cd /home/coretat/CoreTAT/frontend
 npm ci
 
 # Create production env
@@ -281,13 +281,13 @@ sudo apt install -y nginx
 ### Create the site configuration
 
 ```bash
-sudo tee /etc/nginx/sites-available/psyichub > /dev/null <<'EOF'
+sudo tee /etc/nginx/sites-available/coretat > /dev/null <<'EOF'
 server {
     listen 80;
     server_name yourdomain.com www.yourdomain.com;
 
     # ── Frontend (static files) ──────────────────────────────────
-    root /home/psyichub/PsyicHub/frontend/dist;
+    root /home/coretat/CoreTAT/frontend/dist;
     index index.html;
 
     location / {
@@ -330,7 +330,7 @@ EOF
 ### Enable the site
 
 ```bash
-sudo ln -sf /etc/nginx/sites-available/psyichub /etc/nginx/sites-enabled/
+sudo ln -sf /etc/nginx/sites-available/coretat /etc/nginx/sites-enabled/
 sudo rm -f /etc/nginx/sites-enabled/default
 
 # Test config
@@ -382,20 +382,20 @@ systemd ensures the backend auto-restarts on crash and starts on boot.
 ### Backend service
 
 ```bash
-sudo tee /etc/systemd/system/psyichub-backend.service > /dev/null <<EOF
+sudo tee /etc/systemd/system/coretat-backend.service > /dev/null <<EOF
 [Unit]
-Description=PsyicHub Backend (FastAPI)
+Description=CoreTAT Backend (FastAPI)
 After=network.target ollama.service postgresql.service
 Wants=ollama.service
 
 [Service]
 Type=simple
-User=psyichub
-Group=psyichub
-WorkingDirectory=/home/psyichub/PsyicHub/backend
-Environment="PATH=/home/psyichub/PsyicHub/backend/venv/bin:/usr/local/bin:/usr/bin"
-EnvironmentFile=/home/psyichub/PsyicHub/backend/.env
-ExecStart=/home/psyichub/PsyicHub/backend/venv/bin/uvicorn \
+User=coretat
+Group=coretat
+WorkingDirectory=/home/coretat/CoreTAT/backend
+Environment="PATH=/home/coretat/CoreTAT/backend/venv/bin:/usr/local/bin:/usr/bin"
+EnvironmentFile=/home/coretat/CoreTAT/backend/.env
+ExecStart=/home/coretat/CoreTAT/backend/venv/bin/uvicorn \
     app.main:app \
     --host 127.0.0.1 \
     --port 8000 \
@@ -410,7 +410,7 @@ MemoryMax=10G
 # Logging
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=psyichub
+SyslogIdentifier=coretat
 
 [Install]
 WantedBy=multi-user.target
@@ -426,15 +426,15 @@ EOF
 
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable psyichub-backend
-sudo systemctl start psyichub-backend
+sudo systemctl enable coretat-backend
+sudo systemctl start coretat-backend
 ```
 
 ### Check status and logs
 
 ```bash
-sudo systemctl status psyichub-backend
-sudo journalctl -u psyichub-backend -f   # live logs
+sudo systemctl status coretat-backend
+sudo journalctl -u coretat-backend -f   # live logs
 ```
 
 ---
@@ -480,10 +480,10 @@ Nginx Full                 ALLOW       Anywhere
 
 ```bash
 # Live tail
-sudo journalctl -u psyichub-backend -f
+sudo journalctl -u coretat-backend -f
 
 # Last 100 lines
-sudo journalctl -u psyichub-backend -n 100
+sudo journalctl -u coretat-backend -n 100
 
 # Ollama logs
 sudo journalctl -u ollama -f
@@ -492,7 +492,7 @@ sudo journalctl -u ollama -f
 ### Restart services
 
 ```bash
-sudo systemctl restart psyichub-backend
+sudo systemctl restart coretat-backend
 sudo systemctl restart ollama
 sudo systemctl restart nginx
 ```
@@ -504,23 +504,23 @@ Transfer updated files from your local machine:
 ```bash
 # From your local machine
 rsync -av --exclude='.git' --exclude='backend/venv' --exclude='**/__pycache__' \
-  /path/to/PsyicHub/ psyichub@YOUR_VPS_IP:/home/psyichub/PsyicHub/
+  /path/to/CoreTAT/ coretat@YOUR_VPS_IP:/home/coretat/CoreTAT/
 
 # SSH into VPS and apply updates
-ssh psyichub@YOUR_VPS_IP
+ssh coretat@YOUR_VPS_IP
 
 # Update backend deps (if requirements.txt changed)
-cd /home/psyichub/PsyicHub/backend
+cd /home/coretat/CoreTAT/backend
 source venv/bin/activate
 pip install -r requirements.txt
 
 # Rebuild frontend (if frontend changed)
-cd /home/psyichub/PsyicHub/frontend
+cd /home/coretat/CoreTAT/frontend
 npm ci
 VITE_API_BASE_URL=https://yourdomain.com/api npm run build
 
 # Restart backend
-sudo systemctl restart psyichub-backend
+sudo systemctl restart coretat-backend
 # Nginx serves static files — no restart needed for frontend-only changes
 ```
 
@@ -528,9 +528,9 @@ sudo systemctl restart psyichub-backend
 
 ```bash
 df -h                                        # Overall disk
-du -sh /home/psyichub/PsyicHub/             # Project size
+du -sh /home/coretat/CoreTAT/             # Project size
 du -sh /usr/share/ollama/.ollama/models/     # Ollama models
-du -sh /home/psyichub/PsyicHub/backend/data_store/  # Runtime data
+du -sh /home/coretat/CoreTAT/backend/data_store/  # Runtime data
 ```
 
 ### Monitor memory
@@ -545,15 +545,15 @@ Expected memory breakdown at runtime:
 | Process | RAM Usage |
 |---------|-----------|
 | Ollama + Airavata Q4_K_M | ~5-6 GB |
-| PsyicHub backend (all engines loaded) | ~4-6 GB |
+| CoreTAT backend (all engines loaded) | ~4-6 GB |
 | Nginx + PostgreSQL + OS overhead | ~1 GB |
 | **Total** | **~10-13 GB** (within 16 GB) |
 
 ### Set up log rotation (prevent disk fill)
 
 ```bash
-sudo tee /etc/logrotate.d/psyichub > /dev/null <<EOF
-/home/psyichub/PsyicHub/logs/*.log {
+sudo tee /etc/logrotate.d/coretat > /dev/null <<EOF
+/home/coretat/CoreTAT/logs/*.log {
     weekly
     rotate 4
     compress
@@ -572,7 +572,7 @@ When developing locally, point your app to your **desktop Ollama** instance:
 ### Backend `.env` (local)
 
 ```env
-DATABASE_URL=postgresql://postgres:user@localhost:5432/psyichub
+DATABASE_URL=postgresql://postgres:user@localhost:5432/coretat
 OLLAMA_BASE_URL=http://localhost:11434
 USE_GPU=false
 ```
@@ -601,12 +601,12 @@ cd frontend && npm run dev
 ```bash
 # From your local machine — sync changed files
 rsync -av --exclude='.git' --exclude='backend/venv' --exclude='**/__pycache__' \
-  /path/to/PsyicHub/ psyichub@YOUR_VPS_IP:/home/psyichub/PsyicHub/
+  /path/to/CoreTAT/ coretat@YOUR_VPS_IP:/home/coretat/CoreTAT/
 
 # SSH in and restart
-ssh psyichub@YOUR_VPS_IP
-cd /home/psyichub/PsyicHub/frontend && npm ci && VITE_API_BASE_URL=https://yourdomain.com/api npm run build
-sudo systemctl restart psyichub-backend
+ssh coretat@YOUR_VPS_IP
+cd /home/coretat/CoreTAT/frontend && npm ci && VITE_API_BASE_URL=https://yourdomain.com/api npm run build
+sudo systemctl restart coretat-backend
 ```
 
 ---
@@ -619,12 +619,12 @@ sudo systemctl restart psyichub-backend
 | Backend API | `https://yourdomain.com/api/` | proxied → 8000 |
 | Ollama | `http://127.0.0.1:11434` | localhost only |
 | PostgreSQL | `localhost:5432` | localhost only |
-| SSH | `ssh psyichub@YOUR_VPS_IP` | 22 |
+| SSH | `ssh coretat@YOUR_VPS_IP` | 22 |
 
 | Command | What it does |
 |---------|-------------|
-| `sudo systemctl status psyichub-backend` | Check backend health |
-| `sudo journalctl -u psyichub-backend -f` | Live backend logs |
-| `sudo systemctl restart psyichub-backend` | Restart after code update |
+| `sudo systemctl status coretat-backend` | Check backend health |
+| `sudo journalctl -u coretat-backend -f` | Live backend logs |
+| `sudo systemctl restart coretat-backend` | Restart after code update |
 | `sudo certbot renew` | Renew SSL certificate |
 | `htop` | Monitor CPU/RAM |

@@ -11,17 +11,17 @@ When running the project locally on your Windows machine or on your friend's sys
 ### Step-by-Step Guide
 1. **Open Task Scheduler**: Press the `Windows Key`, type `Task Scheduler`, and hit Enter.
 2. **Create a Basic Task**: In the right-hand panel, click on **Create Basic Task**.
-3. **Name it**: Give the task a name like "Psyichub Password Reset Processor", and click Next.
+3. **Name it**: Give the task a name like "CoreTAT Password Reset Processor", and click Next.
 4. **Trigger Frequency**: 
    - Since "Every 5 minutes" isn't a default option here, select **Daily** and click Next.
    - Leave the default start date/time and click Next.
 5. **Action**: Choose **Start a program** and click Next.
 6. **Program/Script Configuration**:
    - **Program/script**: Browse and select the `python.exe` inside your backend virtual environment. 
-     *Example path*: `D:\Codes\Psyichub\backend\venv\Scripts\python.exe`
+     *Example path*: `D:\Codes\CoreTAT\backend\venv\Scripts\python.exe`
    - **Add arguments**: `scripts\process_password_resets.py`
    - **Start in**: Provide the absolute path to your backend folder.
-     *Example path*: `D:\Codes\Psyichub\backend`
+     *Example path*: `D:\Codes\CoreTAT\backend`
 7. **Finish**: Click **Finish**.
 8. **Make it Repeat**: 
    - Find your newly created task in the **Task Scheduler Library** list.
@@ -66,7 +66,7 @@ At any time, you can safely trigger the process manually without waiting for the
 
 **On Windows:**
 ```powershell
-cd "D:\Codes\Psyichub\backend"
+cd "D:\Codes\CoreTAT\backend"
 venv\Scripts\python scripts\process_password_resets.py
 ```
 

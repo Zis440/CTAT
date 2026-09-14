@@ -103,7 +103,7 @@ export function ClinicOrgProfilePage() {
   return (
     <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
       <Helmet>
-        <title>${isOrg ? "Organization" : "Clinic"} Profile  | PsyicHub - Psychological Intelligence</title>
+        <title>${isOrg ? "Organization" : "Clinic"} Profile  | CoreTAT - Psychological Intelligence</title>
       </Helmet>
 
       <motion.div
@@ -163,7 +163,7 @@ export function ClinicOrgProfilePage() {
                 <Input
                   value={clinicName}
                   onChange={(e) => setClinicName(e.target.value)}
-                  placeholder="e.g. Psychub Care"
+                  placeholder="e.g. CoreTAT Care"
                   className="h-12 text-lg bg-background/50 border-primary/20 focus-visible:ring-primary/30"
                 />
               </div>

@@ -64,7 +64,7 @@ export function OrgWalletPage() {
 
   }, [typeFilter, dateFrom, dateTo]);
 
-  let roleSuffix = "Psyichub";
+  let roleSuffix = "CoreTAT";
   if (user?.role === "clinic_admin") roleSuffix = "Clinic Admin";
   if (user?.role === "clinic_staff") roleSuffix = "Clinic Staff";
 

@@ -201,7 +201,7 @@ def get_notifications_list(
         dt_str = current_user.created_at.isoformat() if current_user.created_at else datetime.now(timezone.utc).isoformat()
         notifications.append(NotificationItem(
             id="welcome",
-            title="Welcome to PsyicHub",
+            title="Welcome to CoreTAT",
             description="Your notifications will appear here.",
             isRead=True,
             timestamp=dt_str,

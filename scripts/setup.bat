@@ -1,7 +1,7 @@
 @echo off
-title Psyichub - Project Setup
+title CoreThematics - Project Setup
 echo ============================================
-echo   Psyichub : Project Setup (Windows)
+echo   CoreThematics : Project Setup (Windows)
 echo ============================================
 echo.
 

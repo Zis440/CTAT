@@ -31,8 +31,8 @@ class EmailService:
 
     def __init__(self):
         self.api_key = os.getenv("RESEND_API_KEY", "")
-        self.from_email = os.getenv("RESEND_FROM_EMAIL", "Psyichub <noreply@psyichub.com>")
-        self.app_name = "Psyichub"
+        self.from_email = os.getenv("RESEND_FROM_EMAIL", "CoreTAT <noreply@coretat.com>")
+        self.app_name = "CoreTAT"
         self._resend = None
 
         if self.api_key:
@@ -139,7 +139,7 @@ class EmailService:
         psychologist_name: str,
         assessment_name: str,
         patient_name: str,
-        login_url: str = "https://psyichub.com/login",
+        login_url: str = "https://coretat.com/login",
     ) -> bool:
         """Send notification to a psychologist when they are assigned a new report verification."""
         if not psychologist_email:
@@ -255,7 +255,7 @@ class EmailService:
         self,
         request_id: str,
         session_id: str,
-        admin_email: str = "admin@psyichub.com",
+        admin_email: str = "admin@coretat.com",
     ) -> bool:
         """Send escalation notification when a verification request exceeds max attempts."""
         subject = f"⚠ ESCALATION: Verification Request {request_id[:8]} Requires Immediate Attention"

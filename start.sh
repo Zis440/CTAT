@@ -5,7 +5,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 echo "============================================"
-echo "  Psyichub : Starting Application"
+echo "  CoreThematics : Starting Application"
 echo "============================================"
 echo ""
 

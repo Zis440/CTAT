@@ -299,7 +299,7 @@ export function VerificationQueuePage() {
     return (
       <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
         <Helmet>
-          <title>Account Verification Queue  | PsyicHub - Psychological Intelligence</title>
+          <title>Account Verification Queue  | CoreTAT - Psychological Intelligence</title>
         </Helmet>
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -411,7 +411,7 @@ export function VerificationQueuePage() {
     <>
       <div className="w-full max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <Helmet>
-          <title>Account Verification Queue  | PsyicHub - Psychological Intelligence</title>
+          <title>Account Verification Queue  | CoreTAT - Psychological Intelligence</title>
         </Helmet>
 
         <div className="flex items-start justify-between gap-4">

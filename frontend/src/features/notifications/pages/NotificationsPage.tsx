@@ -80,7 +80,7 @@ export function NotificationsPage() {
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <Helmet>
-        <title>Notifications | PsyicHub</title>
+        <title>Notifications | CoreTAT</title>
       </Helmet>
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

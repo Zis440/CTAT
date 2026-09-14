@@ -552,9 +552,9 @@ export function AdminReportsPage() {
               <Building2 className="h-8 w-8 text-primary" />
             </div>
             <div className="space-y-1">
-              <h4 className="font-bold text-lg">Psyichub Care</h4>
+              <h4 className="font-bold text-lg">CoreTAT Care</h4>
               <p className="text-sm text-muted-foreground">123 Health Ave, New Delhi</p>
-              <p className="text-xs text-muted-foreground">contact@psyichub.com | +91 99999 88888</p>
+              <p className="text-xs text-muted-foreground">contact@coretat.com | +91 99999 88888</p>
             </div>
           </CardContent>
         </Card>
@@ -695,7 +695,7 @@ export function AdminReportsPage() {
   return (
     <div className="w-full">
       <Helmet>
-        <title>Reports  | PsyicHub - Psychological Intelligence</title>
+        <title>Reports  | CoreTAT - Psychological Intelligence</title>
       </Helmet>
 
       {selectedReportId ? renderDetailedReport() : renderReportsList()}

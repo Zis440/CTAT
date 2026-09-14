@@ -19,7 +19,7 @@ export const RiskBar: React.FC<{ label: string; level: string }> = ({ label, lev
     levelText = `${levelText} (${riskScore}/100)`;
   }
 
-  let color = '#238b40';
+  let color = '#ce1126';
   if (levelText.includes('MODERATE')) color = '#3b82f6';
   else if (levelText.includes('HIGH') || levelText.includes('ELEVATED')) color = '#f59e0b';
   else if (levelText.includes('CRITICAL') || levelText.includes('SEVERE')) color = '#ef4444';
@@ -45,7 +45,7 @@ export const ColorBandBar: React.FC<{ label: string; value: number; compareText?
         <span className="text-[#50d3a7]">{value} / 100</span>
       </div>
       <div className="w-full bg-muted h-4 border border-[#50d3a7]/50 overflow-hidden">
-        <div className="h-full bg-[#238b40] transition-all duration-1000" style={{ width: `${value}%` }}></div>
+        <div className="h-full bg-[#ce1126] transition-all duration-1000" style={{ width: `${value}%` }}></div>
       </div>
       {compareText && <p className="text-[10px] text-muted-foreground mt-1 italic">{compareText}</p>}
     </div>
@@ -54,7 +54,7 @@ export const ColorBandBar: React.FC<{ label: string; value: number; compareText?
 
 export const SectionHeader: React.FC<{ title: string }> = ({ title }) => (
   <div className="mt-10 mb-4">
-    <h2 className="text-[14px] font-bold text-[#238b40] uppercase">
+    <h2 className="text-[14px] font-bold text-[#ce1126] uppercase">
       ■ {title.replace(/^\d+\.\s*/, '')}
     </h2>
   </div>

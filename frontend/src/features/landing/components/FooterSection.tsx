@@ -15,6 +15,7 @@ const footerColumns = [
       title: "Company",
       links: [
         { label: "Our Team", href: "/team" },
+        { label: "Developer", href: "/developer" },
       ],
     },
   ],
@@ -30,7 +31,7 @@ const footerColumns = [
     {
       title: "Legal",
       links: [
-        { label: "Terms and Conditions", href: "https://psyichub.com/terms-conditions/" },
+        { label: "Terms and Conditions", href: "/terms" },
         { label: "Privacy Policy", href: "/privacy" },
       ],
     },
@@ -45,16 +46,32 @@ export function Footer() {
           <div className="lg:col-span-2 flex flex-col justify-between">
             <div className="flex items-center gap-2">
               <img
-                src="/psyichub-logo-v2.png"
-                alt="Psyichub Logo"
-                className="h-14 md:h-16 w-auto dark:filter-none" style={{ filter: "brightness(0) saturate(100%) invert(33%) sepia(43%) saturate(935%) hue-rotate(70deg) brightness(100%) contrast(83%)" }}
+                src="/coretat-logo.png"
+                alt="CoreTAT Logo"
+                className="h-14 md:h-16 w-auto hidden dark:block"
+              />
+              <img
+                src="/coretat-report-logo.png"
+                alt="CoreTAT Logo"
+                className="h-14 md:h-16 w-auto block dark:hidden"
               />
             </div>
 
             <div className="mt-16 lg:mt-auto flex flex-col gap-2">
               <div className="flex flex-col text-xs text-text/50 font-bold tracking-widest uppercase gap-1">
                 <p>A PRODUCT BY</p>
-                <p>TECHGEN CYBER SOLUTION PVT. LTD © {new Date().getFullYear()}</p>
+                <p className="text-text/70">Zis440 © {new Date().getFullYear()}</p>
+                <p className="normal-case tracking-normal font-medium text-text/60 mt-1">
+                  Developed by{" "}
+                  <a
+                    href="https://saphalya-das.vercel.app/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-primary transition-colors text-text/80 font-semibold"
+                  >
+                    Saphalya Das
+                  </a>
+                </p>
               </div>
 
             </div>

@@ -10,7 +10,7 @@ export function TATCardPreviewPage() {
   return (
     <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
       <Helmet>
-        <title>Card Preview | PsyicHub - Psychological Intelligence</title>
+        <title>Card Preview | CoreTAT - Psychological Intelligence</title>
       </Helmet>
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

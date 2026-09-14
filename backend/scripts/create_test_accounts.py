@@ -10,7 +10,7 @@ Usage (with venv active, from backend/ directory):
     python scripts/create_test_accounts.py
 
 Test accounts created:
-  1. Super Admin          : superadmin@psyichub.com / admin123
+  1. Super Admin          : superadmin@coretat.com / admin123
   2. Approved Psychologist: psychologist@test.com / password123
   3. Pending Clinic Admin : clinic.admin@test.com / password123
   4. Clinic Staff         : clinic.staff@test.com / password123
@@ -38,7 +38,7 @@ def create_test_accounts():
 
         test_accounts = [
             {
-                'email': 'superadmin@psyichub.com',
+                'email': 'superadmin@coretat.com',
                 'password': 'admin123',
                 'first_name': 'System',
                 'last_name': 'Admin',
@@ -83,7 +83,7 @@ def create_test_accounts():
         ]
 
         print("=" * 70)
-        print("Creating Psyichub Test Accounts")
+        print("Creating CoreTAT Test Accounts")
         print("=" * 70)
         print()
 

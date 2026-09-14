@@ -66,7 +66,7 @@ export function useBulkSelection<T extends { id: string }>() {
     let currentY = 20;
 
     try {
-      const response = await fetch('/psyichub-report-logo.png');
+      const response = await fetch('/coretat-report-logo.png');
       const blob = await response.blob();
       const base64Data = await new Promise<string>((resolve) => {
         const reader = new FileReader();
@@ -80,8 +80,8 @@ export function useBulkSelection<T extends { id: string }>() {
     } catch (e) {
       console.warn("Failed to load logo for PDF", e);
       doc.setFontSize(14);
-      doc.setTextColor("#238b40");
-      doc.text("Psyichub", 14, 22);
+      doc.setTextColor("#ce1126");
+      doc.text("CoreTAT", 14, 22);
       currentY = 35;
     }
 
@@ -108,7 +108,7 @@ export function useBulkSelection<T extends { id: string }>() {
       head,
       body,
       styles: { cellPadding: 3, fontSize: 9 },
-      headStyles: { fillColor: "#238b40" },
+      headStyles: { fillColor: "#ce1126" },
     });
 
     doc.save(`${headerText.replace(/\s+/g, "_")}_${format(new Date(), "yyyyMMdd")}.pdf`);

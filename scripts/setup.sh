@@ -2,7 +2,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 echo "============================================"
-echo "  Psyichub : Project Setup"
+echo "  CoreThematics : Project Setup"
 echo "============================================"
 echo ""
 

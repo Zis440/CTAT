@@ -207,7 +207,7 @@ export function UserManagementPage() {
   return (
     <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
       <Helmet>
-        <title>User Management  | PsyicHub - Psychological Intelligence</title>
+        <title>User Management  | CoreTAT - Psychological Intelligence</title>
       </Helmet>
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

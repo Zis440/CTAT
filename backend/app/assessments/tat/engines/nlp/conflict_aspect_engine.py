@@ -197,7 +197,7 @@ class ConflictAspectEngine:
 
     def _determine_resolution_status(self, narrative_text: str, resolution_pattern: str) -> str:
         """
-        Calibrated resolution status (Rule 2 — Psyichub Calibration v1.2).
+        Calibrated resolution status (Rule 2 — CoreTAT Calibration v1.2).
         3-tier: Resolved (Adaptive Integration) / Partially Resolved / Unresolved
 
         Resolved (Adaptive Integration) requires:

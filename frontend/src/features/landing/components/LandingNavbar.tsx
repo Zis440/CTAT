@@ -32,9 +32,14 @@ export function LandingNavbar() {
             onClick={() => navigate("/")}
           >
             <img
-              src="/psyichub-logo-v2.png"
-              alt="Psyichub Logo"
-              className="h-14 md:h-16 w-auto dark:filter-none" style={{ filter: "brightness(0) saturate(100%) invert(33%) sepia(43%) saturate(935%) hue-rotate(70deg) brightness(100%) contrast(83%)" }}
+              src="/coretat-logo.png"
+              alt="CoreTAT Logo"
+              className="h-14 md:h-16 w-auto hidden dark:block"
+            />
+            <img
+              src="/coretat-report-logo.png"
+              alt="CoreTAT Logo"
+              className="h-14 md:h-16 w-auto block dark:hidden"
             />
           </div>
 
@@ -57,6 +62,11 @@ export function LandingNavbar() {
                     <NavigationMenuItem>
                       <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
                         <Link to="/team">Our Team</Link>
+                      </NavigationMenuLink>
+                    </NavigationMenuItem>
+                    <NavigationMenuItem>
+                      <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                        <Link to="/developer">Developer</Link>
                       </NavigationMenuLink>
                     </NavigationMenuItem>
                   </NavigationMenuList>
@@ -149,6 +159,14 @@ export function LandingNavbar() {
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         <Link to="/team">Our Team</Link>
+                      </Button>
+                      <Button
+                        asChild
+                        variant="ghost"
+                        className={`justify-start text-lg py-6 ${location.pathname === "/developer" ? "text-secondary font-bold" : "text-text"}`}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Link to="/developer">Developer</Link>
                       </Button>
                     </>
                   )}

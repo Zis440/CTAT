@@ -142,7 +142,7 @@ export function ReportVerificationQueuePage() {
         <ShieldAlert className="h-16 w-16 text-muted-foreground opacity-50" />
         <h2 className="text-xl font-bold">Access Denied</h2>
         <p className="text-muted-foreground max-w-md text-center">
-          You must be a PsyicHub Verified Psychologist to access the Report Verification Queue. Please submit your profile on the Verification page to enroll.
+          You must be a CoreTAT Verified Psychologist to access the Report Verification Queue. Please submit your profile on the Verification page to enroll.
         </p>
         <Button asChild variant="outline">
           <Link to="/verification">Go to Verification</Link>
@@ -181,7 +181,7 @@ export function ReportVerificationQueuePage() {
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <Helmet>
-        <title>RCI Verification Queue | PsyicHub</title>
+        <title>RCI Verification Queue | CoreTAT</title>
       </Helmet>
 
       <div className="flex items-start justify-between gap-4">

@@ -25,19 +25,19 @@ export function BrainAnalysisUI() {
     <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-visible z-30">
 
       <motion.div
-        className="absolute w-[400px] h-[400px] rounded-full border-[0.5px] border-primary/20 border-dashed"
-        style={{ top: 'calc(50% - 200px)' }}
+        className="absolute w-[380px] h-[380px] rounded-full border-[0.5px] border-primary/20 border-dashed"
+        style={{ top: 'calc(42% - 190px)' }}
         animate={{ rotate: 360 }}
         transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
       />
       <motion.div
-        className="absolute w-[500px] h-[500px] rounded-full border-[0.5px] border-primary/10 border-dotted"
-        style={{ top: 'calc(50% - 250px)' }}
+        className="absolute w-[460px] h-[460px] rounded-full border-[0.5px] border-primary/10 border-dotted"
+        style={{ top: 'calc(42% - 230px)' }}
         animate={{ rotate: -360 }}
         transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
       />
 
-      <div className="absolute w-[60px] h-[60px] rounded-full border-[0.5px] border-primary/30" style={{ top: 'calc(50% - 30px)' }}>
+      <div className="absolute w-[50px] h-[50px] rounded-full border-[0.5px] border-primary/30" style={{ top: 'calc(42% - 25px)' }}>
         <div className="absolute top-1/2 -left-2 w-4 h-[1px] bg-primary/50" />
         <div className="absolute top-1/2 -right-2 w-4 h-[1px] bg-primary/50" />
         <div className="absolute -top-2 left-1/2 w-[1px] h-4 bg-primary/50" />
@@ -45,18 +45,18 @@ export function BrainAnalysisUI() {
       </div>
 
       <motion.div
-        className="absolute w-[300px] h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent blur-[1px] opacity-60"
-        animate={{ y: [-250, -20, -250] }}
+        className="absolute w-[280px] h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent blur-[1px] opacity-60"
+        animate={{ y: [-190, 20, -190] }}
         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      <div className="absolute -right-[15%] top-[0%] w-[240px] space-y-6 font-mono">
+      <div className="absolute -right-[12%] top-[6%] w-[230px] space-y-5 font-mono">
 
         <div className="flex flex-col">
-          <div className="text-[10px] text-primary/60 tracking-[0.2em] mb-1">SYS.STATUS</div>
+          <div className="text-[10px] text-primary/70 tracking-[0.2em] mb-1">SYS.STATUS</div>
           <div className="flex items-center space-x-2">
             <motion.div
-              className="w-2 h-2 bg-primary rounded-full shadow-[0_0_8px_#39ff14]"
+              className="w-2 h-2 bg-primary rounded-full shadow-[0_0_8px_#ff384d]"
               animate={{ opacity: [1, 0.4, 1] }}
               transition={{ duration: 1.5, repeat: Infinity }}
             />
@@ -65,7 +65,7 @@ export function BrainAnalysisUI() {
           <div className="w-full h-[1px] bg-gradient-to-r from-primary/50 to-transparent mt-2" />
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3.5">
           {data.map((m, i) => (
             <motion.div
               key={m.id}
@@ -74,15 +74,15 @@ export function BrainAnalysisUI() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.2 }}
             >
-              <div className="text-[9px] text-primary/50 tracking-wider mb-1">[{m.id}] {m.label}</div>
-              <div className="text-lg text-primary shadow-primary drop-shadow-[0_0_2px_rgba(57,255,20,0.5)]">
+              <div className="text-[9px] text-primary/60 tracking-wider mb-0.5">[{m.id}] {m.label}</div>
+              <div className="text-lg text-primary shadow-primary drop-shadow-[0_0_2px_rgba(255,56,77,0.5)]">
                 {m.current.toFixed(2)}<span className="text-xs text-primary/40 ml-1">%</span>
               </div>
             </motion.div>
           ))}
         </div>
 
-        <div className="mt-8 flex items-end space-x-1 h-12">
+        <div className="mt-6 flex items-end space-x-1 h-10">
           {[...Array(24)].map((_, i) => (
             <motion.div
               key={i}

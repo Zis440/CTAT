@@ -1,5 +1,5 @@
 """
-SQLAlchemy database setup for Psyichub.
+SQLAlchemy database setup for CoreTAT.
 
 PostgreSQL is the only supported database engine.
 All file-based data lives under ``backend/data_store/``:
@@ -35,7 +35,7 @@ if not DATABASE_URL:
     raise RuntimeError(
         "DATABASE_URL environment variable is not set. "
         "Please set it in backend/.env to your PostgreSQL connection string, e.g.:\n"
-        "  DATABASE_URL=postgresql://user:password@localhost:5432/psyichub"
+        "  DATABASE_URL=postgresql://user:password@localhost:5432/coretat"
     )
 
 engine = create_engine(

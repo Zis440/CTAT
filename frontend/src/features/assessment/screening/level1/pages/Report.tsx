@@ -112,18 +112,18 @@ export const ScreeningReportUI: React.FC<{ report: ReportData, questions?: any, 
         <SectionHeader title="4. DETAILED FINDINGS & PERFORMANCE" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mt-6">
           <div>
-            <h3 className="text-[11px] font-bold text-[#238b40] uppercase tracking-wider mb-4 border-b border-gray-200 pb-2">Cognitive Metrics</h3>
+            <h3 className="text-[11px] font-bold text-[#ce1126] uppercase tracking-wider mb-4 border-b border-gray-200 pb-2">Cognitive Metrics</h3>
             <ColorBandBar label="Distractibility / Attention Deficit" value={indexes?.attention_deficit_index || 45} compareText="Higher scores indicate higher distractibility" />
             <ColorBandBar label="Processing Speed Index" value={indexes?.processing_speed_index || 60} compareText="Higher scores indicate faster processing" />
             <ColorBandBar label="Task Errors (Sustained Attention)" value={indexes?.error_rate_index || 20} compareText="Higher scores indicate more errors" />
           </div>
           <div>
-            <h3 className="text-[11px] font-bold text-[#238b40] uppercase tracking-wider mb-4 border-b border-gray-200 pb-2">Emotional Metrics</h3>
+            <h3 className="text-[11px] font-bold text-[#ce1126] uppercase tracking-wider mb-4 border-b border-gray-200 pb-2">Emotional Metrics</h3>
             <ColorBandBar label="Wellbeing Index" value={indexes?.mental_health_index || 50} compareText="Higher scores indicate better overall wellbeing" />
             <ColorBandBar label="Stress & Burnout Index" value={indexes?.burnout_index || 40} compareText="Higher scores indicate higher risk" />
           </div>
           <div>
-            <h3 className="text-[11px] font-bold text-[#238b40] uppercase tracking-wider mb-4 border-b border-gray-200 pb-2">Projective Insight</h3>
+            <h3 className="text-[11px] font-bold text-[#ce1126] uppercase tracking-wider mb-4 border-b border-gray-200 pb-2">Projective Insight</h3>
             <ColorBandBar label="Anxiety Level" value={story_analysis?.global_metrics?.emotional_tone || 50} />
             <ColorBandBar label="Depressive Ideation" value={100 - (story_analysis?.global_metrics?.optimism_score || 50)} />
             <ColorBandBar label="Hostility / Anger" value={story_analysis?.dimensions?.['Main Conflict'] || 40} />
@@ -407,7 +407,7 @@ export const ScreeningReportUI: React.FC<{ report: ReportData, questions?: any, 
           </p>
           <div className="flex justify-between items-center w-full print:w-auto print:flex-col print:items-end gap-1">
             <span className="font-bold uppercase tracking-widest text-foreground">CONFIDENTIAL</span>
-            <span>{new Date().getFullYear()} @ PsyicHub - Psychological Intelligence</span>
+            <span>{new Date().getFullYear()} @ CoreTAT - Psychological Intelligence</span>
           </div>
         </div>
       </div>

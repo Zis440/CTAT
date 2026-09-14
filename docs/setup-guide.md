@@ -1,6 +1,6 @@
 # Setup Guide
 
-Complete installation guide for Psyichub. All dependencies are tested and pinned.
+Complete installation guide for CoreTAT. All dependencies are tested and pinned.
 
 ---
 
@@ -18,10 +18,10 @@ Complete installation guide for Psyichub. All dependencies are tested and pinned
 
 ## 1. Navigate to the Project Folder
 
-Once you have received the project files from your team, open a terminal and navigate into the **PsyicHub** folder:
+Once you have received the project files from your team, open a terminal and navigate into the **CoreTAT** folder:
 
 ```bash
-cd PsyicHub
+cd CoreTAT
 ```
 
 All subsequent commands should be run from inside this folder.

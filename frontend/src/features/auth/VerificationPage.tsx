@@ -487,7 +487,7 @@ function RciProfileSection() {
           <p className="text-sm text-text/60 leading-relaxed">
             {user?.verification_status === "approved"
               ? "You are an approved RCI Reviewer. You can update your bio or CV below — changes will require re-approval from an admin."
-              : "Submit your professional bio and CV to join the PsyicHub Report Reviewer Network. This is completely optional and is only used if you wish to review and sign off on automated assessment reports for organizations. You can still get your account fully verified and use all core platform features without submitting this."}
+              : "Submit your professional bio and CV to join the CoreTAT Report Reviewer Network. This is completely optional and is only used if you wish to review and sign off on automated assessment reports for organizations. You can still get your account fully verified and use all core platform features without submitting this."}
           </p>
         </div>
       </CardHeader>
@@ -578,7 +578,7 @@ function RciProfileSection() {
                     </>
                   ) : (
                     <>
-                      This will submit your CV and Bio to the PsyicHub admin for review to join the <strong>Report Reviewer Network</strong>.
+                      This will submit your CV and Bio to the CoreTAT admin for review to join the <strong>Report Reviewer Network</strong>.
                       Your account verification status will be set to <strong>Pending</strong> while an admin reviews your profile.
                       <br /><br />
                       Note: You can still run all regular assessments and sessions during this review period. Only the report reviewer access will be pending.
@@ -827,7 +827,7 @@ export function DocVerificationPage() {
     return (
       <div className="container py-10 max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700">
         <Helmet>
-          <title>Verification | PsyicHub - Psychological Intelligence</title>
+          <title>Verification | CoreTAT - Psychological Intelligence</title>
         </Helmet>
 
         <div className="space-y-1">
@@ -954,7 +954,7 @@ export function DocVerificationPage() {
   return (
     <div className="container py-10 max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700">
       <Helmet>
-        <title>Verification | PsyicHub - Psychological Intelligence</title>
+        <title>Verification | CoreTAT - Psychological Intelligence</title>
       </Helmet>
 
       <div className="space-y-1">

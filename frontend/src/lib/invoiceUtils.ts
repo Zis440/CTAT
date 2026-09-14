@@ -46,7 +46,7 @@ export async function downloadInvoice(tx: Transaction, user: any) {
   let currentY = 25;
 
   try {
-    const response = await fetch('/psyichub-report-logo.png');
+    const response = await fetch('/coretat-report-logo.png');
     const blob = await response.blob();
     const base64Data = await new Promise<string>((resolve) => {
       const reader = new FileReader();
@@ -206,7 +206,7 @@ export async function downloadInvoice(tx: Transaction, user: any) {
   doc.text("Razorpay", 14, bottomY);
 
   bottomY += 6;
-  doc.text("Paid To: Techgen Cyber Solution Pvt. Ltd.", 14, bottomY);
+  doc.text("Paid To: Zis440", 14, bottomY);
 
   bottomY += 6;
   doc.text(`Transaction ID: ${tx.id}`, 14, bottomY);

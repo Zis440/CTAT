@@ -413,7 +413,7 @@ export function ActiveSession() {
   return (
     <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
       <Helmet>
-        <title>Active Session | PsyicHub - Psychological Intelligence</title>
+        <title>Active Session | CoreTAT - Psychological Intelligence</title>
       </Helmet>
 
       <div className="max-w-3xl mx-auto space-y-6 w-full animate-in fade-in slide-in-from-bottom-4 duration-500">

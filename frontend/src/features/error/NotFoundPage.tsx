@@ -11,7 +11,7 @@ export function NotFoundPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center relative font-mono text-zinc-400 p-4">
       <Helmet>
-        <title>404 - Page Not Found | PsyicHub - Psychological Intelligence</title>
+        <title>404 - Page Not Found | CoreTAT - Psychological Intelligence</title>
       </Helmet>
 
       <div

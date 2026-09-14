@@ -72,7 +72,7 @@ try:
             ADMIN_ID,
             ADMIN_EMAIL,
             hashed,
-            "Psyichub",
+            "CoreTAT",
             "Admin",
             "super_admin",
             "individual",

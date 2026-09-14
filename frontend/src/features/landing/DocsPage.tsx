@@ -33,7 +33,7 @@ export function DocsPage() {
     <div className="flex flex-col min-h-screen bg-background text-text font-sans selection:bg-primary selection:text-background transition-colors duration-300">
       <Helmet>
         <title>
-          {activeSection === "how-to-use" ? "User Guide" : "Platform Overview"} | Psyichub
+          {activeSection === "how-to-use" ? "User Guide" : "Platform Overview"} | CoreTAT
         </title>
       </Helmet>
       <Navbar />

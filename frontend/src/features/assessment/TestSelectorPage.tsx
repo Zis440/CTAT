@@ -123,7 +123,7 @@ export function TestSelectorPage() {
     navigate(location.pathname.replace(/\/$/, '') + "/intake");
   };
 
-  let roleSuffix = "Psyichub";
+  let roleSuffix = "CoreTAT";
   if (user?.role === "clinic_admin") roleSuffix = "Clinic Admin";
   if (user?.role === "clinic_staff") roleSuffix = "Clinic Staff";
   if (user?.role === "org_admin") roleSuffix = "Org Admin";
