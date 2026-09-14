@@ -19,6 +19,7 @@ const footerColumns = [
       ],
     },
   ],
+  /* Hidden for now:
   [
     {
       title: "Help and security",
@@ -27,6 +28,7 @@ const footerColumns = [
       ],
     },
   ],
+  */
   [
     {
       title: "Legal",
@@ -77,7 +79,7 @@ export function Footer() {
             </div>
           </div>
 
-          <div className="lg:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="lg:col-span-4 grid grid-cols-2 md:grid-cols-3 gap-8">
             {footerColumns.map((col, colIndex) => (
               <div key={colIndex} className="flex flex-col gap-10">
                 {col.map((section, sectionIndex) => (

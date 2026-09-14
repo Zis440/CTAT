@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link, useLocation, Navigate } from "react-router-dom";
-import { Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Loader2, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Helmet } from "react-helmet-async";
@@ -27,9 +27,26 @@ export function LoginPage() {
   const from = queryRedirect || (location.state as any)?.from?.pathname || "/dashboard";
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const handleDemoSignIn = async () => {
+    setIsDemoLoading(true);
+    try {
+      const res = await login({ email: "psyc@example.com", password: "password123" });
+      setAuth(res.access_token, res.user);
+      toast.success("Signed in with Individual Psychologist Demo Account!");
+      const destination = from !== "/dashboard" ? from : "/dashboard";
+      navigate(destination, { replace: true });
+    } catch (err: any) {
+      console.error("[LoginPage] Demo sign-in error:", err);
+      toast.error(err?.response?.data?.detail || "Demo sign-in failed. Please try again.");
+    } finally {
+      setIsDemoLoading(false);
+    }
+  };
 
   if (hydrated && isAuthenticated && user) {
     let dest = "/dashboard";
@@ -192,7 +209,7 @@ export function LoginPage() {
 
                   <Button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={isLoading || isDemoLoading}
                     className="w-full h-11 bg-primary hover:bg-primary/90 text-background font-bold text-sm rounded-lg transition-all shadow-lg shadow-primary/20"
                   >
                     {isLoading ? (
@@ -203,9 +220,38 @@ export function LoginPage() {
                       </>
                     )}
                   </Button>
+
+                  <div className="relative my-3">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-primary/20" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-card px-2.5 text-text/50 font-bold tracking-wider">
+                        Or Instant Access
+                      </span>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={isLoading || isDemoLoading}
+                    onClick={handleDemoSignIn}
+                    className="w-full h-11 border-primary/30 hover:border-primary/60 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-sm rounded-lg transition-all flex items-center justify-center gap-2 shadow-sm"
+                  >
+                    {isDemoLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4" />
+                        One-Click Individual Demo Sign In
+                      </>
+                    )}
+                  </Button>
                 </form>
 
-                <p className="text-center text-sm text-text/50 mt-6">
+                {/* Sign up hidden for now */}
+                <p className="text-center text-sm text-text/50 mt-6 hidden">
                   Don&apos;t have an account?{" "}
                   <Link
                     to="/sign-up"
