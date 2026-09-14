@@ -49,6 +49,7 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONIOENCODING=utf-8 \
     GIT_PYTHON_REFRESH=quiet \
     LOW_MEMORY_MODE=true \
+    MALLOC_ARENA_MAX=2 \
     PORT=8000
 
 # Copy installed packages from builder

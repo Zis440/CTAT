@@ -8,6 +8,7 @@ os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
 os.environ["LOW_MEMORY_MODE"] = os.getenv("LOW_MEMORY_MODE", "true")
+os.environ["MALLOC_ARENA_MAX"] = "2"
 
 import sys
 from contextlib import asynccontextmanager
@@ -125,6 +126,19 @@ def root():
 def health():
     """Docker/load-balancer health check."""
     return {"status": "ok"}
+
+@app.get("/memory")
+def memory_check():
+    """Live RAM diagnostic endpoint to monitor memory usage against Render's 512MB limit."""
+    import psutil
+    proc = psutil.Process()
+    rss_mb = round(proc.memory_info().rss / (1024 * 1024), 2)
+    return {
+        "rss_mb": rss_mb,
+        "limit_mb": 512,
+        "usage_pct": f"{round((rss_mb / 512) * 100, 1)}%",
+        "status": "healthy" if rss_mb < 400 else "warning",
+    }
 
 @app.get("/readiness")
 def readiness():
