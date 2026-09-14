@@ -10,6 +10,9 @@ export function getApiBaseUrl(): string {
   if (url.endsWith("/")) {
     url = url.slice(0, -1);
   }
+  if (url.startsWith("http") && !url.endsWith("/api")) {
+    url = `${url}/api`;
+  }
   return url;
 }
 
