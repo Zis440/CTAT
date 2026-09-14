@@ -6,16 +6,18 @@ import { AppTopBar } from "./Topbar";
 import { useUIStore } from "@/store/useUIStore";
 import { useEffect, useRef } from "react";
 import { useWalletStore } from "@/store/useWalletStore";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useAuthStore, isDemoAccount } from "@/store/useAuthStore";
 import { getWalletBalance } from "@/services/walletService";
 import { getMe } from "@/services/authService";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { cn } from "@/lib/utils";
 
 export function AppLayout() {
   const { sidebarCollapsed } = useUIStore();
   const { user, setUser } = useAuthStore();
   const { setBalance } = useWalletStore();
   const profileSyncRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isDemo = isDemoAccount(user);
 
   useEffect(() => {
     if (!user) return;
@@ -66,7 +68,7 @@ export function AppLayout() {
   return (
     <ErrorBoundary>
       <SidebarProvider defaultOpen={!sidebarCollapsed}>
-        <div className="flex h-screen w-full overflow-hidden bg-background">
+        <div className={cn("flex h-screen w-full overflow-hidden bg-background", isDemo && "flex-row-reverse")}>
           <AppSidebar />
 
           <SidebarInset className="flex flex-col min-w-0 flex-1 overflow-hidden relative">

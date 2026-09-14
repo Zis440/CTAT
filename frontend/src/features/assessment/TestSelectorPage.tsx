@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TEST_REGISTRY, type TestModule } from "./registry";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useAuthStore, isDemoAccount } from "@/store/useAuthStore";
 import { useSessionStore } from "@/store/useSessionStore";
 import { useWalletStore } from "@/store/useWalletStore";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -81,7 +81,24 @@ export function TestSelectorPage() {
     fetchPricing();
   }, []);
 
-  const selectedTest = TEST_REGISTRY.find((t) => t.slug === selectedSlug);
+  const isDemo = isDemoAccount(user);
+
+  const selectedTest = isDemo
+    ? ({
+        slug: "tat",
+        name: "TATcore AI Test",
+        shortName: "TATcore AI Test",
+        description:
+          "Advanced neural projective assessment engine powered by TATcore. Analyzes thematic apperceptive narratives to extract personality dynamics, clinical indicators, and psychological formulations in real-time.",
+        status: "active" as const,
+        icon: "brain",
+        route: "/session/new",
+        creditCost: 0,
+        category: "Projective Assessment",
+        ageGroup: "Adults & Adolescents",
+        minAge: 9,
+      } as TestModule)
+    : TEST_REGISTRY.find((t) => t.slug === selectedSlug);
 
   const isIndividual = user?.account_type === "individual";
   const isOrg = user?.role === "org_admin" || user?.role === "org_staff";
@@ -106,7 +123,7 @@ export function TestSelectorPage() {
       : null;
     const price = dbPrice != null ? dbPrice : selectedTest.creditCost;
 
-    if (price && price > 0) {
+    if (!isDemo && price && price > 0) {
       const balanceRupees = balance ? balance.balance_rupees : 0;
       if (balanceRupees < price) {
         toast.error(`Insufficient wallet balance. Please recharge your wallet. (Required: ₹${price.toFixed(2)})`);
@@ -213,6 +230,25 @@ export function TestSelectorPage() {
 
           <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {(() => {
+              if (isDemo) {
+                return [
+                  {
+                    slug: "tat",
+                    name: "TATcore AI Test",
+                    shortName: "TATcore AI Test",
+                    description:
+                      "Advanced neural projective assessment engine powered by TATcore. Analyzes thematic apperceptive narratives to extract personality dynamics, clinical indicators, and psychological formulations in real-time.",
+                    status: "active" as const,
+                    icon: "brain",
+                    route: "/session/new",
+                    creditCost: 0,
+                    category: "Projective Assessment",
+                    ageGroup: "Adults & Adolescents",
+                    minAge: 9,
+                  } as TestModule,
+                ];
+              }
+
               const isOrgAccount = user?.role === "org_admin" || user?.role === "org_staff";
               let displayTests = [...TEST_REGISTRY].map((registryTest) => {
                 const dbTest = dbAssessments.find(db => db.slug === registryTest.slug || db.name.toLowerCase() === registryTest.name.toLowerCase());
@@ -298,6 +334,17 @@ export function TestSelectorPage() {
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-sm font-medium">Test Fee</span>
                       {(() => {
+                        if (isDemo) {
+                          return (
+                            <div className="text-right">
+                              <span className="font-bold text-green-600 dark:text-[#D3E392]">Free Demo</span>
+                              <span className="text-xs font-normal text-muted-foreground block">
+                                Rate Limited Tier
+                              </span>
+                            </div>
+                          );
+                        }
+
                         const dbPricing = pricingMap[selectedTest.slug] || pricingMap[selectedTest.name.toLowerCase()];
                         const dbPrice = dbPricing
                           ? (isIndividual ? dbPricing.psychologist : (isOrg ? dbPricing.org : dbPricing.clinic))

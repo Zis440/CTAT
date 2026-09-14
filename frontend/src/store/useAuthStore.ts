@@ -59,3 +59,10 @@ export function useAuthHydrated(): boolean {
 export function useCurrentUser(): AuthUser | null {
   return useAuthStore((s) => s.user);
 }
+
+export const DEMO_ACCOUNT_EMAIL = "psyc@example.com";
+
+export function isDemoAccount(user: { email?: string | null } | null | undefined): boolean {
+  return user?.email === DEMO_ACCOUNT_EMAIL;
+}
+

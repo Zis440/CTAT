@@ -6,7 +6,7 @@ import logging
 import datetime as dt
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session as DBSession
 
@@ -154,8 +154,36 @@ def _try_historical_comparison(patient_id: str, agg: dict, db: DBSession):
                     agg, past_session['report_summary']
                 )
 
+import time
+from collections import defaultdict
+
+_demo_ip_request_history: dict[str, list[float]] = defaultdict(list)
+
+def _check_demo_ip_rate_limit(client_ip: str, max_assessments_per_hour: int = 20) -> None:
+    """Enforce per-device/IP rate limiting for the shared demo account (20 tests/hour/device)."""
+    now = time.time()
+    one_hour_ago = now - 3600.0
+    history = _demo_ip_request_history[client_ip]
+    active_history = [t for t in history if t > one_hour_ago]
+    _demo_ip_request_history[client_ip] = active_history
+
+    if len(active_history) >= max_assessments_per_hour:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Demo rate limit exceeded ({max_assessments_per_hour} assessments per hour per device). Please wait before running another assessment."
+        )
+    _demo_ip_request_history[client_ip].append(now)
+
+def _extract_client_ip(request: Request | None) -> str:
+    if not request:
+        return "127.0.0.1"
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "127.0.0.1"
+
 def _process_session_aggregation(
-    req: AggregateRequest, current_user: User, db: DBSession, skip_billing: bool = False
+    req: AggregateRequest, current_user: User, db: DBSession, skip_billing: bool = False, client_ip: str = "127.0.0.1"
 ) -> tuple[dict, Session]:
     """
     Handles idempotency, billing, and aggregation computation.
@@ -202,27 +230,33 @@ def _process_session_aggregation(
 
     db_patient = db.query(Patient).filter(Patient.id == req.patientId).first()
     patient_name = "Anonymous"
+    is_demo_user = current_user.email == "psyc@example.com"
+    if is_demo_user:
+        skip_billing = True
+        _check_demo_ip_rate_limit(client_ip, max_assessments_per_hour=20)
+
     if db_patient:
         patient_name = f"{db_patient.first_name} {db_patient.last_name or ''}".strip()
 
-        from app.wallet.router import _get_wallet, _record_transaction, _get_target_user_id, get_assessment_price
+        if not is_demo_user:
+            from app.wallet.router import _get_wallet, _record_transaction, _get_target_user_id, get_assessment_price
 
-        base_cost_paise = get_assessment_price(current_user, getattr(req, "assessment_name", "Narrative Intelligence"), db)
-        final_cost_paise = base_cost_paise
+            base_cost_paise = get_assessment_price(current_user, getattr(req, "assessment_name", "Narrative Intelligence"), db)
+            final_cost_paise = base_cost_paise
 
-        total_needed = final_cost_paise
-        if getattr(req, 'request_psychologist_validation', False):
-            total_needed += 10000
+            total_needed = final_cost_paise
+            if getattr(req, 'request_psychologist_validation', False):
+                total_needed += 10000
 
-        from app.models.wallet import TransactionType
-        target_user_id = _get_target_user_id(current_user, db)
-        wallet = _get_wallet(target_user_id, db, lock=True)
+            from app.models.wallet import TransactionType
+            target_user_id = _get_target_user_id(current_user, db)
+            wallet = _get_wallet(target_user_id, db, lock=True)
 
-        if wallet.balance_paise < total_needed:
-            raise HTTPException(
-                status_code=402,
-                detail=f"Insufficient balance. Required ₹{total_needed/100:.2f}, available ₹{wallet.balance_paise/100:.2f}",
-            )
+            if wallet.balance_paise < total_needed:
+                raise HTTPException(
+                    status_code=402,
+                    detail=f"Insufficient balance. Required ₹{total_needed/100:.2f}, available ₹{wallet.balance_paise/100:.2f}",
+                )
 
     from app.assessments.tat.pipeline.multicard_dynamics_engine import MulticardDynamicsEngine
     request_engine = MulticardDynamicsEngine(engines['nlp_processor'])
@@ -369,6 +403,7 @@ def _process_session_aggregation(
 @router.post("/aggregate")
 def aggregate_endpoint(
     req: AggregateRequest,
+    request: Request,
     current_user: User = Depends(require_permission("assessments")),
     db: DBSession = Depends(get_db),
 ):
@@ -380,7 +415,8 @@ def aggregate_endpoint(
     if current_user.role == UserRole.super_admin:
         raise HTTPException(status_code=403, detail="Super Admin accounts cannot perform assessments.")
 
-    agg, _ = _process_session_aggregation(req, current_user, db)
+    client_ip = _extract_client_ip(request)
+    agg, _ = _process_session_aggregation(req, current_user, db, client_ip=client_ip)
     return make_serializable(agg)
 
 def _generate_pdf_report_internal(
@@ -553,6 +589,7 @@ def _generate_pdf_report_internal(
 @router.post("/report")
 def generate_pdf_report(
     req: AggregateRequest,
+    request: Request,
     background_tasks: BackgroundTasks,
     current_user: User = Depends(require_permission("reports")),
     db: DBSession = Depends(get_db),
@@ -561,7 +598,8 @@ def generate_pdf_report(
     if current_user.role == UserRole.super_admin:
         raise HTTPException(status_code=403, detail="Super Admin accounts cannot perform assessments.")
 
-    agg, session_record = _process_session_aggregation(req, current_user, db)
+    client_ip = _extract_client_ip(request)
+    agg, session_record = _process_session_aggregation(req, current_user, db, client_ip=client_ip)
 
     output_path, filename = _generate_pdf_report_internal(req, current_user, db, agg, session_record)
     return FileResponse(output_path, media_type="application/pdf", filename=filename)

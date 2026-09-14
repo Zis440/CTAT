@@ -10,7 +10,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useAuthStore, isDemoAccount } from "@/store/useAuthStore";
 import { useUIStore } from "@/store/useUIStore";
 import { NotificationBell } from "@/features/notifications/components/NotificationBell";
 import { getSessionHistoryRoute } from "@/lib/routeUtils";
@@ -218,11 +218,12 @@ export function AppTopBar() {
   const { topbarBackOverride } = useUIStore();
 
   const breadcrumbs = buildBreadcrumbs(location.pathname, user?.role);
+  const isDemo = isDemoAccount(user);
 
   return (
     <header className="h-[72px] border-b border-border/40 bg-background/80 backdrop-blur-md flex items-center px-4 gap-3 sticky top-0 z-40">
 
-      <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
+      {!isDemo && <SidebarTrigger className="text-muted-foreground hover:text-foreground" />}
 
       <Breadcrumb className="flex-1 min-w-0">
         <BreadcrumbList>
@@ -274,6 +275,8 @@ export function AppTopBar() {
         >
           <ChevronRight className="h-4 w-4" />
         </button>
+
+        {isDemo && <SidebarTrigger className="text-muted-foreground hover:text-foreground ml-1" />}
       </div>
     </header>
   );

@@ -27,7 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useAuthStore, isDemoAccount } from "@/store/useAuthStore";
 import { useWalletStore } from "@/store/useWalletStore";
 import { formatRupees } from "@/types/wallet";
 import { RoleBadge } from "@/components/common/RoleBadge";
@@ -47,7 +47,8 @@ export function IndividualPsychologistSidebar() {
   const navigate = useNavigate();
   const { isMobile, setOpenMobile } = useSidebar();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  const hasWalletPermission = user?.module_permissions?.wallet !== false;
+  const isDemo = isDemoAccount(user);
+  const hasWalletPermission = user?.module_permissions?.wallet !== false && !isDemo;
 
   const { data: pendingCounts } = usePendingCounts();
 
@@ -174,7 +175,7 @@ export function IndividualPsychologistSidebar() {
   const logoLink = "/dashboard";
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border/50">
+    <Sidebar side={isDemo ? "right" : "left"} collapsible="icon" className={cn("border-border/50", isDemo ? "border-l border-r-0" : "border-r")}>
       <SidebarHeader className="h-[72px] border-b border-border/40 flex flex-col justify-center group-data-[collapsible=icon]:px-2 px-4 overflow-hidden">
         <div className="flex items-center justify-between gap-3 w-full group-data-[collapsible=icon]:justify-center">
           <Link
@@ -201,7 +202,11 @@ export function IndividualPsychologistSidebar() {
         )}
         {INDIVIDUAL_NAV.map((group, idx) => {
 
-          const visibleItems = group.items.filter(item => {
+          let visibleItems = group.items.filter(item => {
+            if (isDemo) {
+              const demoAllowed = ["/dashboard", "/session/new", "/session/history", "/reports", "/settings", "/support"];
+              return demoAllowed.includes(item.to);
+            }
             if (item.verificationRequired && user?.verification_status !== "approved") return false;
             if (item.hideIfVerified && user?.verification_status === "approved") return false;
             if (item.rciClinicalOnly && !(user?.professional_domain === "Clinical Psychologist" && user?.rci_number)) return false;
@@ -209,6 +214,14 @@ export function IndividualPsychologistSidebar() {
             if (item.coretatVerifiedOnly && !(user?.verification_status === "approved" && user?.rci_number)) return false;
             return true;
           });
+
+          if (isDemo && group.label === "Support & Feedback") {
+            visibleItems = [
+              ...visibleItems,
+              { label: "Settings", icon: Settings, to: "/settings" }
+            ];
+          }
+
           if (visibleItems.length === 0) return null;
 
           return (
@@ -298,7 +311,7 @@ export function IndividualPsychologistSidebar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-xl border-border/30 shadow-xl bg-background/95 backdrop-blur-sm"
-                side="right"
+                side={isDemo ? "left" : "right"}
                 align="end"
                 sideOffset={4}
               >

@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { Loader2, RotateCcw, RotateCw, Maximize, X, Info, Mic, MicOff, Globe, MapPin, ChevronDown, AlertTriangle, Link as LinkIcon, Copy, Check } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { ImageWithFallback } from "@/components/ui/image-with-fallback";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useAuthStore, isDemoAccount } from "@/store/useAuthStore";
 import { useWalletStore } from "@/store/useWalletStore";
 import { getWalletBalance } from "@/services/walletService";
 import { formatRupees } from "@/types/wallet";
@@ -64,28 +64,36 @@ export function ActiveSession() {
   const { user } = useAuthStore();
   const { balance, setBalance } = useWalletStore();
 
+  const isDemo = isDemoAccount(user);
   const isIndividual = user?.account_type === "individual";
-  const rate = isIndividual ? 30 : 20;
+  const rate = isDemo ? 0 : (isIndividual ? 30 : 20);
   const baseCost = rate * selectedCards.length;
   const hasDiscount = selectedCards.length > 1;
-  const sessionCost = hasDiscount ? baseCost * 0.8 : baseCost;
-  const isEligibleForValidation = user?.verification_status !== "approved";
+  const sessionCost = isDemo ? 0 : (hasDiscount ? baseCost * 0.8 : baseCost);
+  const isEligibleForValidation = !isDemo && user?.verification_status !== "approved";
   const isValidationRequested = isEligibleForValidation && requestPsychologistValidation;
-  const finalCost = sessionCost + (isValidationRequested ? 100 : 0);
+  const finalCost = isDemo ? 0 : (sessionCost + (isValidationRequested ? 100 : 0));
 
   const currentBalance = balance ? balance.balance_rupees : 0;
-  const hasInsufficientBalance = currentBalance < finalCost;
+  const hasInsufficientBalance = isDemo ? false : (currentBalance < finalCost);
 
-  const breakdownItems: PaymentBreakdownItem[] = [
-    { label: "Account Type:", value: <span className="capitalize">{user?.account_type || "individual"}</span> },
-    { label: "Rate per card:", value: formatRupees(rate * 100) },
-    { label: "No. of cards:", value: selectedCards.length },
-    { label: "Base Fee:", value: formatRupees(baseCost * 100) },
-    ...(hasDiscount ? [{ label: "Multi-card Discount (20%):", value: `-${formatRupees(baseCost * 0.2 * 100)}`, isDiscount: true }] : []),
-    ...(isValidationRequested ? [{ label: "Validate by RCI Verified Psychologist:", value: formatRupees(10000) }] : []),
-    { label: "Total Cost:", value: formatRupees(finalCost * 100), isTotal: true },
-    { label: "Available Wallet Balance:", value: balance ? formatRupees(balance.balance_paise) : formatRupees(0), isBalance: true, isInsufficient: hasInsufficientBalance },
-  ];
+  const breakdownItems: PaymentBreakdownItem[] = isDemo
+    ? [
+        { label: "Account Tier:", value: <span>Demo Tier (Complimentary)</span> },
+        { label: "Assessment:", value: <strong>TATcore AI Test</strong> },
+        { label: "No. of cards:", value: selectedCards.length },
+        { label: "Total Cost:", value: <span className="text-green-600 dark:text-[#D3E392] font-bold">₹0.00 (Free Demo)</span>, isTotal: true },
+      ]
+    : [
+        { label: "Account Type:", value: <span className="capitalize">{user?.account_type || "individual"}</span> },
+        { label: "Rate per card:", value: formatRupees(rate * 100) },
+        { label: "No. of cards:", value: selectedCards.length },
+        { label: "Base Fee:", value: formatRupees(baseCost * 100) },
+        ...(hasDiscount ? [{ label: "Multi-card Discount (20%):", value: `-${formatRupees(baseCost * 0.2 * 100)}`, isDiscount: true }] : []),
+        ...(isValidationRequested ? [{ label: "Validate by RCI Verified Psychologist:", value: formatRupees(10000) }] : []),
+        { label: "Total Cost:", value: formatRupees(finalCost * 100), isTotal: true },
+        { label: "Available Wallet Balance:", value: balance ? formatRupees(balance.balance_paise) : formatRupees(0), isBalance: true, isInsufficient: hasInsufficientBalance },
+      ];
 
   useEffect(() => {
     async function fetchBalance() {
@@ -364,7 +372,7 @@ export function ActiveSession() {
       const basePrice = dbPrice != null ? dbPrice : (testDef?.creditCost || 0);
       const price = testDef?.slug === "tat" ? basePrice * selectedCards.length : basePrice;
 
-      if (price > 0) {
+      if (!isDemo && price > 0) {
         const currentBalance = await getWalletBalance();
         if (currentBalance.balance_rupees < price) {
           toast.error(`Insufficient wallet balance to generate link. (Required: ₹${price.toFixed(2)})`);
@@ -697,10 +705,10 @@ export function ActiveSession() {
             <PaymentConfirmationModal
               isOpen={showPayConfirm}
               onOpenChange={setShowPayConfirm}
-              title="Complete Assessment & Pay"
+              title={isDemo ? "Complete Demo Assessment" : "Complete Assessment & Pay"}
               description={
                 <p>
-                  This will analyze all cards and finalize the session. The following amount will be deducted from your wallet.
+                  {isDemo ? "This will analyze all cards and finalize the TATcore AI Test session complimentary." : "This will analyze all cards and finalize the session. The following amount will be deducted from your wallet."}
                 </p>
               }
               breakdownItems={breakdownItems}
@@ -709,9 +717,9 @@ export function ActiveSession() {
               onValidationChange={toggleValidation}
               validationPrice="₹100"
               validationDescription="An independent RCI registered psychologist will review your assessment."
-              warningMessage={<><strong className="block mb-0.5 text-sm">Important:</strong>Once confirmed, the final cost will be deducted from your wallet and the session results will be generated. This action cannot be undone.</>}
+              warningMessage={<><strong className="block mb-0.5 text-sm">Important:</strong>Once confirmed, the final analysis results will be generated. This action cannot be undone.</>}
               onConfirm={handleConfirmPay}
-              confirmText="Pay & Analyze Session"
+              confirmText={isDemo ? "Complete Assessment" : "Pay & Analyze Session"}
               hasInsufficientBalance={hasInsufficientBalance}
               onRechargeClick={() => {
                 setShowPayConfirm(false);

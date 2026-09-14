@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSessionStore } from "@/store/useSessionStore";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useAuthStore, isDemoAccount } from "@/store/useAuthStore";
 import { useWalletStore } from "@/store/useWalletStore";
 import { CardGrid } from "./CardGridPage";
 import { Button } from "@/components/ui/button";
@@ -75,24 +75,33 @@ export function SessionSetupView() {
     );
   }
 
-  const rate = baseRate;
+  const isDemo = isDemoAccount(user);
+  const rate = isDemo ? 0 : baseRate;
   const baseCost = rate * selectedCards.length;
   const hasDiscount = selectedCards.length > 1;
-  const sessionCost = hasDiscount ? baseCost * 0.8 : baseCost;
+  const sessionCost = isDemo ? 0 : (hasDiscount ? baseCost * 0.8 : baseCost);
   const isRciVerifiedPsychologist = !!user?.rci_number && user?.verification_status === "approved";
-  const isEligibleForValidation = !isRciVerifiedPsychologist;
+  const isEligibleForValidation = !isDemo && !isRciVerifiedPsychologist;
   const isValidationRequested = isEligibleForValidation && requestPsychologistValidation;
-  const finalCost = sessionCost + (isValidationRequested ? 100 : 0);
+  const finalCost = isDemo ? 0 : (sessionCost + (isValidationRequested ? 100 : 0));
 
-  const breakdownItems: PaymentBreakdownItem[] = [
-    { label: "Account Type:", value: <span className="capitalize">{user?.account_type || "individual"}</span> },
-    { label: "Rate per card:", value: formatRupees(rate * 100) },
-    { label: "No. of cards:", value: selectedCards.length },
-    { label: "Base Fee:", value: formatRupees(baseCost * 100) },
-    ...(hasDiscount ? [{ label: "Multi-card Discount (20%):", value: `-${formatRupees(baseCost * 0.2 * 100)}`, isDiscount: true }] : []),
-    ...(isValidationRequested ? [{ label: "Validate by RCI Verified Psychologist:", value: formatRupees(10000) }] : []),
-    { label: "Total Cost:", value: formatRupees(finalCost * 100), isTotal: true },
-  ];
+  const breakdownItems: PaymentBreakdownItem[] = isDemo
+    ? [
+        { label: "Account Tier:", value: <span>Demo Tier (Complimentary)</span> },
+        { label: "Selected Assessment:", value: <strong>TATcore AI Test</strong> },
+        { label: "No. of cards:", value: selectedCards.length },
+        { label: "Assessment Fee:", value: <span className="text-green-600 dark:text-[#D3E392] font-bold">Free (Rate Limited)</span> },
+        { label: "Total Cost:", value: <span className="text-green-600 dark:text-[#D3E392] font-bold">₹0.00</span>, isTotal: true },
+      ]
+    : [
+        { label: "Account Type:", value: <span className="capitalize">{user?.account_type || "individual"}</span> },
+        { label: "Rate per card:", value: formatRupees(rate * 100) },
+        { label: "No. of cards:", value: selectedCards.length },
+        { label: "Base Fee:", value: formatRupees(baseCost * 100) },
+        ...(hasDiscount ? [{ label: "Multi-card Discount (20%):", value: `-${formatRupees(baseCost * 0.2 * 100)}`, isDiscount: true }] : []),
+        ...(isValidationRequested ? [{ label: "Validate by RCI Verified Psychologist:", value: formatRupees(10000) }] : []),
+        { label: "Total Cost:", value: formatRupees(finalCost * 100), isTotal: true },
+      ];
 
   const handleStartSession = () => {
     if (selectedCards.length === 0) {
@@ -127,7 +136,7 @@ export function SessionSetupView() {
       const basePrice = dbPrice != null ? dbPrice : (testDef?.creditCost || 0);
       const price = testDef?.slug === "tat" ? basePrice * selectedCards.length : basePrice;
 
-      if (price > 0) {
+      if (!isDemo && price > 0) {
         const currentBalance = await getWalletBalance();
         if (currentBalance.balance_rupees < price) {
           toast.error(`Insufficient wallet balance to generate link. (Required: ₹${price.toFixed(2)})`);
@@ -175,7 +184,7 @@ export function SessionSetupView() {
       <div className="space-y-6 w-full max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">{TEST_REGISTRY.find(t => t.slug === testType)?.name || "Assessment"} Session Setup</h2>
+            <h2 className="text-3xl font-bold tracking-tight">{isDemo ? "TATcore AI Test" : (TEST_REGISTRY.find(t => t.slug === testType)?.name || "Assessment")} Session Setup</h2>
             <p className="text-muted-foreground">Patient: {activePatientId}</p>
           </div>
           <div className="flex items-center gap-4">

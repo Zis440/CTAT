@@ -135,17 +135,44 @@ export function LoginPage() {
             <Card className="border-primary/10 bg-background/85 backdrop-blur-xl shadow-2xl shadow-primary/5">
               <CardHeader className="space-y-1.5 pb-4">
                 <CardTitle className="text-2xl font-extrabold tracking-tight">
-                  Welcome back
+                  CoreTAT Demo Access
                 </CardTitle>
                 <CardDescription className="text-text/60">
-                  Sign in to access your dashboard
+                  Instant one-click access to the psychological intelligence test environment
                 </CardDescription>
               </CardHeader>
 
               <CardContent>
+                <div className="space-y-5">
+                  <div className="p-3.5 rounded-xl border border-primary/20 bg-primary/5 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-primary uppercase tracking-wider">Demo Account</span>
+                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary/15 text-primary">Free Tier</span>
+                    </div>
+                    <p className="text-sm font-semibold text-foreground">psyc@example.com</p>
+                    <p className="text-xs text-muted-foreground">Individual Psychologist • Rate Limited (No Payment Required)</p>
+                  </div>
 
-                <form onSubmit={handleLogin} className="space-y-5">
+                  <Button
+                    type="button"
+                    disabled={isLoading || isDemoLoading}
+                    onClick={handleDemoSignIn}
+                    className="w-full h-12 bg-primary hover:bg-primary/90 text-background font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/25 cursor-pointer"
+                  >
+                    {isDemoLoading ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <>
+                        <Sparkles className="h-5 w-5" />
+                        Launch One-Click Demo
+                        <ArrowRight className="h-4 w-4 ml-1" />
+                      </>
+                    )}
+                  </Button>
+                </div>
 
+                {/* Hidden manual credential form (preserved, not deleted) */}
+                <form onSubmit={handleLogin} className="space-y-5 hidden" aria-hidden="true">
                   <div className="space-y-2">
                     <Label
                       htmlFor="login-email"
@@ -159,7 +186,6 @@ export function LoginPage() {
                       placeholder="name@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      required
                       autoComplete="email"
                       className="h-11 bg-background/50 border border-primary/20 focus:border-2 focus:border-primary/50 focus-visible:ring-0 transition-all"
                     />
@@ -187,7 +213,6 @@ export function LoginPage() {
                         placeholder="Enter your password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        required
                         minLength={8}
                         autoComplete="current-password"
                         className="h-11 bg-background/50 border border-primary/20 focus:border-2 focus:border-primary/50 focus-visible:ring-0 pr-10 transition-all"
@@ -217,34 +242,6 @@ export function LoginPage() {
                     ) : (
                       <>
                         Sign In <ArrowRight className="h-4 w-4 ml-2" />
-                      </>
-                    )}
-                  </Button>
-
-                  <div className="relative my-3">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-primary/20" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-card px-2.5 text-text/50 font-bold tracking-wider">
-                        Or Instant Access
-                      </span>
-                    </div>
-                  </div>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={isLoading || isDemoLoading}
-                    onClick={handleDemoSignIn}
-                    className="w-full h-11 border-primary/30 hover:border-primary/60 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-sm rounded-lg transition-all flex items-center justify-center gap-2 shadow-sm"
-                  >
-                    {isDemoLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <>
-                        <Sparkles className="h-4 w-4" />
-                        One-Click Individual Demo Sign In
                       </>
                     )}
                   </Button>

@@ -171,6 +171,7 @@ def init_db():
 
     _seed_default_pricing()
     _seed_assessments()
+    _seed_demo_user()
 
 def _run_migrations(table_name: str, statements: list):
     """Run a list of DDL statements in a single transaction, silently skipping errors."""
@@ -323,3 +324,50 @@ def _seed_assessments():
         db.rollback()
     finally:
         db.close()
+
+def _seed_demo_user():
+    """Ensure the one-click demo test account psyc@example.com exists in database."""
+    from app.models.user import User, UserRole, AccountType
+    from app.models.wallet import Wallet
+    from app.auth.jwt_utils import hash_password
+    import uuid
+
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.email == "psyc@example.com").first()
+        if not user:
+            user = User(
+                id=str(uuid.uuid4()),
+                email="psyc@example.com",
+                hashed_password=hash_password("password123"),
+                first_name="Demo",
+                last_name="Psychologist",
+                role=UserRole.individual_psychologist,
+                account_type=AccountType.individual,
+                verification_status="approved",
+                is_active=True,
+                professional_domain="Clinical Psychologist",
+                rci_number="A12345",
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+
+            wallet = db.query(Wallet).filter(Wallet.user_id == user.id).first()
+            if not wallet:
+                wallet = Wallet(user_id=user.id, balance_paise=100000)
+                db.add(wallet)
+                db.commit()
+            print("[OK] Demo test user psyc@example.com seeded successfully")
+        else:
+            wallet = db.query(Wallet).filter(Wallet.user_id == user.id).first()
+            if not wallet:
+                wallet = Wallet(user_id=user.id, balance_paise=100000)
+                db.add(wallet)
+                db.commit()
+    except Exception as e:
+        print(f"[WARN] Demo user seed failed: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
