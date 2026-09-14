@@ -28,6 +28,9 @@ RUN pip install --no-cache-dir \
 COPY scripts/download_nltk.py /tmp/download_nltk.py
 RUN python /tmp/download_nltk.py
 
+# Pre-download SentenceTransformer model so it's baked into the image
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2', cache_folder='/app/model_cache')"
+
 
 # ── Stage 2: Runtime ──────────────────────────────────────────────
 FROM python:3.10-slim
@@ -41,18 +44,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-ENV GIT_PYTHON_REFRESH=quiet
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    GIT_PYTHON_REFRESH=quiet \
+    PORT=8000
 
 # Copy installed packages from builder
 COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --from=builder /root/nltk_data /root/nltk_data
+COPY --from=builder /app/model_cache /app/model_cache
 
 # Copy application code
 COPY . .
 
 # Create mount point directories
-# (actual data lives outside — mounted via docker-compose volumes)
 RUN mkdir -p \
     data_store/uploads/avatars \
     data_store/uploads/documents \
@@ -61,6 +67,7 @@ RUN mkdir -p \
     data_store/audio_temp \
     saved_learning/rag_index \
     saved_learning/knowledge_graph \
+    model_cache \
     logs
 
 EXPOSE 8000

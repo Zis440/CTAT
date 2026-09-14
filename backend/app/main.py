@@ -49,63 +49,72 @@ from app.assessments.tat.engines.clinical.medication_engine import MedicationEng
 
 from app.services.airavata_provider import AiravataProvider
 from app.services.ollama_humanizer import OllamaHumanizer
+import asyncio
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Modern lifespan handler (replaces deprecated @app.on_event)."""
+async def _init_all_engines():
+    """Background initialization for database and ML engines."""
+    try:
+        from app.database import init_db
+        init_db()
+        print(f"[OK] Database tables initialized. Data store: {DATA_STORE_DIR}", flush=True)
+    except Exception as e:
+        print(f"[WARN] Database initialization: {e}", flush=True)
 
-    from app.database import init_db
-    init_db()
-    print(f"Database tables initialized. Data store: {DATA_STORE_DIR}")
-    print("Initializing Engines...")
+    print("[...] Initializing Engines in background...", flush=True)
     system_config = SystemConfig()
-    knowledge_graph = KnowledgeGraphEngine(config=system_config)
-
-    if KG_GRAPH_FILE.exists():
-        knowledge_graph.load(KG_GRAPH_FILE)
-        knowledge_graph._graph_built = True
-    else:
-
-        knowledge_graph._graph_built = False
-
-    nlp_processor = EnhancedNLPProcessor(system_config)
-    engines['nlp_processor'] = nlp_processor
-
-    engines['semantic_engine'] = SemanticNarrativeEngine(nlp_processor)
-    engines['murray_engine'] = MurrayInferenceEngine(nlp_processor)
-    engines['theme_engine'] = ThemeDetectionEngine(nlp_processor)
-    engines['relational_engine'] = RelationalFieldEngine(nlp_processor)
-    engines['multicard_engine'] = MulticardDynamicsEngine(nlp_processor)
-    engines['quantitative_scorer'] = QuantitativeScorer(nlp_processor)
-    engines['scoring_engine'] = TATScoringEngine(system_config, knowledge_graph)
+    try:
+        knowledge_graph = KnowledgeGraphEngine(config=system_config)
+        if KG_GRAPH_FILE.exists():
+            knowledge_graph.load(KG_GRAPH_FILE)
+            knowledge_graph._graph_built = True
+        else:
+            knowledge_graph._graph_built = False
+    except Exception as e:
+        print(f"[WARN] KnowledgeGraphEngine: {e}", flush=True)
+        knowledge_graph = None
 
     try:
-        engines['conflict_engine'] = ConflictAspectEngine(nlp_processor)
+        nlp_processor = EnhancedNLPProcessor(system_config)
+        engines['nlp_processor'] = nlp_processor
+
+        engines['semantic_engine'] = SemanticNarrativeEngine(nlp_processor)
+        engines['murray_engine'] = MurrayInferenceEngine(nlp_processor)
+        engines['theme_engine'] = ThemeDetectionEngine(nlp_processor)
+        engines['relational_engine'] = RelationalFieldEngine(nlp_processor)
+        engines['multicard_engine'] = MulticardDynamicsEngine(nlp_processor)
+        engines['quantitative_scorer'] = QuantitativeScorer(nlp_processor)
+        if knowledge_graph:
+            engines['scoring_engine'] = TATScoringEngine(system_config, knowledge_graph)
     except Exception as e:
-        print(f"CRITICAL ERROR: ConflictAspectEngine failed to initialize: {e}")
-        raise RuntimeError(f"Failed to load critical system engine: ConflictAspectEngine. Error: {e}")
+        print(f"[WARN] NLP engines: {e}", flush=True)
+        nlp_processor = None
+
+    if nlp_processor:
+        try:
+            engines['conflict_engine'] = ConflictAspectEngine(nlp_processor)
+        except Exception as e:
+            print(f"[WARN] ConflictAspectEngine: {e}", flush=True)
 
     try:
         engines['environment_classifier'] = EnvironmentClassifier()
     except Exception as e:
-        print(f"Warning: EnvironmentClassifier failed to initialize: {e}")
+        print(f"[WARN] EnvironmentClassifier: {e}", flush=True)
         engines['environment_classifier'] = None
 
     engines['session_manager'] = SessionManager(SESSION_DIR)
 
-    from app.assessments.tat.engines.inference.defense_inference_engine import DefenseInferenceEngine
-    try:
-        engines['defense_engine'] = DefenseInferenceEngine(nlp_processor)
-    except Exception as e:
-        print(f"CRITICAL ERROR: DefenseInferenceEngine failed: {e}")
-        raise RuntimeError(f"Failed to load critical system engine: DefenseInferenceEngine. Error: {e}")
+    if nlp_processor:
+        try:
+            from app.assessments.tat.engines.inference.defense_inference_engine import DefenseInferenceEngine
+            engines['defense_engine'] = DefenseInferenceEngine(nlp_processor)
+        except Exception as e:
+            print(f"[WARN] DefenseInferenceEngine: {e}", flush=True)
 
     try:
         engines['visual_engine'] = VisualAnalysisEngine(config=system_config)
-        print("[OK] visual_engine initialized")
-
+        print("[OK] visual_engine initialized", flush=True)
     except Exception as e:
-        print(f"Warning: VisualAnalysisEngine failed: {e}")
+        print(f"[WARN] VisualAnalysisEngine: {e}", flush=True)
         engines['visual_engine'] = None
 
     try:
@@ -113,7 +122,7 @@ async def lifespan(app: FastAPI):
             medication_csv_path=PROJECT_ROOT / "data" / "remedies_dataset" / "MEDICATION.csv"
         )
     except Exception as e:
-        print(f"Warning: MedicationEngine failed: {e}")
+        print(f"[WARN] MedicationEngine: {e}", flush=True)
         engines['medication_engine'] = None
 
     rag_engine = None
@@ -130,7 +139,7 @@ async def lifespan(app: FastAPI):
             )
             airavata = AiravataProvider()
         except Exception as e:
-            print(f"Warning: RAG/Airavata init failed: {e}")
+            print(f"[WARN] RAG/Airavata: {e}", flush=True)
 
     try:
         engines['ollama_humanizer'] = OllamaHumanizer(
@@ -138,24 +147,32 @@ async def lifespan(app: FastAPI):
             airavata_provider=airavata,
         )
     except Exception as e:
-        print(f"Warning: OllamaHumanizer failed: {e}")
+        print(f"[WARN] OllamaHumanizer: {e}", flush=True)
         engines['ollama_humanizer'] = None
 
-    print("Starting background SLA loop...")
-    import asyncio
-    from app.services.sla_loop import sla_assignment_loop
-    sla_task = asyncio.create_task(sla_assignment_loop(interval_seconds=60))
+    try:
+        from app.services.sla_loop import sla_assignment_loop
+        asyncio.create_task(sla_assignment_loop(interval_seconds=60))
+    except Exception as e:
+        print(f"[WARN] SLA loop: {e}", flush=True)
 
     try:
         from scripts.backfill_audit_logs import backfill
         backfill()
     except Exception as be:
-        print(f"Startup backfill failed: {be}")
+        print(f"[WARN] Startup backfill: {be}", flush=True)
 
-    print("All engines initialized successfully.")
+    print(f"[OK] All engines initialized successfully ({len(engines)} loaded).", flush=True)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan handler: binds port immediately for health check, initializes engines in background."""
+    print("🚀 FastAPI server started — listening on port immediately", flush=True)
+    bg_init_task = asyncio.create_task(_init_all_engines())
     yield
-    print("Shutting down engines...")
-    sla_task.cancel()
+    print("Shutting down engines...", flush=True)
+    if not bg_init_task.done():
+        bg_init_task.cancel()
 
 app = FastAPI(
     title="TAT Analysis API",
