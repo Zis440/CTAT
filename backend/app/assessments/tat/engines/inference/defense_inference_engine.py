@@ -247,8 +247,14 @@ class DefenseInferenceEngine:
 
     def __init__(self, nlp_processor):
         self.processor = nlp_processor
-        self.proto_embs: Dict[str, np.ndarray] = {}
-        self._compute_prototype_embeddings()
+
+        from app.utils.prototype_store import get_prototypes_by_prefix
+        defense_embs = get_prototypes_by_prefix("defense")
+        if defense_embs:
+            self.proto_embs = defense_embs
+        else:
+            self.proto_embs: Dict[str, np.ndarray] = {}
+            self._compute_prototype_embeddings()
 
     def _compute_prototype_embeddings(self):
         """Pre-compute embeddings for all defense prototype sentences."""

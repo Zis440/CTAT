@@ -184,9 +184,16 @@ class EnvironmentClassifier:
                            If provided, enables embedding-based classification.
         """
         self.nlp_processor = nlp_processor
-        self.proto_embeddings = {}
-        if nlp_processor is not None:
+
+        from app.utils.prototype_store import get_prototypes_by_prefix
+        proto_embs = get_prototypes_by_prefix("env")
+        if proto_embs:
+            self.proto_embeddings = proto_embs
+        elif nlp_processor is not None:
+            self.proto_embeddings = {}
             self._compute_prototype_embeddings()
+        else:
+            self.proto_embeddings = {}
 
     def _compute_prototype_embeddings(self):
         """Pre-compute sentence embeddings for each environment prototype."""

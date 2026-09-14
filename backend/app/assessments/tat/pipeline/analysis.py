@@ -195,8 +195,13 @@ def _classify_gender_embedding(gender_input: str, nlp_processor=None) -> str:
         try:
 
             if not _gender_proto_cache:
-                for category, sentences in _GENDER_PROTOTYPES.items():
-                    _gender_proto_cache[category] = nlp_processor.get_embeddings(sentences)
+                from app.utils.prototype_store import get_prototypes_by_prefix
+                stored_gender = get_prototypes_by_prefix("gender")
+                if stored_gender:
+                    _gender_proto_cache = stored_gender
+                else:
+                    for category, sentences in _GENDER_PROTOTYPES.items():
+                        _gender_proto_cache[category] = nlp_processor.get_embeddings(sentences)
 
             query = f"The patient's gender is {gender_input}."
             query_emb = nlp_processor.get_embeddings([query])[0]

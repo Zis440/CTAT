@@ -90,13 +90,7 @@ Respond ONLY with valid JSON in this EXACT format (no markdown, no extra text):
   "key_visual_elements": ["list", "of", "most", "notable", "elements"]
 }"""
 
-try:
-    import torch
-    from torchvision.models.detection import fasterrcnn_resnet50_fpn, FasterRCNN_ResNet50_FPN_Weights
-    import torchvision.transforms.functional as F
-    _TORCH_AVAILABLE = True
-except ImportError:
-    _TORCH_AVAILABLE = False
+_TORCH_AVAILABLE = True
 
 class VisualAnalysisEngine:
     """
@@ -592,8 +586,11 @@ class VisualAnalysisEngine:
 
     def _initialize_cnn(self):
         """Load Faster R-CNN model (legacy mode)."""
-        if not _TORCH_AVAILABLE:
-            print("[WARN] VisualAnalysisEngine: PyTorch not available. CNN disabled.")
+        try:
+            import torch
+            from torchvision.models.detection import fasterrcnn_resnet50_fpn, FasterRCNN_ResNet50_FPN_Weights
+        except ImportError:
+            print("[WARN] VisualAnalysisEngine: PyTorch/torchvision not available. CNN disabled.")
             return
 
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -651,6 +648,7 @@ class VisualAnalysisEngine:
             return self._empty_result()
 
         try:
+            import torchvision.transforms.functional as F
             image = Image.open(image_path).convert("RGB")
             img_tensor = F.to_tensor(image).unsqueeze(0).to(self._cnn_device)
 

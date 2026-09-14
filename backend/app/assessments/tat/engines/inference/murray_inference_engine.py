@@ -260,9 +260,16 @@ class MurrayInferenceEngine:
         self.processor = nlp_processor
         self.rag_engine = rag_engine
 
-        self.need_proto_embs = {}
-        self.press_proto_embs = {}
-        self._compute_prototype_embeddings()
+        from app.utils.prototype_store import get_prototypes_by_prefix
+        need_embs = get_prototypes_by_prefix("need")
+        press_embs = get_prototypes_by_prefix("press")
+        if need_embs and press_embs:
+            self.need_proto_embs = need_embs
+            self.press_proto_embs = press_embs
+        else:
+            self.need_proto_embs = {}
+            self.press_proto_embs = {}
+            self._compute_prototype_embeddings()
 
     def _compute_prototype_embeddings(self):
         """Compute and store embeddings for all prototype sentences."""

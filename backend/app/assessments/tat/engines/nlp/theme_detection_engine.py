@@ -8,8 +8,6 @@ No predefined keywords.
 
 import numpy as np
 import logging
-from sentence_transformers import SentenceTransformer
-from bertopic import BERTopic
 from typing import List, Dict, Any, Optional, Tuple
 import re
 from collections import defaultdict
@@ -479,11 +477,20 @@ class ThemeDetectionEngine:
         self.sentence_model = nlp_processor.bert_embedder
         self.topic_model = None
 
-        self.need_proto_embs = {}
-        self._compute_need_prototype_embeddings()
+        from app.utils.prototype_store import get_prototypes_by_prefix
+        need_embs = get_prototypes_by_prefix("need")
+        if need_embs:
+            self.need_proto_embs = need_embs
+        else:
+            self.need_proto_embs = {}
+            self._compute_need_prototype_embeddings()
 
-        self._clinical_proto_embs = {}
-        self._compute_clinical_label_embeddings()
+        clinical_embs = get_prototypes_by_prefix("clinical_label")
+        if clinical_embs:
+            self._clinical_proto_embs = {k: (v[0] if v.ndim > 1 else v) for k, v in clinical_embs.items()}
+        else:
+            self._clinical_proto_embs = {}
+            self._compute_clinical_label_embeddings()
 
         self.sentiment_analyzer = getattr(nlp_processor, 'sentiment_analyzer', None)
 
@@ -522,6 +529,7 @@ class ThemeDetectionEngine:
 
         from sklearn.feature_extraction.text import CountVectorizer
         vectorizer_model = CountVectorizer(stop_words=list(STOPWORDS))
+        from bertopic import BERTopic
         self.topic_model = BERTopic(embedding_model=self.sentence_model, vectorizer_model=vectorizer_model, verbose=False)
         try:
             topics, probs = self.topic_model.fit_transform(sentences, embeddings)
@@ -675,14 +683,17 @@ class ThemeDetectionEngine:
         noun_phrases = []
         for sent in sentences[:3]:
             doc = self.processor.nlp(sent)
-            for chunk in doc.noun_chunks:
-                np_text = chunk.root.lemma_.lower()
-                if np_text not in STOPWORDS and len(np_text) > 2:
+            try:
+                for chunk in doc.noun_chunks:
+                    np_text = chunk.root.lemma_.lower()
+                    if np_text not in STOPWORDS and len(np_text) > 2:
 
-                    if _is_psychological_construct_wn(np_text):
-                        noun_phrases.insert(0, np_text)
-                    else:
-                        noun_phrases.append(np_text)
+                        if _is_psychological_construct_wn(np_text):
+                            noun_phrases.insert(0, np_text)
+                        else:
+                            noun_phrases.append(np_text)
+            except Exception:
+                pass
 
         all_terms = list(dict.fromkeys(words[:3] + noun_phrases[:3]))
 
@@ -706,18 +717,23 @@ class ThemeDetectionEngine:
 
         embeddings = self.sentence_model.encode(sentences, show_progress_bar=False)
 
-        n_clusters = max(2, min(len(sentences) // 2, 4))
-        try:
-            from sklearn.cluster import AgglomerativeClustering
-            clustering = AgglomerativeClustering(
-                n_clusters=n_clusters,
-                metric='cosine',
-                linkage='average'
-            )
-            labels = clustering.fit_predict(embeddings)
-        except Exception:
-
-            labels = [0] * len(sentences)
+        if len(sentences) <= 2:
+            labels = list(range(len(sentences)))
+        else:
+            try:
+                # Fast pure-numpy greedy cosine clustering (avoids heavy sklearn/scipy memory allocation)
+                sims = np.dot(embeddings, embeddings.T)
+                labels = [-1] * len(sentences)
+                current_label = 0
+                for i in range(len(sentences)):
+                    if labels[i] == -1:
+                        labels[i] = current_label
+                        for j in range(i + 1, len(sentences)):
+                            if labels[j] == -1 and sims[i, j] > 0.5:
+                                labels[j] = current_label
+                        current_label += 1
+            except Exception:
+                labels = [0] * len(sentences)
 
         cluster_sentences = defaultdict(list)
         cluster_embeddings = defaultdict(list)
@@ -797,15 +813,17 @@ class ThemeDetectionEngine:
         phrase_counts = defaultdict(int)
         for sent in sentences:
             doc = self.processor.nlp(sent)
-            for chunk in doc.noun_chunks:
+            try:
+                for chunk in doc.noun_chunks:
+                    head_lemma = chunk.root.lemma_.lower()
+                    if head_lemma in STOPWORDS or len(head_lemma) < 3:
+                        continue
 
-                head_lemma = chunk.root.lemma_.lower()
-                if head_lemma in STOPWORDS or len(head_lemma) < 3:
-                    continue
-
-                full_phrase = " ".join([t.lemma_.lower() for t in chunk if t.lemma_.lower() not in STOPWORDS and not t.is_punct])
-                if full_phrase:
-                    phrase_counts[full_phrase] += 1
+                    full_phrase = " ".join([t.lemma_.lower() for t in chunk if t.lemma_.lower() not in STOPWORDS and not t.is_punct])
+                    if full_phrase:
+                        phrase_counts[full_phrase] += 1
+            except Exception:
+                pass
 
             for token in doc:
                 lemma = token.lemma_.lower()

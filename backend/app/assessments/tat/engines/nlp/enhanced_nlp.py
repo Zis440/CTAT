@@ -23,9 +23,8 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 import spacy
 import torch
 import numpy as np
-from keybert import KeyBERT
 ASTE = None
-from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
+from transformers import AutoTokenizer
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from typing import List
 import nltk
@@ -64,6 +63,58 @@ def _resolve_torch_device(use_gpu: bool):
         return torch.device("cuda"), 0
     return torch.device("cpu"), -1
 
+class ONNXSentenceEmbedder:
+    """Ultra-low-memory sentence embedder using ONNX Runtime quantized all-MiniLM-L6-v2 (~95MB total RAM)."""
+    def __init__(self, model_cache_dir: str = None):
+        import onnxruntime as ort
+        from transformers import AutoTokenizer
+        from huggingface_hub import hf_hub_download
+
+        self.embedding_dim = 384
+        logger.info("[NLP] Loading quantized ONNX embedder (Xenova/all-MiniLM-L6-v2)...")
+        model_path = hf_hub_download(
+            repo_id="Xenova/all-MiniLM-L6-v2",
+            filename="onnx/model_quantized.onnx",
+            cache_dir=model_cache_dir,
+        )
+        opts = ort.SessionOptions()
+        opts.intra_op_num_threads = 1
+        opts.inter_op_num_threads = 1
+        self.session = ort.InferenceSession(model_path, sess_options=opts, providers=["CPUExecutionProvider"])
+        self.tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L6-v2", cache_dir=model_cache_dir)
+        logger.info("[NLP] Quantized ONNX embedder loaded successfully (Memory < 100MB).")
+
+    def get_sentence_embedding_dimension(self) -> int:
+        return self.embedding_dim
+
+    def encode(self, sentences, batch_size: int = 32, show_progress_bar: bool = False, normalize_embeddings: bool = True, **kwargs) -> np.ndarray:
+        if isinstance(sentences, str):
+            sentences = [sentences]
+        if not sentences:
+            return np.empty((0, self.embedding_dim), dtype=np.float32)
+
+        all_embs = []
+        for i in range(0, len(sentences), batch_size):
+            batch = sentences[i : i + batch_size]
+            inputs = self.tokenizer(batch, padding=True, truncation=True, max_length=128, return_tensors="np")
+            feed = {
+                "input_ids": inputs["input_ids"].astype(np.int64),
+                "attention_mask": inputs["attention_mask"].astype(np.int64),
+                "token_type_ids": inputs.get("token_type_ids", np.zeros_like(inputs["input_ids"])).astype(np.int64),
+            }
+            outputs = self.session.run(None, feed)
+            token_embs = outputs[0]
+            mask = np.broadcast_to(np.expand_dims(feed["attention_mask"], -1), token_embs.shape)
+            sum_embs = np.sum(token_embs * mask, axis=1)
+            sum_mask = np.clip(mask.sum(axis=1), 1e-9, None)
+            mean_pooled = sum_embs / sum_mask
+            if normalize_embeddings:
+                norm = np.linalg.norm(mean_pooled, axis=1, keepdims=True)
+                mean_pooled = mean_pooled / np.clip(norm, 1e-9, None)
+            all_embs.append(mean_pooled.astype(np.float32))
+
+        return np.vstack(all_embs)
+
 class EnhancedNLPProcessor:
 
     def __init__(self, config, use_gpu: bool = None):
@@ -91,8 +142,13 @@ class EnhancedNLPProcessor:
                 try:
                     return spacy.load("en_core_web_sm")
                 except Exception:
-                    print("[INFO] spaCy fallback -> blank english")
-                    return spacy.blank("en")
+                    print("[INFO] spaCy fallback -> blank english with sentencizer")
+                    _blank = spacy.blank("en")
+                    try:
+                        _blank.add_pipe("sentencizer")
+                    except Exception:
+                        pass
+                    return _blank
 
         self.nlp, self._model_status["spacy"] = safe_load("spaCy", load_spacy)
 
@@ -100,6 +156,15 @@ class EnhancedNLPProcessor:
         self._model_status["pyabsa"] = False
 
         def load_sentencebert():
+            is_low_mem = getattr(self.config, "LOW_MEMORY_MODE", False)
+            if is_low_mem:
+                try:
+                    embedder = ONNXSentenceEmbedder(model_cache_dir=self.model_cache_dir)
+                    self.embedding_dim = embedder.get_sentence_embedding_dimension()
+                    return embedder
+                except Exception as e:
+                    logger.warning(f"ONNX embedder initialization failed ({e}), falling back to SentenceTransformer")
+
             from sentence_transformers import SentenceTransformer
             model = SentenceTransformer(
                 self.config.SENTENCE_TRANSFORMER_MODEL,
@@ -128,6 +193,9 @@ class EnhancedNLPProcessor:
             self.goemotions_pipeline = None
             self._model_status["goemotions"] = False
         else:
+            from keybert import KeyBERT
+            from transformers import pipeline, AutoModelForSequenceClassification
+
             # Share the sentence_bert instance with KeyBERT to save RAM
             if self.bert_embedder:
                 self.kw_model, self._model_status["keybert"] = safe_load(

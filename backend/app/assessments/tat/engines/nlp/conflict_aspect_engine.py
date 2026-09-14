@@ -127,8 +127,14 @@ class ConflictAspectEngine:
     def __init__(self, nlp_processor, rag_engine=None):
         self.processor = nlp_processor
         self.rag_engine = rag_engine
-        self.conflict_embs = {}
-        self._compute_prototypes()
+
+        from app.utils.prototype_store import get_prototypes_by_prefix
+        conflict_embs = get_prototypes_by_prefix("conflict")
+        if conflict_embs:
+            self.conflict_embs = conflict_embs
+        else:
+            self.conflict_embs = {}
+            self._compute_prototypes()
 
     def _compute_prototypes(self):
         """Pre-compute embeddings for conflict descriptions."""
