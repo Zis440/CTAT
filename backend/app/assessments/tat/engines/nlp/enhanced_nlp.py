@@ -24,10 +24,7 @@ import spacy
 import torch
 import numpy as np
 from keybert import KeyBERT
-try:
-    from pyabsa import AspectSentimentTripletExtraction as ASTE
-except Exception:
-    ASTE = None
+ASTE = None
 from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from typing import List
