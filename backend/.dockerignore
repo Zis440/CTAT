@@ -41,8 +41,8 @@ temporary/
 *.bin
 *.safetensors
 
-# Large data files (mounted as volume instead)
-data/tat_cards/
+# Manuals & backups (not needed at runtime)
+data/tat_cards_backup_pre_square/
 data/tat_scoring_manual/
 data/tat_judging_manual/
-data/remedies_dataset/
+

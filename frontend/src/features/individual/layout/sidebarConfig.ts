@@ -10,6 +10,7 @@ import {
   FileText,
   Link,
   ShieldCheck,
+  Image as ImageIcon,
 } from "lucide-react";
 import type { NavGroup } from "@/components/layout/sidebarConfig";
 
@@ -25,6 +26,7 @@ export const INDIVIDUAL_NAV: NavGroup[] = [
       { label: "Appointments", icon: Calendar, to: "/appointments" },
       { label: "Patients", icon: Users, to: "/patients" },
       { label: "Assessments", icon: ClipboardPlus, to: "/session/new" },
+      { label: "TAT Cards", icon: ImageIcon, to: "/cards" },
       { label: "Session History", icon: History, to: "/session/history" },
       { label: "Reports", icon: FileText, to: "/reports" },
       { label: "Generated Links", icon: Link, to: "/generated-links" },

@@ -21,6 +21,7 @@ import { PatientDetailsPage } from "@/features/individual/pages/PatientDetailsPa
 import { ClinicReportsPage } from "@/features/clinic-admin/pages/ClinicReportsPage";
 import { GenerateLinkPage } from "@/features/org-admin/pages/GenerateLinkPage";
 import { ReportVerificationQueuePage } from "@/features/individual/pages/ReportVerificationQueuePage";
+import { TATCardPreviewPage } from "@/features/assessment/tat/pages/TATCardPreviewPage";
 
 export const individualRoutes = [
   {
@@ -58,6 +59,7 @@ export const individualRoutes = [
       { path: "reports", element: <ClinicReportsPage /> },
       { path: "reports/page/:pageId", element: <ClinicReportsPage /> },
       { path: "generated-links", element: <GenerateLinkPage /> },
+      { path: "cards", element: <TATCardPreviewPage /> },
 
       { path: "verification-queue", element: <ReportVerificationQueuePage /> },
     ],
