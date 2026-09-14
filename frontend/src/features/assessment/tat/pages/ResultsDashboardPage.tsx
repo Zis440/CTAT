@@ -538,7 +538,7 @@ export function AnalysisDashboard() {
                       {recentSessions.slice(0, 3).map((s, idx) => {
                         const testName = s.test_type === 'screening_level1'
                           ? 'Employee Mental Health'
-                          : 'Narrative Intelligence';
+                          : 'TATcore AI Test';
                         return (
                           <div
                             key={idx}
@@ -767,7 +767,7 @@ export function AnalysisDashboard() {
 
   return (
     <MasterReportLayout
-      title="Narrative Intelligence Assessment Report"
+      title="TATcore AI Assessment Report"
       subtitle="CONFIDENTIAL EXECUTIVE ASSESSMENT"
       patientId={displayPatientId || undefined}
       status={report?._db_metadata?.validation_status}
@@ -1035,7 +1035,7 @@ export function AnalysisDashboard() {
             <div className="mb-8" style={{ pageBreakInside: 'avoid' }}>
               <SectionHeader title="6. Environment Classification" />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                <div className="p-5 border border-[#50d3a7]/30 rounded-lg bg-[#50d3a7]/5">
+                <div className="p-5 border border-primary/20 rounded-lg bg-primary/5">
                   <div className="flex items-center justify-between mb-4">
                     <span className="font-bold text-[14px] uppercase text-[#ce1126] tracking-wider">{report.aggregated_environment.dominant_type}</span>
                     <span className="text-[11px] font-bold text-[#ce1126] bg-white px-2 py-1 rounded border border-[#ce1126]/20">

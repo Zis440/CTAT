@@ -42,10 +42,10 @@ export const ColorBandBar: React.FC<{ label: string; value: number; compareText?
     <div className="mb-5">
       <div className="flex justify-between text-[11px] font-bold text-foreground mb-1 uppercase tracking-wider">
         <span>{label}</span>
-        <span className="text-[#50d3a7]">{value} / 100</span>
+        <span className="text-primary font-bold">{value} / 100</span>
       </div>
-      <div className="w-full bg-muted h-4 border border-[#50d3a7]/50 overflow-hidden">
-        <div className="h-full bg-[#ce1126] transition-all duration-1000" style={{ width: `${value}%` }}></div>
+      <div className="w-full bg-muted/50 h-4 border border-primary/25 overflow-hidden rounded-sm">
+        <div className="h-full bg-primary transition-all duration-1000" style={{ width: `${value}%` }}></div>
       </div>
       {compareText && <p className="text-[10px] text-muted-foreground mt-1 italic">{compareText}</p>}
     </div>

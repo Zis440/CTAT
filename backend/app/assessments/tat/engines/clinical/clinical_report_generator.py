@@ -82,7 +82,7 @@ def generate_radar_chart(metrics: Dict[str, float], out_dir: Path, filename: str
     angles += angles[:1]
 
     fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
-    ax.fill(angles, values, alpha=0.25, color='#50d3a7')
+    ax.fill(angles, values, alpha=0.25, color='#ce1126')
     ax.plot(angles, values, marker='o', color='#ce1126')
     ax.set_xticks(angles[:-1])
 
@@ -102,7 +102,7 @@ def generate_phase_diagram(conflict: float, ego: float, out_dir: Path, filename:
     conflict = _scale(conflict)
     ego = _scale(ego)
     fig, ax = plt.subplots(figsize=(6, 4))
-    ax.scatter(conflict, ego, s=200, c='#50d3a7', marker='o', zorder=5)
+    ax.scatter(conflict, ego, s=200, c='#ce1126', marker='o', zorder=5)
     ax.axhline(y=5, color='gray', linestyle='--', alpha=0.5)
     ax.axvline(x=5, color='gray', linestyle='--', alpha=0.5)
 
@@ -130,7 +130,7 @@ def generate_emotion_bar_chart(emotions: List[Tuple[str, int]], out_dir: Path, f
     labels = [textwrap.fill(e[0], width=20) for e in emotions]
     values = [e[1] for e in emotions]
     fig, ax = plt.subplots(figsize=(6, 4))
-    bars = ax.barh(labels, values, color='#50d3a7')
+    bars = ax.barh(labels, values, color='#ce1126')
     ax.set_xlabel("Frequency", fontsize=8)
     ax.set_title("Emotional Attractors Across Cards", fontsize=10)
     ax.tick_params(axis='both', which='major', labelsize=7)
@@ -186,13 +186,13 @@ HEADER_STYLE = TableStyle([
     ('FONTSIZE', (0, 0), (-1, -1), 9),
     ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
     ('TOPPADDING', (0, 0), (-1, -1), 4),
-    ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#50d3a7')),
+    ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e8dedf')),
     ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white]),
 ])
 
 SIMPLE_GRID = TableStyle([
-    ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#50d3a7')),
-    ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#eaffea')),
+    ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e8dedf')),
+    ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#fdf2f2')),
     ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
     ('FONTSIZE', (0, 0), (-1, -1), 9),
     ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
@@ -329,7 +329,7 @@ def generate_report(
         story.append(Table([['']], colWidths=[7.2*inch], style=[('LINEABOVE', (0,0), (-1,-1), 1.5, colors.HexColor('#ce1126'))]))
         story.append(Spacer(1, 0.2*inch))
 
-        story.append(Paragraph("NARRATIVE INTELLIGENCE ASSESSMENT REPORT", title_style))
+        story.append(Paragraph("TATCORE AI ASSESSMENT REPORT", title_style))
         story.append(Paragraph("CONFIDENTIAL EXECUTIVE ASSESSMENT", subtitle_style))
         story.append(Spacer(1, 0.15*inch))
 
@@ -436,7 +436,7 @@ def generate_report(
             story.append(Spacer(1, 0.1*inch))
             base_score = aggregated.get('base_psychological_score', 'N/A')
             final_score = aggregated.get('overall_score', 'N/A')
-            story.append(Paragraph(f"<b>Base Narrative Intelligence Score:</b> {base_score} | <b>Final Score (with PCS):</b> {final_score}", body))
+            story.append(Paragraph(f"<b>Base TATcore AI Score:</b> {base_score} | <b>Final Score (with PCS):</b> {final_score}", body))
             story.append(PageBreak())
 
         story.append(Paragraph("■ EXECUTIVE SUMMARY", h2))
@@ -684,7 +684,7 @@ def generate_report(
         story.append(Paragraph("■ STRUCTURED PSYCHODYNAMIC COMPONENTS", h2))
         story.append(Paragraph(
             "The following table presents the seven essential psychodynamic components "
-            "extracted from the Narrative Intelligence narrative analysis, per Murray's framework.", body
+            "extracted from the TATcore AI narrative analysis, per Murray's framework.", body
         ))
         story.append(Spacer(1, 0.1*inch))
 
@@ -826,13 +826,13 @@ def generate_report(
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                 ('FONTSIZE', (0, 0), (-1, 0), 9),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#50d3a7')),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e8dedf')),
                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                 ('LEFTPADDING', (0, 0), (-1, -1), 6),
                 ('RIGHTPADDING', (0, 0), (-1, -1), 6),
                 ('TOPPADDING', (0, 0), (-1, -1), 4),
                 ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-                ('BACKGROUND', (0, 1), (0, -1), colors.HexColor('#eaffea')),
+                ('BACKGROUND', (0, 1), (0, -1), colors.HexColor('#fdf2f2')),
             ]))
             story.append(t)
         except Exception as e:
@@ -1563,8 +1563,8 @@ def generate_report(
 
         t = Table(val_data, colWidths=[2.2*inch, 4.3*inch], hAlign='LEFT')
         t.setStyle(TableStyle([
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#50d3a7')),
-            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#eaffea')),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e8dedf')),
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#fdf2f2')),
             ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, -1), 9),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),

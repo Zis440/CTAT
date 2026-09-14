@@ -39,7 +39,7 @@ export function MasterReportLayout({
                 <Badge variant="outline" className="text-sm px-3 py-1 print:hidden">Patient: {patientId}</Badge>
               )}
               {(status === "Verified by Psychologist" || status === "validated" || status === "Finalized") && verifiedByName && (
-                <div className="inline-flex items-center gap-2 bg-[#f0fdf4] text-[#166534] border border-[#dcfce7] px-4 py-2 rounded-lg shadow-sm print:mt-4">
+                <div className="inline-flex items-center gap-2 bg-primary/10 text-primary border border-primary/20 px-4 py-2 rounded-lg shadow-sm print:mt-4">
                   <ShieldCheck className="w-5 h-5" />
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5">Verified By</p>
@@ -66,7 +66,7 @@ export function MasterReportLayout({
             <h1 className="text-3xl font-black text-foreground tracking-tight uppercase">{title}</h1>
             <p className="text-sm font-semibold tracking-widest text-muted-foreground uppercase mt-2">{subtitle}</p>
             {status && status !== "Finalized" && status !== "Verified by Psychologist" && status !== "validated" && status.toLowerCase() !== "ai generated" && status.toLowerCase() !== "ai_generated" && (
-              <p className="text-xs font-bold text-amber-600 uppercase mt-4 bg-amber-50 inline-block px-3 py-1 rounded border border-amber-200">
+              <p className="text-xs font-bold text-primary uppercase mt-4 bg-primary/10 inline-block px-3 py-1 rounded border border-primary/20">
                 {status === "pending" || status === "Under Verification" || status === "Assigned" ? "Pending Verification" : status}
               </p>
             )}

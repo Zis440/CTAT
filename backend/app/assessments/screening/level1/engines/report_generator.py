@@ -87,7 +87,7 @@ class ColorBandBar(Flowable):
         self.canv.saveState()
 
         self.canv.setFont("Helvetica-Bold", 6.5)
-        self.canv.setFillColor(HexColor('#50d3a7'))
+        self.canv.setFillColor(HexColor('#ce1126'))
 
         val_str = f"{self.value:.2f}".rstrip('0').rstrip('.') if isinstance(self.value, float) else str(self.value)
         self.canv.drawRightString(self.width, self.height - 8, f"{val_str} / 100")
@@ -99,8 +99,8 @@ class ColorBandBar(Flowable):
             y_offset -= 8
 
         bar_y = y_offset - 2
-        self.canv.setFillColor(HexColor('#eaffea'))
-        self.canv.setStrokeColor(HexColor('#50d3a7'))
+        self.canv.setFillColor(HexColor('#fdf2f2'))
+        self.canv.setStrokeColor(HexColor('#e8dedf'))
         self.canv.rect(0, bar_y, self.width, 6, fill=1, stroke=1)
 
         fill_width = (self.value / 100.0) * self.width
@@ -344,8 +344,8 @@ def generate_report(
         story.append(Paragraph("CONFIDENTIAL EXECUTIVE ASSESSMENT", subtitle_style))
 
         SIMPLE_GRID = TableStyle([
-            ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#50d3a7')),
-            ('BACKGROUND', (0, 0), (0, -1), HexColor('#eaffea')),
+            ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#e8dedf')),
+            ('BACKGROUND', (0, 0), (0, -1), HexColor('#fdf2f2')),
             ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, -1), 9),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
@@ -731,8 +731,8 @@ def generate_report(
 
         t = Table(val_data, colWidths=[2.2*inch, 4.3*inch], hAlign='LEFT')
         t.setStyle(TableStyle([
-            ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#50d3a7')),
-            ('BACKGROUND', (0, 0), (0, -1), HexColor('#eaffea')),
+            ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#e8dedf')),
+            ('BACKGROUND', (0, 0), (0, -1), HexColor('#fdf2f2')),
             ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, -1), 9),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
