@@ -3,7 +3,7 @@ import { formatDateTime } from "@/lib/dateFormat";
 import { useSessionStore } from "@/store/useSessionStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useQueryClient } from "@tanstack/react-query";
-import { aggregateCardResults, generatePdfReport, fetchPastSessions, openPdfReport, requestSessionValidation } from "@/features/assessment/tat/services/analysisService";
+import { aggregateCardResults, fetchPastSessions, requestSessionValidation } from "@/features/assessment/tat/services/analysisService";
 import { getWalletBalance } from "@/services/walletService";
 import { getDashboardStats } from "@/services/dashboardService";
 import { useWalletStore } from "@/store/useWalletStore";
@@ -43,13 +43,11 @@ export function AnalysisDashboard() {
   const [viewingPast, setViewingPast] = useState(false);
   const [pastPatientId, setPastPatientId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [report, setReport] = useState<any>(null);
   const [viewedTestType, setViewedTestType] = useState<string>('tat');
   const [questions, setQuestions] = useState<any>(null);
   const [isValidating, setIsValidating] = useState(false);
   const [hasRequestedValidation, setHasRequestedValidation] = useState(false);
-  const hasGeneratedRef = useRef(false);
   const isAggregatingRef = useRef(false);
 
   const handleRequestValidation = async () => {
@@ -93,22 +91,7 @@ export function AnalysisDashboard() {
         setViewedTestType(location.state.report._metadata?.test_type || 'tat');
         setViewingPast(true);
         setIsLoading(false);
-        if (!hasGeneratedRef.current && location.state.cardResults) {
-          hasGeneratedRef.current = true;
-          generatePdfReport(location.state.activePatientId, location.state.cardResults, location.state.testDefName, location.state.requestPsychologistValidation)
-            .then((url) => {
-              setPdfUrl(url);
-              toast.success("PDF Report generated!");
-              getWalletBalance()
-                .then((b) => useWalletStore.getState().setBalance(b))
-                .catch((err) => console.error("Failed to update wallet balance:", err));
-            })
-            .catch((pdfErr) => {
-              console.error("PDF generation failed:", pdfErr);
-              toast.error("Analysis complete, but failed to generate PDF report.");
-              hasGeneratedRef.current = false;
-            });
-        }
+        // Background PDF generation disabled for now
       } else if (searchParams.get('view') === 'past' || isDetailsRoute || urlSessionId) {
         setIsLoading(true);
         const cached = queryClient.getQueryData<any>(['past-session-report']);
@@ -127,9 +110,6 @@ export function AnalysisDashboard() {
             if (cached.validationStatus) cached.report._db_metadata.validation_status = cached.validationStatus;
           }
 
-          if (cached.pdfFilename) {
-            setPdfUrl(cached.pdfFilename.split('/').pop() || null);
-          }
           queryClient.removeQueries({ queryKey: ['past-session-report'] });
           setIsLoading(false);
         } else if (urlSessionId) {
@@ -140,9 +120,6 @@ export function AnalysisDashboard() {
             setPastPatientId(data.patient_id || data.patient_info?.patient_id || data.report_summary?.patient_id || data.report_summary?.employee_information?.patient_id || null);
             setViewedTestType(data._metadata?.test_type || (urlSessionId.startsWith('SCR_') ? 'screening_level1' : 'tat'));
             setViewingPast(true);
-            if (data.pdf_filename) {
-              setPdfUrl(data.pdf_filename.split('/').pop() || null);
-            }
           } catch (err) {
             console.error("Failed to load past session details", err);
           } finally {
@@ -224,25 +201,7 @@ export function AnalysisDashboard() {
           setReport(aggResult);
           setIsLoading(false);
 
-          if (!hasGeneratedRef.current) {
-            hasGeneratedRef.current = true;
-            generatePdfReport(activePatientId, cardResults, testDef.name, requestPsychologistValidation)
-              .then((url) => {
-                setPdfUrl(url);
-                toast.success("PDF Report generated!");
-
-                getWalletBalance()
-                  .then((b) => {
-                    useWalletStore.getState().setBalance(b);
-                  })
-                  .catch((err) => console.error("Failed to update wallet balance:", err));
-              })
-              .catch((pdfErr) => {
-                console.error("PDF generation failed:", pdfErr);
-                toast.error("Analysis complete, but failed to generate PDF report.");
-                hasGeneratedRef.current = false;
-              });
-          }
+          // Background PDF generation disabled for now
         } catch (err: any) {
           const detail = err?.response?.data?.detail || err?.message || "Unknown error";
           console.error("Aggregation failed:", detail, err);
@@ -258,9 +217,6 @@ export function AnalysisDashboard() {
               const reportSummary = detail?.report_summary;
               if (reportSummary) {
                 setReport(reportSummary);
-                if (latest.pdf_filename) {
-                  setPdfUrl(latest.pdf_filename.split('/').pop() || null);
-                }
                 toast.info("Showing last saved session — re-run for fresh results.");
               }
             }
@@ -683,47 +639,7 @@ export function AnalysisDashboard() {
           <ScreeningReportUI
             report={report}
             questions={questions}
-            leftFooterActions={
-              <Button
-                variant="outline"
-                disabled={!pdfUrl}
-                onClick={async () => {
-                  if (pdfUrl && !pdfUrl.startsWith('blob:')) {
-                    const pdfName = pdfUrl.split('/').pop();
-                    if (pdfName) {
-                      const sessionId = report?._db_metadata?.id || urlSessionId;
-                      if (sessionId) {
-                        const realId = sessionId.replace('SCR_', '');
-                        const promise = (async () => {
-                          const { reportService } = await import("@/features/assessment/screening/level1/services/api");
-                          const blob = await reportService.openPdf(realId);
-                          const url = URL.createObjectURL(blob);
-                          window.open(url, '_blank');
-                          setTimeout(() => URL.revokeObjectURL(url), 60000);
-                        })();
-                        toast.promise(promise, { loading: 'Opening PDF...', success: 'PDF opened successfully!', error: 'Failed to open PDF.' });
-                        return;
-                      }
-                      toast.promise(
-                        openPdfReport(pdfName),
-                        {
-                          loading: 'Opening PDF...',
-                          success: 'PDF opened successfully!',
-                          error: 'Failed to open PDF.'
-                        }
-                      );
-                    }
-                  } else if (pdfUrl && pdfUrl.startsWith('blob:')) {
-                    window.open(pdfUrl, '_blank');
-                  } else {
-                    toast.error("PDF not available yet.");
-                  }
-                }}
-                className="flex items-center gap-2"
-              >
-                {pdfUrl ? "View Report" : "Generating Report..."}
-              </Button>
-            }
+            leftFooterActions={null}
             rightFooterActions={
               <>
                 <Button
@@ -772,34 +688,7 @@ export function AnalysisDashboard() {
       patientId={displayPatientId || undefined}
       status={report?._db_metadata?.validation_status}
       verifiedByName={report?._db_metadata?.verified_by_name}
-      leftFooterActions={
-        <Button
-          variant="outline"
-          disabled={!pdfUrl}
-          onClick={() => {
-            if (pdfUrl && !pdfUrl.startsWith('blob:')) {
-              const pdfName = pdfUrl.split('/').pop();
-              if (pdfName) {
-                toast.promise(
-                  openPdfReport(pdfName),
-                  {
-                    loading: 'Opening PDF...',
-                    success: 'PDF opened successfully!',
-                    error: 'Failed to open PDF.'
-                  }
-                );
-              }
-            } else if (pdfUrl && pdfUrl.startsWith('blob:')) {
-              window.open(pdfUrl, '_blank');
-            } else {
-              toast.error("PDF not available yet.");
-            }
-          }}
-          className="flex items-center gap-2"
-        >
-          {pdfUrl ? "View Report" : "Generating Report..."}
-        </Button>
-      }
+      leftFooterActions={null}
       rightFooterActions={
         <>
 
