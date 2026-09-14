@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function getApiBaseUrl(): string {
-  let url = import.meta.env.VITE_API_BASE_URL || "/api";
+  let url = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? "https://ctat.onrender.com/api" : "/api");
   if (url.endsWith("/")) {
     url = url.slice(0, -1);
   }
