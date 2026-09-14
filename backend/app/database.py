@@ -31,27 +31,43 @@ from dotenv import load_dotenv
 load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL", None)
 
-if not DATABASE_URL:
-    raise RuntimeError(
-        "DATABASE_URL environment variable is not set. "
-        "Please set it in backend/.env to your PostgreSQL connection string, e.g.:\n"
-        "  DATABASE_URL=postgresql://user:password@localhost:5432/coretat"
-    )
+if DATABASE_URL:
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    # Ensure SSL mode is enabled for external Render connections
+    if "render.com" in DATABASE_URL and "sslmode=" not in DATABASE_URL:
+        sep = "&" if "?" in DATABASE_URL else "?"
+        DATABASE_URL = f"{DATABASE_URL}{sep}sslmode=require"
+else:
+    # Graceful fallback to local SQLite if DATABASE_URL is not provided
+    DATABASE_URL = f"sqlite:///{DATA_STORE_DIR / 'coretat.db'}"
+    print(f"[WARN] DATABASE_URL not set. Falling back to local SQLite at {DATABASE_URL}", flush=True)
 
-engine = create_engine(
-    DATABASE_URL,
-    poolclass=QueuePool,
-    pool_size=20,
-    max_overflow=10,
-    pool_pre_ping=True,
-    pool_recycle=3600,
-)
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(
+        DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        pool_pre_ping=True,
+    )
+else:
+    engine = create_engine(
+        DATABASE_URL,
+        poolclass=QueuePool,
+        pool_size=5,
+        max_overflow=5,
+        pool_pre_ping=True,
+        pool_recycle=300,
+    )
 
 @event.listens_for(engine, "connect")
 def set_postgresql_timezone(dbapi_conn, connection_record):
-    cursor = dbapi_conn.cursor()
-    cursor.execute("SET timezone='UTC'")
-    cursor.close()
+    if engine.dialect.name == "postgresql":
+        try:
+            cursor = dbapi_conn.cursor()
+            cursor.execute("SET timezone='UTC'")
+            cursor.close()
+        except Exception:
+            pass
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
