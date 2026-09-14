@@ -83,18 +83,17 @@ class EnhancedNLPProcessor:
     def _load_models(self):
 
         def load_spacy():
+            model_name = getattr(self.config, "SPACY_MODEL", "en_core_web_sm")
             try:
-                return spacy.load(self.config.SPACY_MODEL)
-            except:
-                print("⚠ spaCy fallback → en_core_web_sm")
-                return spacy.load("en_core_web_sm")
+                return spacy.load(model_name)
+            except Exception:
+                try:
+                    return spacy.load("en_core_web_sm")
+                except Exception:
+                    print("⚠ spaCy fallback → blank english")
+                    return spacy.blank("en")
 
         self.nlp, self._model_status["spacy"] = safe_load("spaCy", load_spacy)
-
-        self.kw_model, self._model_status["keybert"] = safe_load(
-            "KeyBERT",
-            lambda: KeyBERT(model=self.config.KEYBERT_MODEL)
-        )
 
         self.aspect_extractor = None
         self._model_status["pyabsa"] = False
@@ -117,59 +116,78 @@ class EnhancedNLPProcessor:
             load_sentencebert
         )
 
-        def load_roberta():
-            tokenizer = AutoTokenizer.from_pretrained(
-                self.config.ROBERTA_SENTIMENT_MODEL,
-                cache_dir=self.model_cache_dir
+        # Share the sentence_bert instance with KeyBERT to save 150MB RAM!
+        if self.bert_embedder:
+            self.kw_model, self._model_status["keybert"] = safe_load(
+                "KeyBERT",
+                lambda: KeyBERT(model=self.bert_embedder)
             )
-            model = AutoModelForSequenceClassification.from_pretrained(
-                self.config.ROBERTA_SENTIMENT_MODEL,
-                cache_dir=self.model_cache_dir
-            ).to(self.torch_device)
+        else:
+            self.kw_model = None
+            self._model_status["keybert"] = False
 
-            return pipeline(
-                "sentiment-analysis",
-                model=model,
-                tokenizer=tokenizer,
-                device=self.pipeline_device
+        is_low_mem = getattr(self.config, "LOW_MEMORY_MODE", False)
+
+        if is_low_mem:
+            logger.info("Low Memory Mode: Skipping heavy RoBERTa & GoEmotions local models (using Groq/VADER)")
+            self.sentiment_pipeline = None
+            self._model_status["roberta"] = False
+            self.goemotions_pipeline = None
+            self._model_status["goemotions"] = False
+        else:
+            def load_roberta():
+                tokenizer = AutoTokenizer.from_pretrained(
+                    self.config.ROBERTA_SENTIMENT_MODEL,
+                    cache_dir=self.model_cache_dir
+                )
+                model = AutoModelForSequenceClassification.from_pretrained(
+                    self.config.ROBERTA_SENTIMENT_MODEL,
+                    cache_dir=self.model_cache_dir
+                ).to(self.torch_device)
+
+                return pipeline(
+                    "sentiment-analysis",
+                    model=model,
+                    tokenizer=tokenizer,
+                    device=self.pipeline_device
+                )
+
+            self.sentiment_pipeline, self._model_status["roberta"] = safe_load(
+                "RoBERTa",
+                load_roberta
             )
 
-        self.sentiment_pipeline, self._model_status["roberta"] = safe_load(
-            "RoBERTa",
-            load_roberta
-        )
+            def load_goemotions():
+                model_name = getattr(
+                    self.config,
+                    "GOEMOTIONS_MODEL",
+                    "joeddav/distilbert-base-uncased-go-emotions-student"
+                )
 
-        def load_goemotions():
-            model_name = getattr(
-                self.config,
-                "GOEMOTIONS_MODEL",
-                "joeddav/distilbert-base-uncased-go-emotions-student"
+                tokenizer = AutoTokenizer.from_pretrained(
+                    model_name,
+                    cache_dir=self.model_cache_dir
+                )
+                model = AutoModelForSequenceClassification.from_pretrained(
+                    model_name,
+                    cache_dir=self.model_cache_dir
+                ).to(self.torch_device)
+
+                pipe = pipeline(
+                    "text-classification",
+                    model=model,
+                    tokenizer=tokenizer,
+                    return_all_scores=True,
+                    function_to_apply="sigmoid",
+                    device=self.pipeline_device
+                )
+                self.goemotions_id2label = model.config.id2label
+                return pipe
+
+            self.goemotions_pipeline, self._model_status["goemotions"] = safe_load(
+                "GoEmotions",
+                load_goemotions
             )
-
-            tokenizer = AutoTokenizer.from_pretrained(
-                model_name,
-                cache_dir=self.model_cache_dir
-            )
-            model = AutoModelForSequenceClassification.from_pretrained(
-                model_name,
-                cache_dir=self.model_cache_dir
-            ).to(self.torch_device)
-
-            pipe = pipeline(
-                "text-classification",
-                model=model,
-                tokenizer=tokenizer,
-                return_all_scores=True,
-                function_to_apply="sigmoid",
-                device=self.pipeline_device
-            )
-            self.goemotions_id2label = model.config.id2label
-            return pipe
-
-        self.goemotions_pipeline, self._model_status["goemotions"] = safe_load(
-            "GoEmotions",
-            load_goemotions
-        )
 
         self.vader, self._model_status["vader"] = safe_load(
             "VADER",
@@ -230,12 +248,52 @@ class EnhancedNLPProcessor:
         return result
 
     def detect_emotions(self, text: str):
-        if not self.goemotions_pipeline:
-            return []
-        res = self.goemotions_pipeline(text, truncation=True)[0]
-        emotions = [(r['label'], r['score']) for r in res]
-        emotions.sort(key=lambda x: -x[1])
-        return emotions[: getattr(self.config, "EMOTION_TOP_K", 5)]
+        if self.goemotions_pipeline:
+            try:
+                res = self.goemotions_pipeline(text, truncation=True)[0]
+                emotions = [(r['label'], r['score']) for r in res]
+                emotions.sort(key=lambda x: -x[1])
+                return emotions[: getattr(self.config, "EMOTION_TOP_K", 5)]
+            except Exception:
+                pass
+
+        # If Groq is available, use Groq for high-accuracy emotions with 0 MB RAM
+        try:
+            from app.services.groq_service import is_groq_available, call_groq_chat
+            if is_groq_available():
+                prompt = (
+                    f"Analyze the primary psychological emotions in this TAT story: \"{text[:1000]}\"\n"
+                    "Return ONLY a JSON array of objects with 'label' and 'score' (between 0.0 and 1.0), "
+                    "for example: [{\"label\": \"sadness\", \"score\": 0.85}, {\"label\": \"hope\", \"score\": 0.60}]. "
+                    "Do not include any explanation or markdown formatting."
+                )
+                raw = call_groq_chat(
+                    [{"role": "user", "content": prompt}],
+                    temperature=0.1,
+                    max_tokens=150,
+                )
+                if raw:
+                    import json, re
+                    m = re.search(r'\[.*\]', raw, re.DOTALL)
+                    if m:
+                        items = json.loads(m.group(0))
+                        return [(it["label"].lower(), float(it.get("score", 0.5))) for it in items][:5]
+        except Exception as e:
+            logger.debug(f"Groq emotion detection skipped: {e}")
+
+        # Basic VADER-based emotion approximation
+        if self.vader:
+            scores = self.vader.polarity_scores(text)
+            comp = scores.get('compound', 0.0)
+            if comp >= 0.5:
+                return [("joy", comp), ("optimism", comp * 0.8), ("contentment", comp * 0.6)]
+            elif comp <= -0.5:
+                return [("sadness", abs(comp)), ("fear", abs(comp) * 0.8), ("grief", abs(comp) * 0.6)]
+            elif comp < 0:
+                return [("concern", abs(comp)), ("disappointment", abs(comp) * 0.7), ("neutral", 0.4)]
+            return [("neutral", 0.8), ("thoughtful", 0.5), ("curiosity", 0.4)]
+
+        return []
 
     def get_embeddings(self, sentences: List[str]):
         if not self.bert_embedder:

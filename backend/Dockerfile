@@ -12,19 +12,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY requirements.txt .
 
-# PyTorch CPU-only (smaller image ~200 MB)
-# RUN pip install --no-cache-dir \
-#     torch==2.2.2 torchvision==0.17.2 torchaudio==2.2.2 \
-#     --extra-index-url https://download.pytorch.org/whl/cpu
-
-# Standard PyTorch install (supports CUDA if available, but image is ~2.5GB)
-RUN pip install --no-cache-dir torch==2.2.2 torchvision==0.17.2 torchaudio==2.2.2
+# PyTorch CPU-only (lightweight image ~200 MB vs 2.5GB CUDA)
+RUN pip install --no-cache-dir \
+    torch==2.2.2 torchvision==0.17.2 torchaudio==2.2.2 \
+    --extra-index-url https://download.pytorch.org/whl/cpu
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-# spaCy model
+# spaCy lightweight model (~12 MB vs 750 MB for en_core_web_lg)
 RUN pip install --no-cache-dir \
-    https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.7.1/en_core_web_lg-3.7.1-py3-none-any.whl
+    https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl
 
 # NLTK data — uses the dedicated script to download all required corpora
 COPY scripts/download_nltk.py /tmp/download_nltk.py

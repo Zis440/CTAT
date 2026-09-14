@@ -1,3 +1,9 @@
+import os
+os.environ["USE_TF"] = "0"
+os.environ["USE_TORCH"] = "1"
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
