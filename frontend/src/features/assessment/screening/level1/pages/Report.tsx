@@ -3,6 +3,7 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { reportService, assessmentService } from '../services/api';
 import { useAuthStore } from '@/store/useAuthStore';
 import { getSessionHistoryRoute, getDashboardRoute } from '@/lib/routeUtils';
+import { getApiBaseUrl } from '@/lib/utils';
 import { AlertCircle, ShieldCheck, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -291,7 +292,7 @@ export const ScreeningReportUI: React.FC<{ report: ReportData, questions?: any, 
                 }
               }
 
-              const imageUrl = `http://localhost:8000/api/cards/image/indianized/${cardName}.webp`;
+              const imageUrl = `${getApiBaseUrl()}/cards/image/indianized/${cardName}.webp`;
 
               return (
                 <div key={idx} className="flex gap-6 p-4 border border-border rounded-lg bg-card">

@@ -10,7 +10,10 @@ import logging
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 
-import ollama
+try:
+    import ollama
+except ImportError:
+    ollama = None
 
 import os
 LOG_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "..", "logs", "ollama_humanizer.log")
@@ -114,18 +117,38 @@ class OllamaHumanizer:
 
         safe_prompt = prompt[:6000]
 
-        for attempt in range(1, self.max_retries + 1):
-            try:
-                logger.info(f"Ollama call attempt {attempt} | type={response_type} | primary={self.model_name}")
-
-                response = ollama.chat(
-                    model=self.model_name,
+        # 1. Try Groq if configured
+        try:
+            from app.services.groq_service import is_groq_available, call_groq_chat
+            if is_groq_available():
+                logger.info(f"Using Groq LLM for {response_type} humanization")
+                groq_text = call_groq_chat(
                     messages=[
                         {"role": "system", "content": self._system_guardrails()},
                         {"role": "user", "content": safe_prompt}
                     ],
-                    options={"temperature": 0.3}
+                    temperature=0.3,
                 )
+                if groq_text and len(groq_text.strip()) >= 20:
+                    self._store_in_history(response_type, groq_text)
+                    return groq_text
+        except Exception as ge:
+            logger.warning(f"Groq humanization attempt failed: {ge}")
+
+        # 2. Try Ollama if available
+        if ollama is not None:
+            for attempt in range(1, self.max_retries + 1):
+                try:
+                    logger.info(f"Ollama call attempt {attempt} | type={response_type} | primary={self.model_name}")
+
+                    response = ollama.chat(
+                        model=self.model_name,
+                        messages=[
+                            {"role": "system", "content": self._system_guardrails()},
+                            {"role": "user", "content": safe_prompt}
+                        ],
+                        options={"temperature": 0.3}
+                    )
 
                 text = self._extract_response_text(response)
 

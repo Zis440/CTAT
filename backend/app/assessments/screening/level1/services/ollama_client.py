@@ -86,6 +86,22 @@ async def get_llm_insight(context: str = "general") -> dict:
                  "stress_questionnaire", "burnout_questionnaire", "cognitive_game", "general"
     """
 
+    # 1. Try Groq if configured
+    try:
+        from app.services.groq_service import is_groq_available, call_groq_chat_async
+        if is_groq_available():
+            prompt = _build_prompt(context)
+            message = await call_groq_chat_async(
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.7,
+                max_tokens=200,
+            )
+            if message and 20 < len(message) < 500:
+                return {"message": message, "category": "llm", "source": "groq"}
+    except Exception as ge:
+        logger.debug(f"Groq unavailable for screening insight: {ge}")
+
+    # 2. Try Ollama if available
     try:
         import ollama as ollama_lib
         import os

@@ -8,6 +8,7 @@ import { Helmet } from "react-helmet-async";
 import { fetchPastSessions, fetchSessionDetails, deleteSession, openPdfReport, requestSessionValidation } from "@/features/assessment/tat/services/analysisService";
 import { formatDateTime } from "@/lib/dateFormat";
 import { getSessionNewRoute, getSessionDetailsRoute } from "@/lib/routeUtils";
+import { getApiBaseUrl } from "@/lib/utils";
 import { AssessmentAuditLogsSheet } from "@/features/assessment/_shared/components/AssessmentAuditLogsSheet";
 import { reportService } from "@/features/assessment/screening/level1/services/api";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -111,7 +112,7 @@ export function OrgSessionHistoryPage() {
       if (sessionId.startsWith("SCR_")) {
         const actualId = sessionId.replace("SCR_", "");
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:8000/api/assessments/screening/level1/${actualId}`, {
+        const response = await fetch(`${getApiBaseUrl()}/assessments/screening/level1/${actualId}`, {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${token}` }
         });

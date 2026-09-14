@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { apiClient } from "@/services/apiClient";
+import { getApiBaseUrl } from "@/lib/utils";
 import { Helmet } from "react-helmet-async";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -81,7 +82,7 @@ export function AnonymousNIAssessment({
 
   const getCardImageUrl = useCallback((filename: string) => {
     if (!filename) return "";
-    return `${import.meta.env.VITE_API_URL || "http://localhost:8000/api"}/cards/image/${cardVersion}/${filename}`;
+    return `${getApiBaseUrl()}/cards/image/${cardVersion}/${filename}`;
   }, [cardVersion]);
 
   const currentCard = cards[currentCardIndex];

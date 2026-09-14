@@ -28,9 +28,11 @@ class AiravataProvider:
         self,
         model_name: str = "hf.co/therandomuser03/Airavata-Q4_K_M-GGUF:Q4_K_M",
         temperature: float = 0.3,
+        base_url: Optional[str] = None,
     ):
         self.model_name = model_name
         self.temperature = temperature
+        self.base_url = base_url
         logger.info(f"AiravataProvider initialized: model={model_name}")
 
     def generate(

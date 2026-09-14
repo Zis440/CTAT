@@ -18,6 +18,7 @@ import { formatRupees } from "@/types/wallet";
 import { PaymentConfirmationModal, type PaymentBreakdownItem } from "@/components/PaymentConfirmationModal";
 import { useNavigate } from "react-router-dom";
 import { getSessionNewRoute, getRechargeRoute, getSessionResultRoute } from "@/lib/routeUtils";
+import { getApiBaseUrl } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -141,10 +142,11 @@ export function ActiveSession() {
 
   const getCardImageUrl = useCallback((filename: string) => {
     if (!filename) return "";
+    const base = getApiBaseUrl();
     if (cardVersion === "original") {
-      return `http://localhost:8000/api/cards/image/${filename}`;
+      return `${base}/cards/image/${filename}`;
     }
-    return `http://localhost:8000/api/cards/image/${cardVersion}/${filename}`;
+    return `${base}/cards/image/${cardVersion}/${filename}`;
   }, [cardVersion]);
 
   const mutation = useMutation({
